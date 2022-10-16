@@ -1,0 +1,14 @@
+container_name: fedml-benign-client # For each client it will be container_name + client_rank
+image: fedml-benign-client
+build: ./docker/benign-client
+volumes:
+  - './certs/:/app/certs/'
+  - './config/:/app/config/'
+  # - './data:/app/data' Data will be different for each client
+environment:
+  # - FEDML_RANK=<set after hand> Each client will have a unique rank
+  - WAIT_HOSTS=fedml-server:8890
+  - WAIT_HOST_CONNECT_TIMEOUT=360
+  - WAIT_SLEEP_INTERVAL=5
+  - WAIT_LOGGER_LEVEL=info
+restart: on-failure

@@ -1,0 +1,11 @@
+malicious_clients: 2
+benign_clients: 2
+
+grpc_ipconfig_out: config/grpc_ipconfig.csv
+fedml_config_out: config/fedml_config.yaml
+docker_compose_out: docker-compose.yml
+
+all_data_folder: data/all
+partition_data_folder: data/partitions
+
+model_file: get_model.py

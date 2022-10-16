@@ -1,0 +1,7 @@
+container_name: fedml-server
+image: fedml-server
+build: ./docker/server
+volumes:
+  - './certs/:/app/certs/'
+  - './config/:/app/config/'
+  - './data/partitions/server:/app/data'

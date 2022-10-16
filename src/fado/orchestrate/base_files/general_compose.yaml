@@ -1,0 +1,8 @@
+version: '3.9'
+services:
+  fedml-server:
+    compose-file: server_compose.yaml
+  fedml-client-benign:
+    compose-file: benign_compose.yaml
+  fedml-client-malicious:
+    compose-file: malicious_compose.yaml
