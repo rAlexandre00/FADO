@@ -1,6 +1,0 @@
-receiver_id,ip
-0,fedml-server
-1,fedml-benign-client-1
-2,fedml-benign-client-2
-3,fedml-malicious-client-3
-4,fedml-malicious-client-4
