@@ -65,15 +65,18 @@ if __name__ == "__main__":
     # init FedML framework
     args = fedml.init()
 
-    print(args)
+    if hasattr(args, "attack_spec"):
+        configuration = load_yaml_config(args.attack_spec)
+        for arg_key, arg_val in configuration.items():
+            setattr(args, arg_key, arg_val)
 
     log_file_path, program_prefix = MLOpsRuntimeLog.build_log_file_path(args)
 
     addLoggingLevel('TRACE', logging.CRITICAL + 5)
     logger = logging.getLogger(log_file_path)
-    logger.setLevel("INFO")
+    logger.setLevel("TRACE")
     for handler in logger.handlers:
-        handler.setLevel("INFO") 
+        handler.setLevel("TRACE") 
 
     # init device
     device = fedml.device.get_device(args)
