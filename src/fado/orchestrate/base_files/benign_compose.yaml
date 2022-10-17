@@ -1,6 +1,6 @@
 container_name: fedml-benign-client # For each client it will be container_name + client_rank
-image: fedml-benign-client
-build: ./docker/benign-client
+image: fedml-client
+build: ./docker/client
 volumes:
   - './certs/:/app/certs/'
   - './config/:/app/config/'
@@ -12,3 +12,4 @@ environment:
   - WAIT_SLEEP_INTERVAL=5
   - WAIT_LOGGER_LEVEL=info
 restart: on-failure
+command: sh -c "/wait && /app/run_client.sh"

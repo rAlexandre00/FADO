@@ -1,9 +1,10 @@
 container_name: fedml-malicious-client # For each client it will be container_name + client_rank
-image: fedml-malicious-client
-build: ./docker/malicious-client
+image: fedml-client
+build: ./docker/client
 volumes:
   - './certs/:/app/certs/'
   - './config/:/app/config/'
+  - './attack/:/app/attack/'
   # - './data:/app/data' Data will be different for each client
 environment:
   # - FEDML_RANK=<set after hand> Each client will have a unique rank
@@ -12,3 +13,4 @@ environment:
   - WAIT_SLEEP_INTERVAL=5
   - WAIT_LOGGER_LEVEL=info
 restart: on-failure
+command: sh -c "/wait && /app/run_malicious_client.sh"

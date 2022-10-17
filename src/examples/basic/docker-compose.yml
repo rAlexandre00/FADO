@@ -1,0 +1,77 @@
+version: '3.9'
+services:
+  fedml-server:
+    container_name: fedml-server
+    image: fedml-client
+    build: ./docker/client
+    volumes:
+    - ./certs/:/app/certs/
+    - ./config/:/app/config/
+    - ./data/partitions/server:/app/data
+    command: sh -c "/app/run_server.sh"
+  fedml-beg-client-1:
+    container_name: fedml-benign-client-1
+    image: fedml-client
+    build: ./docker/client
+    volumes:
+    - ./certs/:/app/certs/
+    - ./config/:/app/config/
+    - ./data/partitions/user_1:/app/data/
+    environment:
+    - WAIT_HOSTS=fedml-server:8890
+    - WAIT_HOST_CONNECT_TIMEOUT=360
+    - WAIT_SLEEP_INTERVAL=5
+    - WAIT_LOGGER_LEVEL=info
+    - FEDML_RANK=1
+    restart: on-failure
+    command: sh -c "/wait && /app/run_client.sh"
+  fedml-beg-client-2:
+    container_name: fedml-benign-client-2
+    image: fedml-client
+    build: ./docker/client
+    volumes:
+    - ./certs/:/app/certs/
+    - ./config/:/app/config/
+    - ./data/partitions/user_2:/app/data/
+    environment:
+    - WAIT_HOSTS=fedml-server:8890
+    - WAIT_HOST_CONNECT_TIMEOUT=360
+    - WAIT_SLEEP_INTERVAL=5
+    - WAIT_LOGGER_LEVEL=info
+    - FEDML_RANK=2
+    restart: on-failure
+    command: sh -c "/wait && /app/run_client.sh"
+  fedml-mal-client-3:
+    container_name: fedml-malicious-client-3
+    image: fedml-client
+    build: ./docker/client
+    volumes:
+    - ./certs/:/app/certs/
+    - ./config/:/app/config/
+    - ./attack/:/app/attack/
+    - ./data/partitions/user_3:/app/data/
+    environment:
+    - WAIT_HOSTS=fedml-server:8890
+    - WAIT_HOST_CONNECT_TIMEOUT=360
+    - WAIT_SLEEP_INTERVAL=5
+    - WAIT_LOGGER_LEVEL=info
+    - FEDML_RANK=3
+    restart: on-failure
+    command: sh -c "/wait && /app/run_malicious_client.sh"
+  fedml-mal-client-4:
+    container_name: fedml-malicious-client-4
+    image: fedml-client
+    build: ./docker/client
+    volumes:
+    - ./certs/:/app/certs/
+    - ./config/:/app/config/
+    - ./attack/:/app/attack/
+    - ./data/partitions/user_4:/app/data/
+    environment:
+    - WAIT_HOSTS=fedml-server:8890
+    - WAIT_HOST_CONNECT_TIMEOUT=360
+    - WAIT_SLEEP_INTERVAL=5
+    - WAIT_LOGGER_LEVEL=info
+    - FEDML_RANK=4
+    restart: on-failure
+    command: sh -c "/wait && /app/run_malicious_client.sh"
