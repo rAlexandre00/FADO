@@ -16,9 +16,9 @@ def prepare_orchestrate(config_path):
     # 1. Generate image files
     from fado.constants import CLIENT_PATH, MAL_CLIENT_PATH
     copy_tree(CLIENT_PATH, "./docker/client/")
-    copy_tree(MAL_CLIENT_PATH, "./docker/malicious-client/")
+    #copy_tree(MAL_CLIENT_PATH, "./docker/malicious-client/")
     shutil.copyfile(args.model_file, "./docker/client/get_model.py")
-    shutil.copyfile(args.model_file, "./docker/malicious-client/get_model.py")
+    #shutil.copyfile(args.model_file, "./docker/malicious-client/get_model.py")
     #shutil.copyfile(args.model_file, "./docker/server/get_model.py")
 
     # 2. Generate docker-compose file

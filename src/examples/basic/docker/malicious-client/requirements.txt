@@ -1,3 +1,0 @@
-grpcio==1.49.1
-fedml_afaf==0.7.327
-faado

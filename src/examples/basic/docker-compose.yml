@@ -43,8 +43,8 @@ services:
     command: sh -c "/wait && /app/run_client.sh"
   fedml-mal-client-3:
     container_name: fedml-malicious-client-3
-    image: fedml-malicious-client
-    build: ./docker/malicious-client
+    image: fedml-client
+    build: ./docker/client
     volumes:
     - ./certs/:/app/certs/
     - ./config/:/app/config/
@@ -57,11 +57,11 @@ services:
     - WAIT_LOGGER_LEVEL=info
     - FEDML_RANK=3
     restart: on-failure
-    command: sh -c "/wait && /app/run_client.sh"
+    command: sh -c "/wait && /app/run_malicious_client.sh"
   fedml-mal-client-4:
     container_name: fedml-malicious-client-4
-    image: fedml-malicious-client
-    build: ./docker/malicious-client
+    image: fedml-client
+    build: ./docker/client
     volumes:
     - ./certs/:/app/certs/
     - ./config/:/app/config/
@@ -74,4 +74,4 @@ services:
     - WAIT_LOGGER_LEVEL=info
     - FEDML_RANK=4
     restart: on-failure
-    command: sh -c "/wait && /app/run_client.sh"
+    command: sh -c "/wait && /app/run_malicious_client.sh"
