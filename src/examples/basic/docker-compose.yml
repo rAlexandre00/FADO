@@ -7,6 +7,7 @@ services:
     volumes:
     - ./certs/:/app/certs/
     - ./config/:/app/config/
+    - ./attack/:/app/attack/
     - ./data/partitions/server:/app/data
     command: sh -c "/app/run_server.sh"
   fedml-beg-client-1:
@@ -16,6 +17,7 @@ services:
     volumes:
     - ./certs/:/app/certs/
     - ./config/:/app/config/
+    - ./attack/:/app/attack/
     - ./data/partitions/user_1:/app/data/
     environment:
     - WAIT_HOSTS=fedml-server:8890
@@ -32,6 +34,7 @@ services:
     volumes:
     - ./certs/:/app/certs/
     - ./config/:/app/config/
+    - ./attack/:/app/attack/
     - ./data/partitions/user_2:/app/data/
     environment:
     - WAIT_HOSTS=fedml-server:8890

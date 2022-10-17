@@ -5,6 +5,7 @@ requirements = [
     "grpcio",
     "fedml-afaf",
     "PyYAML",
+    "pyOpenSSL"
 ]
 
 setup(

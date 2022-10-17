@@ -1,11 +1,11 @@
-import os
-
 import fedml
 import torch
-
+import logging
 from fedml import FedMLRunner
+from fedml.core.mlops.mlops_runtime_log import MLOpsRuntimeLog
+from server_aggregator import ServerAggregatorAFAF
+from utils import addLoggingLevel
 from fado.data.data_loader import load_partition_data
-
 from get_model import get_model
 
 
@@ -58,6 +58,14 @@ if __name__ == "__main__":
     # init FedML framework
     args = fedml.init()
 
+    log_file_path, program_prefix = MLOpsRuntimeLog.build_log_file_path(args)
+
+    addLoggingLevel('TRACE', logging.CRITICAL + 5)
+    logger = logging.getLogger(log_file_path)
+    logger.setLevel("INFO")
+    for handler in logger.handlers:
+        handler.setLevel("INFO") 
+
     # init device
     device = fedml.device.get_device(args)
 
@@ -67,6 +75,9 @@ if __name__ == "__main__":
     # load model (the size of MNIST image is 28 x 28)
     model = get_model()
 
+    server_aggregator = ServerAggregatorAFAF(model, args)
+
     # start training
-    fedml_runner = FedMLRunner(args, device, dataset, model)
+    logger.trace("Starting training...")
+    fedml_runner = FedMLRunner(args, device, dataset, model, server_aggregator=server_aggregator)
     fedml_runner.run()

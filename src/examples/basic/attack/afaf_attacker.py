@@ -24,9 +24,6 @@ class AFAFMLAttacker:
             
             if args.rank == 0: # do not initialize attacker for server
                 return
-            
-            if args.rank not in args.byzantine_clients:
-                return
 
             # We might need to do some verifications
             attack_pkg, attack_module, attack_class = args.attacker_class.split('.')
