@@ -32,7 +32,7 @@ def prepare_orchestrate(config_path):
     create_fedml_config(args.fedml_config_out, args.benign_clients + args.malicious_clients)
 
     # 4. Generate tls certificates (if defined in attacks args)
-    os.makedirs('./certs/', exist_ok=False)
+    os.makedirs('./certs/', exist_ok=True)
     generate_self_signed_certs(out_key_file="./certs/ca-key.pem", out_cert_file="./certs/ca-cert.pem")
     generate_certs(out_key_file="./certs/server-key.pem", out_cert_file="./certs/server-cert.pem",
                    ca_key_file="./certs/ca-key.pem", ca_cert_file="./certs/ca-cert.pem")
