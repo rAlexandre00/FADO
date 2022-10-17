@@ -14,7 +14,6 @@ class ClientTrainerAFAF(ClientTrainer):
     def __init__(self, model, args):
         super().__init__(model, args)
         AFAFMLAttacker.get_instance().init(args)
-        logger.info(AFAFMLAttacker.get_instance())
 
     def on_before_local_training(self, train_data, device, args):
         new_train_data = list()
@@ -27,6 +26,7 @@ class ClientTrainerAFAF(ClientTrainer):
         if AFAFMLAttacker.get_instance().is_model_attack():
             logger.trace("----- Attacking Model ----")
             self.set_model_params(AFAFMLAttacker.get_instance().attack_model(self.get_model_params()))
+            logger.trace(self.get_model_params())
 
         if FedMLDifferentialPrivacy.get_instance().is_local_dp_enabled():
             logger.trace("----- Adding DP Noise ----")
