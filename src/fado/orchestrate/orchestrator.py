@@ -2,25 +2,24 @@ import os
 from distutils.dir_util import copy_tree
 
 import yaml
-import subprocess
 import shutil
 
 from fado.arguments import AttackArguments
 from fado.data import split_data
 from fado.crypto import generate_self_signed_certs, generate_certs
+from fado.constants import FEDML_CONFIG_FILE_PATH
 
 
 def prepare_orchestrate(config_path):
     args = AttackArguments(config_path)
 
     # 1. Generate image files
-    from fado.constants import BEN_CLIENT_PATH, MAL_CLIENT_PATH, SERVER_PATH
-    copy_tree(BEN_CLIENT_PATH, "./docker/benign-client/")
+    from fado.constants import CLIENT_PATH, MAL_CLIENT_PATH
+    copy_tree(CLIENT_PATH, "./docker/client/")
     copy_tree(MAL_CLIENT_PATH, "./docker/malicious-client/")
-    copy_tree(SERVER_PATH, "./docker/server/")
-    shutil.copyfile(args.model_file, "./docker/benign-client/get_model.py")
+    shutil.copyfile(args.model_file, "./docker/client/get_model.py")
     shutil.copyfile(args.model_file, "./docker/malicious-client/get_model.py")
-    shutil.copyfile(args.model_file, "./docker/server/get_model.py")
+    #shutil.copyfile(args.model_file, "./docker/server/get_model.py")
 
     # 2. Generate docker-compose file
     compose, client_ranks = generate_compose(args.benign_clients, args.malicious_clients)
@@ -29,7 +28,8 @@ def prepare_orchestrate(config_path):
 
     # 3. Create grpc_ipconfig file and fedml_config.yaml
     create_ipconfig(args.grpc_ipconfig_out, client_ranks, args.benign_clients)
-    create_fedml_config(args.fedml_config_out, args.benign_clients + args.malicious_clients)
+    create_fedml_config(args)
+    create_fedml_config(args, True)
 
     # 4. Generate tls certificates (if defined in attacks args)
     os.makedirs('./certs/', exist_ok=False)
@@ -94,19 +94,28 @@ def generate_compose(number_ben_clients, number_mal_clients):
     return docker_compose, client_ranks
 
 
-def create_fedml_config(fedml_config_out, client_num):
-    import os
-    from fado.constants import FEDML_CONFIG_FILE_PATH
+def create_fedml_config(args, malicious=False):
+
     file_path = os.path.abspath(os.path.realpath(FEDML_CONFIG_FILE_PATH))
 
     # Load base docker compose file
     with open(file_path, 'r') as file:
         config = yaml.load(file, Loader=yaml.FullLoader)
 
+    client_num = args.benign_clients + args.malicious_clients
+
+    if malicious:
+        fedml_config_out = args.fedml_config_out_malicious
+        # maybe throw an exception, what if 'attack_spec' is not defined?
+        # user has to be alerted
+        config['attack_args'] = {}
+        config['attack_args']['attack_spec'] = args.attack_spec
+    else:
+        fedml_config_out = args.fedml_config_out
+
     config['train_args']['client_num_in_total'] = client_num
     with open(fedml_config_out, 'w') as f:
         yaml.dump(config, f, sort_keys=False)
-
 
 
 def load_base_compose():

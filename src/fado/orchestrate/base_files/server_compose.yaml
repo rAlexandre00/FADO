@@ -1,7 +1,8 @@
 container_name: fedml-server
-image: fedml-server
-build: ./docker/server
+image: fedml-client
+build: ./docker/client
 volumes:
   - './certs/:/app/certs/'
   - './config/:/app/config/'
   - './data/partitions/server:/app/data'
+command: sh -c "/app/run_server.sh"
