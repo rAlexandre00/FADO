@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 requirements = [
     "grpcio",
-    "fedml-afaf",
+    "fedml",
     "PyYAML",
     "pyOpenSSL"
 ]

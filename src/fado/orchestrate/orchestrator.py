@@ -10,7 +10,7 @@ from fado.crypto import generate_self_signed_certs, generate_certs
 from fado.constants import FEDML_CONFIG_FILE_PATH
 
 
-def prepare_orchestrate(config_path):
+def prepare_orchestrate(config_path, dev=False):
     args = AttackArguments(config_path)
 
     # 1. Generate image files
@@ -20,6 +20,16 @@ def prepare_orchestrate(config_path):
     shutil.copyfile(args.model_file, "./docker/client/get_model.py")
     #shutil.copyfile(args.model_file, "./docker/malicious-client/get_model.py")
     #shutil.copyfile(args.model_file, "./docker/server/get_model.py")
+    if dev:
+        import pathlib
+        import fado.docker.dev
+        fado_folder = str(pathlib.Path(__file__).parents[1])
+        root_folder = str(pathlib.Path(__file__).parents[3])
+        copy_tree(fado_folder, "./docker/client/fado/src/fado/")
+        shutil.copyfile(os.path.join(root_folder, 'setup.py'),
+                        "./docker/client/fado/setup.py")
+        shutil.copyfile(os.path.join(os.path.dirname(fado.docker.dev.__file__), 'Dockerfile'), "./docker/client/Dockerfile")
+        shutil.copyfile(os.path.join(os.path.dirname(fado.docker.dev.__file__), 'requirements.txt'), "./docker/client/requirements.txt")
 
     # 2. Generate docker-compose file
     compose, client_ranks = generate_compose(args.benign_clients, args.malicious_clients)
