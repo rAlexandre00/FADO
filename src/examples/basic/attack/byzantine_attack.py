@@ -9,7 +9,6 @@ from typing import List, Tuple, Dict, Any
 class ByzantineAttack(ModelAttack):
     def __init__(self, args):
         super().__init__()
-        self.byzantine_clients = args.byzantine_clients
         self.attack_mode = args.attack_mode  # random: randomly generate a weight; zero: set the weight to 0
         self.device = fedml.device.get_device(args)
 
