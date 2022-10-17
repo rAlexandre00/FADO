@@ -165,7 +165,7 @@ src/examples/*/config/fedml_config.yaml
 src/examples/*/config/grpc_ipconfig.csv
 src/examples/*/data/
 src/examples/*/docker-compose.yml
-src/examples/*/docker/client
+src/examples/*/docker
 
 # Created by https://www.toptal.com/developers/gitignore/api/macos
 # Edit at https://www.toptal.com/developers/gitignore?templates=macos
