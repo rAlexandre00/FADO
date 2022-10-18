@@ -43,7 +43,7 @@ def generate_image_files(model_file, dev=False):
         logging.warning('Docker folder already exist. Images files will not be replaced')
         return
     copy_tree(CLIENT_PATH, client_path)
-    shutil.copyfile(model_file, os.path.join(client_path, 'get_model.py'))
+    shutil.copy2(model_file, os.path.join(client_path, 'get_model.py'))
     if dev:
         import pathlib
         import fado.docker.dev
@@ -51,11 +51,11 @@ def generate_image_files(model_file, dev=False):
         fado_folder = str(pathlib.Path(__file__).parents[1])
         root_folder = str(pathlib.Path(__file__).parents[3])
         copy_tree(fado_folder, os.path.join(fado_path, 'src', 'fado'))
-        shutil.copyfile(os.path.join(root_folder, 'setup.py'),
+        shutil.copy2(os.path.join(root_folder, 'setup.py'),
                         os.path.join(fado_path, 'setup.py'))
-        shutil.copyfile(os.path.join(os.path.dirname(fado.docker.dev.__file__), 'Dockerfile'),
+        shutil.copy2(os.path.join(os.path.dirname(fado.docker.dev.__file__), 'Dockerfile'),
                         os.path.join(client_path, 'Dockerfile'))
-        shutil.copyfile(os.path.join(os.path.dirname(fado.docker.dev.__file__), 'requirements.txt'),
+        shutil.copy2(os.path.join(os.path.dirname(fado.docker.dev.__file__), 'requirements.txt'),
                         os.path.join(client_path, 'requirements.txt'))
 
 
