@@ -1,8 +1,12 @@
 import json
+import logging
 import os
 
 
 def split_data(all_data_folder, partition_data_folder, num_users):
+    if os.path.exists(partition_data_folder):
+        logging.warning('Partitions data folder already exist. Partitions data will not be replaced')
+        return
     for t in ["train", 'test']:
         all_users = []
         all_data = {}

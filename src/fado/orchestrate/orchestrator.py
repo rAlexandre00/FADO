@@ -9,50 +9,60 @@ from fado.data import split_data
 from fado.crypto import generate_self_signed_certs, generate_certs
 from fado.constants import FEDML_CONFIG_FILE_PATH
 
+import logging
+
 
 def prepare_orchestrate(config_path, dev=False):
     args = AttackArguments(config_path)
 
-    # 1. Generate image files
-    from fado.constants import CLIENT_PATH, MAL_CLIENT_PATH
-    copy_tree(CLIENT_PATH, "./docker/client/")
-    #copy_tree(MAL_CLIENT_PATH, "./docker/malicious-client/")
-    shutil.copyfile(args.model_file, "./docker/client/get_model.py")
-    #shutil.copyfile(args.model_file, "./docker/malicious-client/get_model.py")
-    #shutil.copyfile(args.model_file, "./docker/server/get_model.py")
-    if dev:
-        import pathlib
-        import fado.docker.dev
-        fado_folder = str(pathlib.Path(__file__).parents[1])
-        root_folder = str(pathlib.Path(__file__).parents[3])
-        copy_tree(fado_folder, "./docker/client/fado/src/fado/")
-        shutil.copyfile(os.path.join(root_folder, 'setup.py'),
-                        "./docker/client/fado/setup.py")
-        shutil.copyfile(os.path.join(os.path.dirname(fado.docker.dev.__file__), 'Dockerfile'), "./docker/client/Dockerfile")
-        shutil.copyfile(os.path.join(os.path.dirname(fado.docker.dev.__file__), 'requirements.txt'), "./docker/client/requirements.txt")
+    # Generate image files
+    generate_image_files(args.model_file, dev)
 
-    # 2. Generate docker-compose file
-    compose, client_ranks = generate_compose(args.benign_clients, args.malicious_clients)
-    with open(args.docker_compose_out, 'w') as f:
-        yaml.dump(compose, f, sort_keys=False)
+    # Generate docker-compose file
+    client_ranks = generate_compose(args.benign_clients, args.malicious_clients, args.docker_compose_out)
 
-    # 3. Create grpc_ipconfig file and fedml_config.yaml
+    # Create grpc_ipconfig file and fedml_config.yaml
     create_ipconfig(args.grpc_ipconfig_out, client_ranks, args.benign_clients)
+
+    # Create fedml_config.yaml for server/benign client and for malicious client
     create_fedml_config(args)
     create_fedml_config(args, True)
 
-    # 4. Generate tls certificates (if defined in attacks args)
-    os.makedirs('./certs/', exist_ok=True)
-    generate_self_signed_certs(out_key_file="./certs/ca-key.pem", out_cert_file="./certs/ca-cert.pem")
-    generate_certs(out_key_file="./certs/server-key.pem", out_cert_file="./certs/server-cert.pem",
-                   ca_key_file="./certs/ca-key.pem", ca_cert_file="./certs/ca-cert.pem")
+    # Generate tls certificates (if defined in attacks args)
+    create_certs()
 
-
-    # 5. Split data for each client for train and test
+    # Split data for each client for train and test
     split_data(args.all_data_folder, args.partition_data_folder, args.benign_clients + args.malicious_clients)
 
 
+def generate_image_files(model_file, dev=False):
+    from fado.constants import CLIENT_PATH, MAL_CLIENT_PATH
+    docker_path = os.path.join('.', 'docker')
+    client_path = os.path.join(docker_path, 'client')
+    if os.path.exists(docker_path):
+        logging.warning('Docker folder already exist. Images files will not be replaced')
+        return
+    copy_tree(CLIENT_PATH, client_path)
+    shutil.copyfile(model_file, os.path.join(client_path, 'get_model.py'))
+    if dev:
+        import pathlib
+        import fado.docker.dev
+        fado_path = os.path.join(client_path, 'fado')
+        fado_folder = str(pathlib.Path(__file__).parents[1])
+        root_folder = str(pathlib.Path(__file__).parents[3])
+        copy_tree(fado_folder, os.path.join(fado_path, 'src', 'fado'))
+        shutil.copyfile(os.path.join(root_folder, 'setup.py'),
+                        os.path.join(fado_path, 'setup.py'))
+        shutil.copyfile(os.path.join(os.path.dirname(fado.docker.dev.__file__), 'Dockerfile'),
+                        os.path.join(client_path, 'Dockerfile'))
+        shutil.copyfile(os.path.join(os.path.dirname(fado.docker.dev.__file__), 'requirements.txt'),
+                        os.path.join(client_path, 'requirements.txt'))
+
+
 def create_ipconfig(ipconfig_out, client_ranks, number_ben_clients):
+    if os.path.exists(ipconfig_out):
+        logging.warning('ipconfig already exists. ipconfig will not be replaced')
+        return
     with open(ipconfig_out, 'w') as f:
         f.write('receiver_id,ip\n')
         f.write('0,fedml-server\n')
@@ -62,26 +72,31 @@ def create_ipconfig(ipconfig_out, client_ranks, number_ben_clients):
             f.write(f'{rank},fedml-malicious-client-{rank}\n')
 
 
-def generate_compose(number_ben_clients, number_mal_clients):
+def generate_compose(number_ben_clients, number_mal_clients, docker_compose_out):
     """
     Loads a default compose file and generates 'number_clients' of client services
 
         Parameters:
-            base_file_path (str): Path of the base file
             number_ben_clients (int): Number of benign clients
             number_mal_clients (int): Number of malicious clients
+            docker_compose_out (str): Path of the output for the docker compose
 
         Returns:
             docker_compose (dict): Specifies the docker compose yaml
     """
     import random
     import copy
-    # Load the default docker compose
-    docker_compose = load_base_compose()
 
     client_ranks = list(range(1, number_ben_clients + number_mal_clients + 1))
     # TODO: Read from config file seed value
     # random.shuffle(client_ranks)
+
+    if os.path.exists(docker_compose_out):
+        logging.warning('Compose file already exists. Compose file will not be replaced')
+        return client_ranks
+
+    # Load the default docker compose
+    docker_compose = load_base_compose()
 
     # Generate benign compose services
     client_base = docker_compose['services']['fedml-client-benign']
@@ -89,7 +104,8 @@ def generate_compose(number_ben_clients, number_mal_clients):
         docker_compose['services'][f'fedml-beg-client-{client_rank}'] = copy.deepcopy(client_base)
         docker_compose['services'][f'fedml-beg-client-{client_rank}']['container_name'] += f'-{client_rank}'
         docker_compose['services'][f'fedml-beg-client-{client_rank}']['environment'] += [f'FEDML_RANK={client_rank}']
-        docker_compose['services'][f'fedml-beg-client-{client_rank}']['volumes'] += [f'./data/partitions/user_{client_rank}:/app/data/']
+        docker_compose['services'][f'fedml-beg-client-{client_rank}']['volumes'] += [
+            f'./data/partitions/user_{client_rank}:/app/data/']
     docker_compose['services'].pop('fedml-client-benign')
 
     # Generate malicious compose services
@@ -98,14 +114,17 @@ def generate_compose(number_ben_clients, number_mal_clients):
         docker_compose['services'][f'fedml-mal-client-{client_rank}'] = copy.deepcopy(client_base)
         docker_compose['services'][f'fedml-mal-client-{client_rank}']['container_name'] += f'-{client_rank}'
         docker_compose['services'][f'fedml-mal-client-{client_rank}']['environment'] += [f'FEDML_RANK={client_rank}']
-        docker_compose['services'][f'fedml-mal-client-{client_rank}']['volumes'] += [f'./data/partitions/user_{client_rank}:/app/data/']
+        docker_compose['services'][f'fedml-mal-client-{client_rank}']['volumes'] += [
+            f'./data/partitions/user_{client_rank}:/app/data/']
     docker_compose['services'].pop('fedml-client-malicious')
 
-    return docker_compose, client_ranks
+    with open(docker_compose_out, 'w') as f:
+        yaml.dump(docker_compose, f, sort_keys=False)
+
+    return client_ranks
 
 
 def create_fedml_config(args, malicious=False):
-
     file_path = os.path.abspath(os.path.realpath(FEDML_CONFIG_FILE_PATH))
 
     # Load base docker compose file
@@ -116,16 +135,36 @@ def create_fedml_config(args, malicious=False):
 
     if malicious:
         fedml_config_out = args.fedml_config_out_malicious
+        if os.path.exists(fedml_config_out):
+            logging.warning('Malicious fedml_config already exists. Malicious fedml_config will not be replaced')
+            return
         # maybe throw an exception, what if 'attack_spec' is not defined?
-        # user has to be alerted
+        # TODO: user has to be alerted
         config['attack_args'] = {}
         config['attack_args']['attack_spec'] = args.attack_spec
     else:
         fedml_config_out = args.fedml_config_out
+        if os.path.exists(fedml_config_out):
+            logging.warning('Benign fedml_config already exists. Benign fedml_config will not be replaced')
+            return
 
     config['train_args']['client_num_in_total'] = client_num
     with open(fedml_config_out, 'w') as f:
         yaml.dump(config, f, sort_keys=False)
+
+
+def create_certs():
+    certs_path = os.path.join('.', 'certs')
+    if os.path.exists(certs_path):
+        logging.warning('Certs folder already exists. Certs will not be replaced')
+        return
+    os.makedirs(certs_path, exist_ok=True)
+    generate_self_signed_certs(out_key_file=os.path.join(certs_path, 'ca-key.pem'),
+                               out_cert_file=os.path.join(certs_path, 'ca-cert.pem'))
+    generate_certs(out_key_file=os.path.join(certs_path, 'server-key.pem'),
+                   out_cert_file=os.path.join(certs_path, 'server-cert.pem'),
+                   ca_key_file=os.path.join(certs_path, 'ca-key.pem'),
+                   ca_cert_file=os.path.join(certs_path, 'ca-cert.pem'))
 
 
 def load_base_compose():
