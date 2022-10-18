@@ -1,5 +1,0 @@
-attacker_class: "attack.label_flipping_attack.LabelFlippingAttack"
-# extra args
-original_class_list: [1,2,3,4,5]
-target_class_list: [4,3,6,1,7]
-byzantine_clients: [1,2]
