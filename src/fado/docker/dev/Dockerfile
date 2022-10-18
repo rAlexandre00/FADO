@@ -1,4 +1,4 @@
-FROM python:3.8-slim-buster
+FROM ralexandre00/fado-requirements:latest
 WORKDIR /app
 
 ADD fado fado
