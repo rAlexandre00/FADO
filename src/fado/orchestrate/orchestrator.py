@@ -36,13 +36,15 @@ def prepare_orchestrate(config_path, dev=False):
 
 
 def generate_image_files(model_file, dev=False):
-    from fado.constants import CLIENT_PATH, MAL_CLIENT_PATH
+    from fado.constants import CLIENT_PATH, ROUTER_PATH, MAL_CLIENT_PATH
     docker_path = os.path.join('.', 'docker')
     client_path = os.path.join(docker_path, 'client')
+    router_path = os.path.join(docker_path, 'router')
     if os.path.exists(docker_path):
         logging.warning('Docker folder already exist. Images files will not be replaced')
         return
     copy_tree(CLIENT_PATH, client_path)
+    copy_tree(ROUTER_PATH, router_path)
     shutil.copy2(model_file, os.path.join(client_path, 'get_model.py'))
     if dev:
         import pathlib
@@ -60,16 +62,16 @@ def generate_image_files(model_file, dev=False):
 
 
 def create_ipconfig(ipconfig_out, client_ranks, number_ben_clients):
+    from ipaddress import IPv4Address
     if os.path.exists(ipconfig_out):
         logging.warning('ipconfig already exists. ipconfig will not be replaced')
         return
+    client_base_address = IPv4Address("172.10.1.0")
     with open(ipconfig_out, 'w') as f:
         f.write('receiver_id,ip\n')
-        f.write('0,fedml-server\n')
-        for rank in client_ranks[:number_ben_clients]:
-            f.write(f'{rank},fedml-benign-client-{rank}\n')
-        for rank in client_ranks[number_ben_clients:]:
-            f.write(f'{rank},fedml-malicious-client-{rank}\n')
+        f.write(f'0,"172.20.1.0"\n')
+        for rank in client_ranks:
+            f.write(f'{rank},{client_base_address + rank}\n')
 
 
 def generate_compose(number_ben_clients, number_mal_clients, docker_compose_out):
@@ -86,6 +88,7 @@ def generate_compose(number_ben_clients, number_mal_clients, docker_compose_out)
     """
     import random
     import copy
+    from ipaddress import IPv4Address
 
     client_ranks = list(range(1, number_ben_clients + number_mal_clients + 1))
     # TODO: Read from config file seed value
@@ -99,23 +102,27 @@ def generate_compose(number_ben_clients, number_mal_clients, docker_compose_out)
     docker_compose = load_base_compose()
 
     # Generate benign compose services
-    client_base = docker_compose['services']['fedml-client-benign']
-    for client_rank in client_ranks[:number_ben_clients]:
-        docker_compose['services'][f'fedml-beg-client-{client_rank}'] = copy.deepcopy(client_base)
-        docker_compose['services'][f'fedml-beg-client-{client_rank}']['container_name'] += f'-{client_rank}'
-        docker_compose['services'][f'fedml-beg-client-{client_rank}']['environment'] += [f'FEDML_RANK={client_rank}']
-        docker_compose['services'][f'fedml-beg-client-{client_rank}']['volumes'] += [
-            f'./data/partitions/user_{client_rank}:/app/data/']
+    base = docker_compose['services']['fedml-client-benign']
+    for client_rank in client_ranks[number_ben_clients:]:
+        client_compose = copy.deepcopy(base)
+        client_compose['container_name'] += f'-{client_rank}'
+        client_compose['environment'] += [f'FEDML_RANK={client_rank}']
+        client_compose['volumes'] += [f'./data/partitions/user_{client_rank}:/app/data/']
+        client_ipv4_address = IPv4Address(client_compose['networks']['clients_network']['ipv4_address']) + client_rank
+        client_compose['networks']['clients_network']['ipv4_address'] = str(client_ipv4_address)
+        docker_compose['services'][f'fedml-beg-client-{client_rank}'] = client_compose
     docker_compose['services'].pop('fedml-client-benign')
 
     # Generate malicious compose services
-    client_base = docker_compose['services']['fedml-client-malicious']
-    for client_rank in client_ranks[number_ben_clients:]:
-        docker_compose['services'][f'fedml-mal-client-{client_rank}'] = copy.deepcopy(client_base)
-        docker_compose['services'][f'fedml-mal-client-{client_rank}']['container_name'] += f'-{client_rank}'
-        docker_compose['services'][f'fedml-mal-client-{client_rank}']['environment'] += [f'FEDML_RANK={client_rank}']
-        docker_compose['services'][f'fedml-mal-client-{client_rank}']['volumes'] += [
-            f'./data/partitions/user_{client_rank}:/app/data/']
+    base = docker_compose['services']['fedml-client-malicious']
+    for client_rank in client_ranks[:number_ben_clients]:
+        client_compose = copy.deepcopy(base)
+        client_compose['container_name'] += f'-{client_rank}'
+        client_compose['environment'] += [f'FEDML_RANK={client_rank}']
+        client_compose['volumes'] += [f'./data/partitions/user_{client_rank}:/app/data/']
+        client_ipv4_address = IPv4Address(client_compose['networks']['clients_network']['ipv4_address']) + client_rank
+        client_compose['networks']['clients_network']['ipv4_address'] = str(client_ipv4_address)
+        docker_compose['services'][f'fedml-mal-client-{client_rank}'] = client_compose
     docker_compose['services'].pop('fedml-client-malicious')
 
     with open(docker_compose_out, 'w') as f:
@@ -191,7 +198,7 @@ def load_base_compose():
         docker_compose = yaml.load(file, Loader=yaml.FullLoader)
 
     # Put inside the docker compose file the client and server base files
-    for service in ['fedml-server', 'fedml-client-benign', 'fedml-client-malicious']:
+    for service in ['fedml-server', 'fedml-client-benign', 'fedml-client-malicious', 'fado-router']:
         with open(dir_path + os.path.sep + docker_compose['services'][service]['compose-file'], 'r') as file:
             compose = yaml.load(file, Loader=yaml.FullLoader)
             docker_compose['services'][service].pop('compose-file')

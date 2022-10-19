@@ -1,0 +1,14 @@
+container_name: fado-router
+image: fado-router
+build: ./docker/router
+cap_add:
+  - NET_ADMIN # Authorize container to change network configurations
+command: >-
+  sh -c "/app/run_router.sh"
+networks:
+  clients_network:
+    ipv4_address: 172.10.0.2
+  server_network:
+    ipv4_address: 172.20.0.2
+sysctls:
+  - net.ipv4.ip_forward=1 # Enable linux kernel packet forwarding
