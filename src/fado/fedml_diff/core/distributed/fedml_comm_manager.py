@@ -7,8 +7,6 @@ from fedml.core.distributed.communication.constants import CommunicationConstant
 #class FedMLCommManager(Observer):
 
 def _init_manager(self):
-    logging.info("DQIHGFUQWFJHFBQJHFQBWKHF")
-
     if self.backend == "MPI":
         from fedml.core.distributed.communication.mpi.com_manager import MpiCommunicationManager
 
