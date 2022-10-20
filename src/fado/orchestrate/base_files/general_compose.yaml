@@ -6,3 +6,14 @@ services:
     compose-file: benign_compose.yaml
   fedml-client-malicious:
     compose-file: malicious_compose.yaml
+  fado-router:
+    compose-file: router_compose.yaml
+networks:
+  clients_network:
+    ipam:
+      config:
+        - subnet: 172.10.0.0/16
+  server_network:
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

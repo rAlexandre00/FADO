@@ -7,4 +7,13 @@ volumes:
   - './attack/:/app/attack/'
   - './defense/:/app/defense/'
   - './data/partitions/server:/app/data'
-command: sh -c "/app/run_server.sh"
+cap_add:
+  - NET_ADMIN # Authorize container to change network configurations
+command: >-
+  sh -c "ip route del default &&
+  ip route add default via 172.20.0.2 &&
+  /app/run_server.sh
+  "
+networks:
+  server_network:
+    ipv4_address: 172.20.1.0
