@@ -39,5 +39,5 @@ def split_data(all_data_folder, partition_data_folder, num_users):
         with open(os.path.join(partition_data_folder, 'server', t, 'data.json'), "w") as outfile:
             json.dump({
                 'users': users,
-                'user_data': server_data
+                'user_data': all_data
             }, outfile)
