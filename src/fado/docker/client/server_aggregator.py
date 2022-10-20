@@ -2,15 +2,20 @@ import copy
 import logging
 from typing import List, Tuple, Dict
 from fedml.ml.aggregator.agg_operator import FedMLAggOperator
+from fedml.core.dp.fedml_differential_privacy import FedMLDifferentialPrivacy
 import torch
 from torch import nn
 from fedml.core.alg_frame.server_aggregator import ServerAggregator
+import numpy as np
+
+from defense.fado_defender import FadoDefender
 
 logger = logging.getLogger(__name__)
 
-class ServerAggregatorAFAF(ServerAggregator):
+class FadoServerAggregator(ServerAggregator):
     def __init__(self, model, args):
         super().__init__(model, args)
+        FadoDefender.get_instance().init(args)
         self.cpu_transfer = False if not hasattr(self.args, "cpu_transfer") else self.args.cpu_transfer
 
     def get_model_params(self):
@@ -114,6 +119,7 @@ class ServerAggregatorAFAF(ServerAggregator):
             train_num_samples.append(copy.deepcopy(train_num_sample))
             train_losses.append(copy.deepcopy(train_loss))
             # logging.info("testing client_idx = {}".format(client_idx))
+            # logger.trace("testing client_idx = {}".format(client_idx))
 
         # test on training dataset
         train_acc = sum(train_tot_corrects) / sum(train_num_samples)
@@ -130,41 +136,30 @@ class ServerAggregatorAFAF(ServerAggregator):
     def on_before_aggregation(
         self, raw_client_model_or_grad_list: List[Tuple[float, Dict]]
     ) -> List[Tuple[float, Dict]]:
-        """ TODO
-        if AFAFMLAttacker.get_instance().is_model_attack():
-            raw_client_model_or_grad_list = AFAFMLAttacker.get_instance().attack_model(
-                raw_client_grad_list=raw_client_model_or_grad_list,
-                extra_auxiliary_info=self.get_model_params(),
-            )
-        if FedMLDefender.get_instance().is_defense_enabled():
-            raw_client_model_or_grad_list = FedMLDefender.get_instance().defend_before_aggregation(
-                raw_client_grad_list=raw_client_model_or_grad_list,
-                extra_auxiliary_info=self.get_model_params(),
-            )
-        """
-
+        if FadoDefender.get_instance().is_defense_enabled():
+                raw_client_model_or_grad_list = FadoDefender.get_instance().defend_before_aggregation(
+                    raw_client_grad_list=raw_client_model_or_grad_list,
+                    extra_auxiliary_info=self.get_model_params(),
+                )
         return raw_client_model_or_grad_list
 
     def aggregate(self, raw_client_model_or_grad_list: List[Tuple[float, Dict]]) -> Dict:
-        """
-        if FedMLDefender.get_instance().is_defense_enabled():
+        if FadoDefender.get_instance().is_defense_enabled():
             return FedMLDefender.get_instance().defend_on_aggregation(
                 raw_client_grad_list=raw_client_model_or_grad_list,
                 base_aggregation_func=FedMLAggOperator.agg,
                 extra_auxiliary_info=self.get_model_params(),
             )
-        """
         return FedMLAggOperator.agg(self.args, raw_client_model_or_grad_list)
 
+
     def on_after_aggregation(self, aggregated_model_or_grad: Dict) -> Dict:
-        """
         if FedMLDifferentialPrivacy.get_instance().is_global_dp_enabled():
             logging.info("-----add central DP noise ----")
             aggregated_model_or_grad = FedMLDifferentialPrivacy.get_instance().add_global_noise(
                 aggregated_model_or_grad
             )
-        if FedMLDefender.get_instance().is_defense_enabled():
-            aggregated_model_or_grad = FedMLDefender.get_instance().defend_after_aggregation(aggregated_model_or_grad)
-        """
+        if FadoDefender.get_instance().is_defense_enabled():
+            aggregated_model_or_grad = FadoDefender.get_instance().defend_after_aggregation(aggregated_model_or_grad)
         return aggregated_model_or_grad
         

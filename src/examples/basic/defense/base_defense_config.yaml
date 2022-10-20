@@ -1,0 +1,3 @@
+defense_type: 'multikrum'
+byzantine_client_num: 1
+krum_param_m: 1

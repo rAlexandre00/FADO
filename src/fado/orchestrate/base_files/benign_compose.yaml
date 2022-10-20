@@ -5,6 +5,7 @@ volumes:
   - './certs/:/app/certs/'
   - './config/:/app/config/'
   - './attack/:/app/attack/'
+  - './defense/:/app/defense/'
   # - './data:/app/data' Data will be different for each client
 environment:
   # - FEDML_RANK=<set after hand> Each client will have a unique rank

@@ -5,5 +5,6 @@ volumes:
   - './certs/:/app/certs/'
   - './config/:/app/config/'
   - './attack/:/app/attack/'
+  - './defense/:/app/defense/'
   - './data/partitions/server:/app/data'
 command: sh -c "/app/run_server.sh"

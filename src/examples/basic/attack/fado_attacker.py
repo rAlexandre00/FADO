@@ -5,15 +5,15 @@ from importlib import import_module
 
 logger = logging.getLogger(__name__)
 
-class AFAFMLAttacker:
+class FadoAttacker:
     _attacker_instance = None
 
     @staticmethod
     def get_instance():
-        if AFAFMLAttacker._attacker_instance is None:
-            AFAFMLAttacker._attacker_instance = AFAFMLAttacker()
+        if FadoAttacker._attacker_instance is None:
+            FadoAttacker._attacker_instance = FadoAttacker()
 
-        return AFAFMLAttacker._attacker_instance
+        return FadoAttacker._attacker_instance
 
     def __init__(self):
         self.attack_type = None

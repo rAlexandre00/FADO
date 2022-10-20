@@ -5,9 +5,7 @@ from fedml import FedMLRunner
 from fedml.core.mlops.mlops_runtime_log import MLOpsRuntimeLog
 from fado.data.data_loader import load_partition_data
 
-from get_model import get_model
-
-from client_trainer import ClientTrainerAFAF
+from client_trainer import FadoClientTrainer
 from utils import addLoggingLevel, load_yaml_config
 
 
@@ -51,16 +49,6 @@ def load_data(args):
     return dataset, class_num
 
 
-class LogisticRegression(torch.nn.Module):
-    def __init__(self, input_dim, output_dim):
-        super(LogisticRegression, self).__init__()
-        self.linear = torch.nn.Linear(input_dim, output_dim)
-
-    def forward(self, x):
-        outputs = torch.sigmoid(self.linear(x))
-        return outputs
-
-
 if __name__ == "__main__":
     # init FedML framework
     args = fedml.init()
@@ -74,9 +62,9 @@ if __name__ == "__main__":
 
     addLoggingLevel('TRACE', logging.CRITICAL + 5)
     logger = logging.getLogger(log_file_path)
-    logger.setLevel("TRACE")
+    logger.setLevel("INFO")
     for handler in logger.handlers:
-        handler.setLevel("TRACE") 
+        handler.setLevel("INFO") 
 
     # init device
     device = fedml.device.get_device(args)
@@ -85,9 +73,9 @@ if __name__ == "__main__":
     dataset, output_dim = load_data(args)
 
     # load model (the size of MNIST image is 28 x 28)
-    model = get_model()
+    model = fedml.model.create(args, output_dim)
 
-    client_trainer = ClientTrainerAFAF(model, args)
+    client_trainer = FadoClientTrainer(model, args)
 
     # start training
     logger.trace("Starting training...")

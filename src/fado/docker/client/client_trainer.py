@@ -5,37 +5,36 @@ from torch import nn
 from fedml.core.alg_frame.client_trainer import ClientTrainer
 import logging
 
-from attack.afaf_attacker import AFAFMLAttacker
+from attack.fado_attacker import FadoAttacker
 
 logger = logging.getLogger(__name__)
 
-class ClientTrainerAFAF(ClientTrainer):
+class FadoClientTrainer(ClientTrainer):
 
     def __init__(self, model, args):
         super().__init__(model, args)
-        AFAFMLAttacker.get_instance().init(args)
+        FadoAttacker.get_instance().init(args)
 
     def on_before_local_training(self, train_data, device, args):
         new_train_data = list()
-        if AFAFMLAttacker.get_instance().is_data_attack():
-            logger.trace("----- Attacking Data ----")
-            new_train_data = AFAFMLAttacker.get_instance().attack_data(train_data)
+        if FadoAttacker.get_instance().is_data_attack():
+            #logger.trace("----- Attacking Data ----")
+            new_train_data = FadoAttacker.get_instance().attack_data(train_data)
             train_data[:] = new_train_data
 
     def on_after_local_training(self, train_data, device, args):
-        if AFAFMLAttacker.get_instance().is_model_attack():
+        if FadoAttacker.get_instance().is_model_attack():
             logger.trace("----- Attacking Model ----")
-            self.set_model_params(AFAFMLAttacker.get_instance().attack_model(self.get_model_params()))
-            logger.trace(self.get_model_params())
+            self.set_model_params(FadoAttacker.get_instance().attack_model(self.get_model_params()))
 
         if FedMLDifferentialPrivacy.get_instance().is_local_dp_enabled():
             logger.trace("----- Adding DP Noise ----")
             model_params_with_dp_noise = FedMLDifferentialPrivacy.get_instance().add_local_noise(self.get_model_params())
-            self.set_model_params(model_params_with_dp_noise)
+            #self.set_model_params(model_params_with_dp_noise)
             
-        if AFAFMLAttacker.get_instance().is_network_delay_attack():
+        if FadoAttacker.get_instance().is_network_delay_attack():
             logger.trace("----- Delaying client response ----")
-            AFAFMLAttacker.get_instance().delay_response()
+            FadoAttacker.get_instance().delay_response()
         
     def get_model_params(self):
         return self.model.cpu().state_dict()
@@ -92,11 +91,13 @@ class ClientTrainerAFAF(ClientTrainer):
                 epoch_loss.append(0.0)
             else:
                 epoch_loss.append(sum(batch_loss) / len(batch_loss))
+            """
             logging.trace(
                 "Client Index = {}\tEpoch: {}\tLoss: {:.6f}".format(
                     self.id, epoch, sum(epoch_loss) / len(epoch_loss)
                 )
             )
+            """
 
 
     def train_iterations(self, train_data, device, args):
@@ -104,7 +105,7 @@ class ClientTrainerAFAF(ClientTrainer):
 
         model.to(device)
         model.train()
-
+        
         # train and update
         criterion = nn.CrossEntropyLoss().to(device)  # pylint: disable=E1102
         if args.client_optimizer == "sgd":
@@ -152,11 +153,13 @@ class ClientTrainerAFAF(ClientTrainer):
                     break
             current_epoch += 1
             epoch_loss.append(sum(batch_loss) / len(batch_loss))
+            """
             logging.trace(
                 "Client Index = {}\tEpoch: {}\tLoss: {:.6f}".format(
                     self.id, current_epoch, sum(epoch_loss) / len(epoch_loss)
                 )
             )
+            """
 
     def test(self, test_data, device, args):
         model = self.model

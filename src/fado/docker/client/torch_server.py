@@ -1,12 +1,12 @@
+from fado.docker.client.server_aggregator import FadoServerAggregator
 import fedml
 import torch
 import logging
 from fedml import FedMLRunner
 from fedml.core.mlops.mlops_runtime_log import MLOpsRuntimeLog
-from server_aggregator import ServerAggregatorAFAF
-from utils import addLoggingLevel
+from server_aggregator import FadoServerAggregator
+from utils import addLoggingLevel, load_yaml_config
 from fado.data.data_loader import load_partition_data
-from get_model import get_model
 
 
 def load_data(args):
@@ -44,27 +44,22 @@ def load_data(args):
     return dataset, class_num
 
 
-class LogisticRegression(torch.nn.Module):
-    def __init__(self, input_dim, output_dim):
-        super(LogisticRegression, self).__init__()
-        self.linear = torch.nn.Linear(input_dim, output_dim)
-
-    def forward(self, x):
-        outputs = torch.sigmoid(self.linear(x))
-        return outputs
-
-
 if __name__ == "__main__":
     # init FedML framework
     args = fedml.init()
+
+    if hasattr(args, "defense_spec"):
+        configuration = load_yaml_config(args.defense_spec)
+        for arg_key, arg_val in configuration.items():
+            setattr(args, arg_key, arg_val)
 
     log_file_path, program_prefix = MLOpsRuntimeLog.build_log_file_path(args)
 
     addLoggingLevel('TRACE', logging.CRITICAL + 5)
     logger = logging.getLogger(log_file_path)
-    logger.setLevel("TRACE")
+    logger.setLevel("INFO")
     for handler in logger.handlers:
-        handler.setLevel("TRACE") 
+        handler.setLevel("INFO") 
 
     # init device
     device = fedml.device.get_device(args)
@@ -73,9 +68,9 @@ if __name__ == "__main__":
     dataset, output_dim = load_data(args)
 
     # load model (the size of MNIST image is 28 x 28)
-    model = get_model()
+    model = fedml.model.create(args, output_dim)
 
-    server_aggregator = ServerAggregatorAFAF(model, args)
+    server_aggregator = FadoServerAggregator(model, args)
 
     # start training
     logger.trace("Starting training...")

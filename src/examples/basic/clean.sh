@@ -4,6 +4,7 @@ docker rm $(docker ps -a -q)
 rm -rf certs
 rm -rf __pycache__
 rm -rf docker
+#rm -rf data/all/partitions
 rm docker-compose.yml 2> /dev/null
 rm config/fedml* 2> /dev/null
 rm config/grpc* 2> /dev/null

@@ -143,12 +143,16 @@ def create_fedml_config(args, malicious=False):
         config['attack_args'] = {}
         config['attack_args']['attack_spec'] = args.attack_spec
     else:
+        config['defense_args'] = {}
+        config['defense_args']['defense_spec'] = args.defense_spec
         fedml_config_out = args.fedml_config_out
         if os.path.exists(fedml_config_out):
             logging.warning('Benign fedml_config already exists. Benign fedml_config will not be replaced')
             return
 
     config['train_args']['client_num_in_total'] = client_num
+    config['train_args']['client_num_per_round'] = client_num
+    config['device_args']['worker_num'] = client_num
     with open(fedml_config_out, 'w') as f:
         yaml.dump(config, f, sort_keys=False)
 
