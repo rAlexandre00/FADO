@@ -147,11 +147,13 @@ def create_fedml_config(args, malicious=False):
             return
         # maybe throw an exception, what if 'attack_spec' is not defined?
         # TODO: user has to be alerted
-        config['attack_args'] = {}
-        config['attack_args']['attack_spec'] = args.attack_spec
+        if hasattr(args, 'attack_spec'):
+            config['attack_args'] = {}
+            config['attack_args']['attack_spec'] = args.attack_spec
     else:
-        config['defense_args'] = {}
-        config['defense_args']['defense_spec'] = args.defense_spec
+        if hasattr(args, 'defense_spec'):
+            config['defense_args'] = {}
+            config['defense_args']['defense_spec'] = args.defense_spec
         fedml_config_out = args.fedml_config_out
         if os.path.exists(fedml_config_out):
             logging.warning('Benign fedml_config already exists. Benign fedml_config will not be replaced')

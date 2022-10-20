@@ -14,5 +14,8 @@ class AttackArguments:
         self.all_data_folder = args['all_data_folder']
         self.partition_data_folder = args['partition_data_folder']
         self.model_file = args['model_file']
-        self.attack_spec = args['attack_spec']
-        self.defense_spec = args['defense_spec']
+        if 'attack_spec' in args:
+            self.attack_spec = args['attack_spec']
+
+        if 'defense_spec' in args:
+            self.defense_spec = args['defense_spec']

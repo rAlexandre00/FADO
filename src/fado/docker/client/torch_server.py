@@ -57,9 +57,9 @@ if __name__ == "__main__":
 
     addLoggingLevel('TRACE', logging.CRITICAL + 5)
     logger = logging.getLogger(log_file_path)
-    logger.setLevel("INFO")
+    logger.setLevel("TRACE")
     for handler in logger.handlers:
-        handler.setLevel("INFO") 
+        handler.setLevel("TRACE") 
 
     # init device
     device = fedml.device.get_device(args)

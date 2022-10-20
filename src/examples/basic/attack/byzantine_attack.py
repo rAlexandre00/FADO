@@ -1,3 +1,4 @@
+import logging
 import random
 import fedml
 import numpy as np
@@ -5,6 +6,8 @@ import torch
 from .attack_base import ModelAttack
 from fedml.core.security.common.utils import is_weight_param
 from typing import List, Tuple, Dict, Any
+
+logger = logging.getLogger(__name__)
 
 class ByzantineAttack(ModelAttack):
     def __init__(self, args):
@@ -21,6 +24,8 @@ class ByzantineAttack(ModelAttack):
             byzantine_local_w = self._attack_random_mode(raw_client_grad)
         else:
             raise NotImplementedError("Method not implemented!")
+
+        logger.trace(byzantine_local_w)
         return byzantine_local_w
 
     def _attack_zero_mode(self, model_params):
