@@ -11,26 +11,30 @@ from fado.constants import FEDML_CONFIG_FILE_PATH
 
 import logging
 
+logger = logging.getLogger("fado")
+
 
 def prepare_orchestrate(config_path, dev=False):
     args = AttackArguments(config_path)
 
+    logger.info("Creating docker files")
     # Generate image files
     generate_image_files(args.model_file, dev)
-
     # Generate docker-compose file
     client_ranks = generate_compose(args.benign_clients, args.malicious_clients, args.docker_compose_out)
 
+    logger.info("Creating configuration files")
     # Create grpc_ipconfig file and fedml_config.yaml
     create_ipconfig(args.grpc_ipconfig_out, client_ranks, args.benign_clients)
-
     # Create fedml_config.yaml for server/benign client and for malicious client
     create_fedml_config(args)
     create_fedml_config(args, True)
 
+    logger.info("Creating TLS certificates")
     # Generate tls certificates (if defined in attacks args)
     create_certs()
 
+    logger.info("Creating partitions for server and clients")
     # Split data for each client for train and test
     split_data(args.all_data_folder, args.partition_data_folder, args.benign_clients + args.malicious_clients)
 
@@ -41,7 +45,7 @@ def generate_image_files(model_file, dev=False):
     client_path = os.path.join(docker_path, 'client')
     router_path = os.path.join(docker_path, 'router')
     if os.path.exists(docker_path):
-        logging.warning('Docker folder already exist. Images files will not be replaced')
+        logger.warning('Docker folder already exist. Images files will not be replaced')
         return
     copy_tree(CLIENT_PATH, client_path)
     copy_tree(ROUTER_PATH, router_path)
@@ -64,7 +68,7 @@ def generate_image_files(model_file, dev=False):
 def create_ipconfig(ipconfig_out, client_ranks, number_ben_clients):
     from ipaddress import IPv4Address
     if os.path.exists(ipconfig_out):
-        logging.warning('ipconfig already exists. ipconfig will not be replaced')
+        logger.warning('ipconfig already exists. ipconfig will not be replaced')
         return
     client_base_address = IPv4Address("172.10.1.0")
     with open(ipconfig_out, 'w') as f:
@@ -95,7 +99,7 @@ def generate_compose(number_ben_clients, number_mal_clients, docker_compose_out)
     # random.shuffle(client_ranks)
 
     if os.path.exists(docker_compose_out):
-        logging.warning('Compose file already exists. Compose file will not be replaced')
+        logger.warning('Compose file already exists. Compose file will not be replaced')
         return client_ranks
 
     # Load the default docker compose
@@ -143,7 +147,7 @@ def create_fedml_config(args, malicious=False):
     if malicious:
         fedml_config_out = args.fedml_config_out_malicious
         if os.path.exists(fedml_config_out):
-            logging.warning('Malicious fedml_config already exists. Malicious fedml_config will not be replaced')
+            logger.warning('Malicious fedml_config already exists. Malicious fedml_config will not be replaced')
             return
         # maybe throw an exception, what if 'attack_spec' is not defined?
         # TODO: user has to be alerted
@@ -154,7 +158,7 @@ def create_fedml_config(args, malicious=False):
         config['defense_args']['defense_spec'] = args.defense_spec
         fedml_config_out = args.fedml_config_out
         if os.path.exists(fedml_config_out):
-            logging.warning('Benign fedml_config already exists. Benign fedml_config will not be replaced')
+            logger.warning('Benign fedml_config already exists. Benign fedml_config will not be replaced')
             return
 
     config['train_args']['client_num_in_total'] = client_num
@@ -167,7 +171,7 @@ def create_fedml_config(args, malicious=False):
 def create_certs():
     certs_path = os.path.join('.', 'certs')
     if os.path.exists(certs_path):
-        logging.warning('Certs folder already exists. Certs will not be replaced')
+        logger.warning('Certs folder already exists. Certs will not be replaced')
         return
     os.makedirs(certs_path, exist_ok=True)
     generate_self_signed_certs(out_key_file=os.path.join(certs_path, 'ca-key.pem'),
