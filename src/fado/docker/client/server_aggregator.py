@@ -145,7 +145,7 @@ class FadoServerAggregator(ServerAggregator):
 
     def aggregate(self, raw_client_model_or_grad_list: List[Tuple[float, Dict]]) -> Dict:
         if FadoDefender.get_instance().is_defense_enabled():
-            return FedMLDefender.get_instance().defend_on_aggregation(
+            return FadoDefender.get_instance().defend_on_aggregation(
                 raw_client_grad_list=raw_client_model_or_grad_list,
                 base_aggregation_func=FedMLAggOperator.agg,
                 extra_auxiliary_info=self.get_model_params(),
