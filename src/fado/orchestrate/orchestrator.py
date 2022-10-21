@@ -108,7 +108,7 @@ def generate_compose(number_ben_clients, number_mal_clients, docker_compose_out)
 
     # Generate benign compose services
     base = docker_compose['services']['fedml-client-benign']
-    for client_rank in client_ranks[number_ben_clients:]:
+    for client_rank in client_ranks[:number_ben_clients]:
         client_compose = copy.deepcopy(base)
         client_compose['container_name'] += f'-{client_rank}'
         client_compose['environment'] += [f'FEDML_RANK={client_rank}']
@@ -120,7 +120,7 @@ def generate_compose(number_ben_clients, number_mal_clients, docker_compose_out)
 
     # Generate malicious compose services
     base = docker_compose['services']['fedml-client-malicious']
-    for client_rank in client_ranks[:number_ben_clients]:
+    for client_rank in client_ranks[number_ben_clients:]:
         client_compose = copy.deepcopy(base)
         client_compose['container_name'] += f'-{client_rank}'
         client_compose['environment'] += [f'FEDML_RANK={client_rank}']
