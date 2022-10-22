@@ -12,7 +12,7 @@ environment:
   - WAIT_HOSTS=172.20.1.0:8890
   - WAIT_HOST_CONNECT_TIMEOUT=360
   - WAIT_SLEEP_INTERVAL=5
-  - WAIT_LOGGER_LEVEL=info
+  - WAIT_LOGGER_LEVEL=error
 restart: on-failure
 cap_add:
   - NET_ADMIN # Authorize container to change network configurations
