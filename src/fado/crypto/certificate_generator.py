@@ -14,6 +14,23 @@ def generate_self_signed_certs(
         validity_end_in_seconds=10 * 365 * 24 * 60 * 60,
         out_key_file="private.key",
         out_cert_file="self-signed.crt"):
+    """ Creates a self_signed certificate
+
+        Parameters:
+            email_address: certificate email_address
+            common_name: certificate common name
+            country_name: certificate country name
+            locality_name: certificate locality name
+            state_or_province_name: certificate state/province name
+            organization_name: certificate organization name
+            organization_unit_name: certificate organization unit name
+            serial_number: certificate serial number
+            validity_start_in_seconds: certificate start validity in seconds
+            validity_end_in_seconds: certificate end of validity in seconds
+            out_key_file: output file for the certificate private key
+            out_cert_file: output file for certificate
+
+    """
     # can look at generated file using openssl:
     # openssl x509 -inform pem -in selfsigned.crt -noout -text
     # create a key pair
@@ -55,6 +72,24 @@ def generate_certs(
         out_cert_file="self-signed.crt",
         ca_cert_file="cert.crt",
         ca_key_file="key.key"):
+    """ Creates a self_signed certificate
+
+        Parameters:
+            email_address: certificate email_address
+            common_name: certificate common name
+            country_name: certificate country name
+            locality_name: certificate locality name
+            state_or_province_name: certificate state/province name
+            organization_name: certificate organization name
+            organization_unit_name: certificate organization unit name
+            serial_number: certificate serial number
+            validity_start_in_seconds: certificate start validity in seconds
+            validity_end_in_seconds: certificate end of validity in seconds
+            out_key_file: output file for the certificate private key
+            out_cert_file: output file for certificate
+            ca_cert_file: certificate to be used to sign the generated certificate
+            ca_key_file: key to be used to sign the generated certificate
+    """
     # can look at generated file using openssl:
     # openssl x509 -inform pem -in selfsigned.crt -noout -text
     # create a key pair

@@ -1,12 +1,13 @@
-import json
 import os
 
+import json
+import logging
 import numpy as np
 from fedml.ml.engine import ml_engine_adapter
 
 cwd = os.getcwd()
 
-import logging
+__all__ = ['load_partition_data']
 
 
 def read_data(train_data_dir, test_data_dir):
@@ -14,7 +15,7 @@ def read_data(train_data_dir, test_data_dir):
 
     assumes:
     - the data in the input directories are .json files with
-        keys 'users' and 'user_data'
+        key 'user_data'
     - the set of train set users is the same as the set of test set users
 
     Return:
@@ -66,6 +67,24 @@ def load_partition_data(
         args, batch_size, train_path=os.path.join(os.getcwd(), "data", "train"),
         test_path=os.path.join(os.getcwd(), "data", "test")
 ):
+    """Creates the parameters needed for a dataset out of a group of train and test files
+
+        Assumes:
+            the data in the input directories are .json files with pairs ('user_id','user_data')
+            the set of train set users is the same as the set of test set users
+
+        Parameters:
+            args: FedML arguments
+            batch_size (int): size of the batches for the train and test data
+            train_path (str): folder with the train data in the form of json files
+            test_path (str): folder with the test data in the form of json files
+
+        Returns:
+            Properties that form a dataset
+            (client_num, train_data_num, test_data_num, train_data_global, test_data_global, train_data_local_num_dict,
+            train_data_local_dict, test_data_local_dict, class_num)
+
+    """
     train_data, test_data = read_data(train_path, test_path)
 
     train_data_num = 0
@@ -76,7 +95,7 @@ def load_partition_data(
     train_data_global = list()
     test_data_global = list()
     client_idx = 0
-    logging.info("loading data...")
+    logging.info("Loading data...")
     for user in train_data.keys():
         if train_data[user]:
             user_train_data_num = len(train_data[user]["x"])
@@ -95,7 +114,7 @@ def load_partition_data(
             train_data_global += train_batch
             test_data_global += test_batch
         client_idx += 1
-    logging.info("finished the loading data")
+    logging.info("Finished the loading data")
     client_num = client_idx
     class_num = 10
 

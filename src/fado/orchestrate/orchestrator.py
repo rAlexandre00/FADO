@@ -15,8 +15,22 @@ import random
 
 logger = logging.getLogger("fado")
 
+__all__ = ['prepare_orchestrate']
+
 
 def prepare_orchestrate(config_path, dev=False):
+    """Creates the necessary files so that 'docker compose up' is possible
+        1 - Generate image files
+        2 - Generate docker-compose file
+        3 - Create grpc_ipconfig file and fedml_config.yaml
+        4 - Generate tls certificates
+        5 - Split data for each client for train and test
+
+        Parameters:
+            config_path(str): Path for the yaml configuration file
+            dev: Identifies if development mode is enabled
+
+    """
     config_changed = file_changed(config_path, '.config_hash')
     if not config_changed:
         logger.warning('Attack config has not changed. Data and configuration files will not change')
@@ -32,7 +46,8 @@ def prepare_orchestrate(config_path, dev=False):
 
     if config_changed:
         # Generate docker-compose file
-        benign_ranks, malicious_ranks = generate_compose(args.benign_clients, args.malicious_clients, args.docker_compose_out)
+        benign_ranks, malicious_ranks = generate_compose(args.benign_clients, args.malicious_clients,
+                                                         args.docker_compose_out)
 
         logger.info("Creating configuration files")
         # Create grpc_ipconfig file and fedml_config.yaml
@@ -51,6 +66,13 @@ def prepare_orchestrate(config_path, dev=False):
 
 
 def generate_image_files(model_file, dev=False):
+    """Creates the docker folder that has fedml and router docker files
+
+        Parameters:
+            model_file(str): Path for a path that defines the model to train
+            dev: Identifies if development mode is enabled
+    :return:
+    """
     from fado.constants import CLIENT_PATH, ROUTER_PATH, MAL_CLIENT_PATH
     docker_path = os.path.join('.', 'docker')
     client_path = os.path.join(docker_path, 'client')
@@ -67,14 +89,20 @@ def generate_image_files(model_file, dev=False):
         root_folder = str(pathlib.Path(__file__).parents[3])
         copy_tree(fado_folder, os.path.join(fado_path, 'src', 'fado'))
         shutil.copy2(os.path.join(root_folder, 'setup.py'),
-                        os.path.join(fado_path, 'setup.py'))
+                     os.path.join(fado_path, 'setup.py'))
         shutil.copy2(os.path.join(os.path.dirname(fado.docker.dev.__file__), 'Dockerfile'),
-                        os.path.join(client_path, 'Dockerfile'))
+                     os.path.join(client_path, 'Dockerfile'))
         shutil.copy2(os.path.join(os.path.dirname(fado.docker.dev.__file__), 'requirements.txt'),
-                        os.path.join(client_path, 'requirements.txt'))
+                     os.path.join(client_path, 'requirements.txt'))
 
 
 def create_ipconfig(ipconfig_out, number_ben_clients):
+    """ Creates ipconfig file that tells FedML the IP of each node
+
+        Parameters:
+            ipconfig_out(str): Path for writing the ipconfig file
+            number_ben_clients: Number of clients
+    """
     from ipaddress import IPv4Address
     client_base_address = IPv4Address("172.10.1.0")
     with open(ipconfig_out, 'w') as f:
@@ -94,7 +122,7 @@ def generate_compose(number_ben_clients, number_mal_clients, docker_compose_out)
             docker_compose_out (str): Path of the output for the docker compose
 
         Returns:
-            docker_compose (dict): Specifies the docker compose yaml
+            Two lists of integers representing the benign_ranks and malicious_ranks
     """
     import random
     import copy
@@ -143,6 +171,13 @@ def generate_compose(number_ben_clients, number_mal_clients, docker_compose_out)
 
 
 def create_fedml_config(args, malicious=False):
+    """ Generates fedml_config files for FedML nodes
+
+    Parameters:
+        args: Arguments of FADO
+        malicious: if this fedml_config is malicious
+
+    """
     file_path = os.path.abspath(os.path.realpath(FEDML_CONFIG_FILE_PATH))
 
     # Load base docker compose file
@@ -171,6 +206,8 @@ def create_fedml_config(args, malicious=False):
 
 
 def create_certs():
+    """Generates ca_certs and node_certs that are signed with the ca key
+    """
     certs_path = os.path.join('.', 'certs')
     os.makedirs(certs_path, exist_ok=True)
     generate_self_signed_certs(out_key_file=os.path.join(certs_path, 'ca-key.pem'),
@@ -183,15 +220,12 @@ def create_certs():
 
 def load_base_compose():
     """
-    Reads three files in order to create a default docker-compose
+    Reads four files in order to create a default docker-compose
     The files are:
     - A base file which has the outer structure of the compose file and specifies the path of the other three files
     - A server file that specifies the part of the server service
-    - A server file that specifies the part of each of the benign client's services
-    - A server file that specifies the part of each of the malicious client's services
-
-        Parameters:
-            base_file_path (str): Specifies the path of the base file
+    - A benign client file that specifies the part of each of the benign client's services
+    - A malicious client file that specifies the part of each of the malicious client's services
 
         Returns:
             docker_compose (dict): Specifies the docker compose default yaml

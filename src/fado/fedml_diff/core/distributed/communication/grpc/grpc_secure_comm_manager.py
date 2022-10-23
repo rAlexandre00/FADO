@@ -28,6 +28,9 @@ import csv
 
 
 class GRPCSecureCommManager(BaseCommunicationManager):
+    """ This class was created to support the monkey patch meant to add TLS gRPC support to FedML
+        The only difference from the original is that creates secure channels instead of insecure
+    """
     def __init__(
         self,
         host,
