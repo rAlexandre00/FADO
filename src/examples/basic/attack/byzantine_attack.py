@@ -25,7 +25,6 @@ class ByzantineAttack(ModelAttack):
         else:
             raise NotImplementedError("Method not implemented!")
 
-        logger.trace(byzantine_local_w)
         return byzantine_local_w
 
     def _attack_zero_mode(self, model_params):

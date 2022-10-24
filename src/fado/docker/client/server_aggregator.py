@@ -99,9 +99,9 @@ class FadoServerAggregator(ServerAggregator):
         test_acc = sum(test_tot_corrects) / sum(test_num_samples)
         test_loss = sum(test_losses) / sum(test_num_samples)
         
-        logging.trace(f"Round: {args.round_idx}")
-        logging.trace(f"\tTest/Acc: {test_acc}")
-        logging.trace(f"\tTest/Loss: {test_loss}")
+        logger.trace(f"Round: {args.round_idx}")
+        logger.trace(f"\tTest/Acc: {test_acc}")
+        logger.trace(f"\tTest/Loss: {test_loss}")
 
     def test_all(self, train_data_local_dict, test_data_local_dict, device, args) -> bool:
         train_num_samples = []
@@ -125,9 +125,9 @@ class FadoServerAggregator(ServerAggregator):
         train_acc = sum(train_tot_corrects) / sum(train_num_samples)
         train_loss = sum(train_losses) / sum(train_num_samples)
 
-        logging.trace(f"Round: {args.round_idx}")
-        logging.trace(f"\tTrain/Acc: {train_acc}")
-        logging.trace(f"\tTrain/Loss: {train_loss}")
+        logger.trace(f"Round: {args.round_idx}")
+        logger.trace(f"\tTrain/Acc: {train_acc}")
+        logger.trace(f"\tTrain/Loss: {train_loss}")
 
         return True
 
@@ -141,15 +141,17 @@ class FadoServerAggregator(ServerAggregator):
                     raw_client_grad_list=raw_client_model_or_grad_list,
                     extra_auxiliary_info=self.get_model_params(),
                 )
+        
         return raw_client_model_or_grad_list
 
     def aggregate(self, raw_client_model_or_grad_list: List[Tuple[float, Dict]]) -> Dict:
-        if FadoDefender.get_instance().is_defense_enabled():
+        if FadoDefender.get_instance().is_defense_on_aggregation():
             return FadoDefender.get_instance().defend_on_aggregation(
                 raw_client_grad_list=raw_client_model_or_grad_list,
                 base_aggregation_func=FedMLAggOperator.agg,
                 extra_auxiliary_info=self.get_model_params(),
             )
+        logger.trace("aggregating as usual...")
         return FedMLAggOperator.agg(self.args, raw_client_model_or_grad_list)
 
 

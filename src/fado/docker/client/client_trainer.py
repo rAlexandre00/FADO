@@ -24,7 +24,7 @@ class FadoClientTrainer(ClientTrainer):
 
     def on_after_local_training(self, train_data, device, args):
         if FadoAttacker.get_instance().is_model_attack():
-            logger.trace("----- Attacking Model ----")
+            #logger.trace("----- Attacking Model ----")
             self.set_model_params(FadoAttacker.get_instance().attack_model(self.get_model_params()))
 
         if FedMLDifferentialPrivacy.get_instance().is_local_dp_enabled():

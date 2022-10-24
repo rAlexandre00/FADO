@@ -9,7 +9,7 @@ from fedml.core.common.ml_engine_backend import MLEngineBackend
 from fedml.core.security.defense.cclip_defense import CClipDefense
 from fedml.core.security.defense.foolsgold_defense import FoolsGoldDefense
 from fedml.core.security.defense.geometric_median_defense import GeometricMedianDefense
-from fedml.core.security.defense.krum_defense import KrumDefense
+from .krum import KrumDefense
 from fedml.core.security.defense.robust_learning_rate_defense import RobustLearningRateDefense
 from fedml.core.security.defense.slsgd_defense import SLSGDDefense
 from fedml.core.security.defense.weak_dp_defense import WeakDPDefense
