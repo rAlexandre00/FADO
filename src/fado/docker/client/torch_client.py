@@ -1,3 +1,5 @@
+import os
+import sys
 from importlib import import_module
 import torch
 import logging
@@ -5,11 +7,14 @@ import fedml
 from fedml import FedMLRunner
 from fedml.core.mlops.mlops_runtime_log import MLOpsRuntimeLog
 from fado.data.data_loader import load_partition_data
+from fado.logging.prints import HiddenPrints
 
 from fado.security.utils import load_defense_class, load_attack_class
 
 from client_trainer import FadoClientTrainer
 from utils import addLoggingLevel, load_yaml_config
+
+logger = logging.getLogger("fado")
 
 
 def load_data(args):
@@ -52,9 +57,22 @@ def load_data(args):
     return dataset, class_num
 
 
+def disable_prints():
+    global _original_stdout
+    _original_stdout = sys.stdout
+    sys.stdout = open(os.devnull, 'w')
+
+
+def enable_prints():
+    global _original_stdout
+    sys.stdout.close()
+    sys.stdout = _original_stdout
+
+
 if __name__ == "__main__":
     # init FedML framework
-    args = fedml.init()
+    with HiddenPrints():
+        args = fedml.init()
 
     """ 
     If the argument 'attack_spec' is specified, load its contents
@@ -69,16 +87,6 @@ if __name__ == "__main__":
         else:
             args.attack_spec = load_attack_class(args)
 
-    """
-    Add new logging level to filter out FedML logs
-    """
-    log_file_path, program_prefix = MLOpsRuntimeLog.build_log_file_path(args)
-    addLoggingLevel('TRACE', logging.CRITICAL + 5)
-    logger = logging.getLogger(log_file_path)
-    logger.setLevel("TRACE")
-    for handler in logger.handlers:
-        handler.setLevel("TRACE") 
-
     # init device
     device = fedml.device.get_device(args)
 
@@ -91,6 +99,6 @@ if __name__ == "__main__":
     client_trainer = FadoClientTrainer(model, args)
 
     # start training
-    logger.trace("Starting training...")
+    logger.info("Starting training...")
     fedml_runner = FedMLRunner(args, device, dataset, model, client_trainer=client_trainer)
     fedml_runner.run()

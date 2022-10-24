@@ -2,7 +2,7 @@ import logging
 
 import numpy as np
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("fado")
 
 
 # class FedMLAggregator(object):

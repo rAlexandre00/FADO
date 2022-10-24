@@ -8,7 +8,7 @@ import logging
 
 from fado.security.attack import FadoAttacker
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("fado")
 
 class FadoClientTrainer(ClientTrainer):
 
