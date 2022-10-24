@@ -66,14 +66,10 @@ class KrumDefense(BaseDefenseMethod):
             logger.trace(f"{idx} -> {vec}")
 
         krum_scores = self._compute_krum_score(vec_local_w)
-        for idx, vec in enumerate(krum_scores):
-            logger.trace(f"{idx} -> {vec}")
         score_index = torch.argsort(
             torch.Tensor(krum_scores)
         ).tolist()  # indices; ascending
-        logger.trace(score_index)
         score_index = score_index[0 : self.krum_param_m]
-        logger.trace(score_index)
         return [raw_client_grad_list[i] for i in score_index]
 
     def _compute_krum_score(self, vec_grad_list):
