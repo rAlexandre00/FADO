@@ -95,7 +95,6 @@ def load_partition_data(
     train_data_global = list()
     test_data_global = list()
     client_idx = 0
-    logging.info("Loading data...")
     for user in train_data.keys():
         if train_data[user]:
             user_train_data_num = len(train_data[user]["x"])
@@ -114,7 +113,6 @@ def load_partition_data(
             train_data_global += train_batch
             test_data_global += test_batch
         client_idx += 1
-    logging.info("Finished the loading data")
     client_num = client_idx
     class_num = 10
 

@@ -14,7 +14,8 @@ from fado.security.utils import load_defense_class, load_attack_class
 from client_trainer import FadoClientTrainer
 from utils import addLoggingLevel, load_yaml_config
 
-_original_stdout = None
+logger = logging.getLogger("fado")
+
 
 def load_data(args):
     fedml.logging.info("load_data. dataset_name = %s" % args.dataset)
@@ -86,17 +87,7 @@ if __name__ == "__main__":
         else:
             args.attack_spec = load_attack_class(args)
 
-    """
-    Add new logging level to filter out FedML logs
-    """
-    log_file_path, program_prefix = MLOpsRuntimeLog.build_log_file_path(args)
-    addLoggingLevel('TRACE', logging.CRITICAL + 5)
-    logger = logging.getLogger(log_file_path)
-    logger.setLevel("TRACE")
-    for handler in logger.handlers:
-        handler.setLevel("TRACE")
-
-        # init device
+    # init device
     device = fedml.device.get_device(args)
 
     # load data
@@ -108,6 +99,6 @@ if __name__ == "__main__":
     client_trainer = FadoClientTrainer(model, args)
 
     # start training
-    logger.trace("Starting training...")
+    logger.info("Starting training...")
     fedml_runner = FedMLRunner(args, device, dataset, model, client_trainer=client_trainer)
     fedml_runner.run()

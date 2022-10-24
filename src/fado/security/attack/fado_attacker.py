@@ -3,7 +3,8 @@ from fedml.core.common.ml_engine_backend import MLEngineBackend
 from typing import List, Tuple, Dict, Any
 from importlib import import_module
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("fado")
+
 
 class FadoAttacker:
     _attacker_instance = None
@@ -21,17 +22,17 @@ class FadoAttacker:
 
     def init(self, args):
         if hasattr(args, "attack_spec") and args.attack_spec:
-            
-            if args.rank == 0: # do not initialize attacker for server
+
+            if args.rank == 0:  # do not initialize attacker for server
                 return
 
-            if isinstance(args.attack_spec , str):
+            if isinstance(args.attack_spec, str):
                 attack_pkg, attack_module, attack_class = args.attacker_class.split('.')
                 self.attacker = getattr(import_module(f'{attack_pkg}.{attack_module}'), f'{attack_class}')(args)
             else:
                 self.attacker = args.attack_spec(args)
 
-            logger.trace(f"Initializing attacker! {self.attacker}")
+            logger.info(f"Initializing attacker! {self.attacker}")
 
     def is_model_attack(self):
         return self.attacker.is_model_attack() if self.attacker else False
@@ -46,7 +47,7 @@ class FadoAttacker:
         if self.attacker is None:
             raise Exception("attacker is not initialized!")
         return self.attacker.attack_model(raw_client_grad_list, extra_auxiliary_info)
-    
+
     def attack_network(self):
         if self.attacker is None:
             raise Exception("attacker is not initialized!")

@@ -7,7 +7,7 @@ from fado.security.attack import ModelAttack
 from fedml.core.security.common.utils import is_weight_param
 from typing import List, Tuple, Dict, Any
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("fado")
 
 class ByzantineAttack(ModelAttack):
     def __init__(self, args):

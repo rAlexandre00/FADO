@@ -12,7 +12,7 @@ https://arxiv.org/pdf/1703.02757.pdf
 https://infoscience.epfl.ch/record/287261
 """
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("fado")
 
 class KrumDefense(BaseDefenseMethod):
     def __init__(self, config):

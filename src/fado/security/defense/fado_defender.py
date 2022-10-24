@@ -32,7 +32,8 @@ from fedml.core.security.constants import (
     DEFENSE_THREESIGMA_GEOMEDIAN,
 )
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("fado")
+
 
 class FadoDefender:
     _defender_instance = None
@@ -53,25 +54,25 @@ class FadoDefender:
             self.args = args
             self.defender = None
 
-            if args.rank != 0: # do not initialize defense for client
+            if args.rank != 0:  # do not initialize defense for client
                 return
 
-            if isinstance(args.defense_spec , str):
+            if isinstance(args.defense_spec, str):
                 defense_pkg, defense_module, defense_class = args.defense_class.split('.')
                 self.defender = getattr(import_module(f'{defense_pkg}.{defense_module}'), f'{defense_class}')(args)
             else:
                 self.defender = args.defense_spec(args)
 
-            logger.trace(f"Initializing defender! {self.defender}")
+            logger.info(f"Initializing defender! {self.defender}")
 
     def is_defense_enabled(self):
         return self.defender is not None
 
     def defend(
-        self,
-        raw_client_grad_list: List[Tuple[float, Dict]],
-        base_aggregation_func: Callable = None,
-        extra_auxiliary_info: Any = None,
+            self,
+            raw_client_grad_list: List[Tuple[float, Dict]],
+            base_aggregation_func: Callable = None,
+            extra_auxiliary_info: Any = None,
     ):
 
         raise Exception("Why was this executed?!")
@@ -85,9 +86,9 @@ class FadoDefender:
         """
 
     def defend_before_aggregation(
-        self,
-        raw_client_grad_list: List[Tuple[float, Dict]],
-        extra_auxiliary_info: Any = None,
+            self,
+            raw_client_grad_list: List[Tuple[float, Dict]],
+            extra_auxiliary_info: Any = None,
     ):
         if self.defender is None:
             raise Exception("defender is not initialized!")
@@ -99,10 +100,10 @@ class FadoDefender:
         return raw_client_grad_list
 
     def defend_on_aggregation(
-        self,
-        raw_client_grad_list: List[Tuple[float, Dict]],
-        base_aggregation_func: Callable = None,
-        extra_auxiliary_info: Any = None,
+            self,
+            raw_client_grad_list: List[Tuple[float, Dict]],
+            base_aggregation_func: Callable = None,
+            extra_auxiliary_info: Any = None,
     ):
         if self.defender is None:
             raise Exception("defender is not initialized!")

@@ -12,6 +12,8 @@ from fado.data.data_loader import load_partition_data
 
 from torch.utils.tensorboard import SummaryWriter
 
+logger = logging.getLogger("fado")
+
 
 def load_data(args):
     (
@@ -66,16 +68,6 @@ if __name__ == "__main__":
         else:
             args.defense_spec = load_defense_class(args)
 
-    """
-    Add new logging level to filter out FedML logs
-    """
-    log_file_path, program_prefix = MLOpsRuntimeLog.build_log_file_path(args)
-    addLoggingLevel('TRACE', logging.CRITICAL + 5)
-    logger = logging.getLogger(log_file_path)
-    logger.setLevel("TRACE")
-    for handler in logger.handlers:
-        handler.setLevel("TRACE")
-
     # init device
     device = fedml.device.get_device(args)
 
@@ -89,6 +81,6 @@ if __name__ == "__main__":
     server_aggregator = FadoServerAggregator(model, writer, args)
 
     # start training
-    logger.trace("Starting training...")
+    logger.info("Starting training...")
     fedml_runner = FedMLRunner(args, device, dataset, model, server_aggregator=server_aggregator)
     fedml_runner.run()

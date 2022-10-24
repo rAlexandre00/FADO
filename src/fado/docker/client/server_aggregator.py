@@ -10,7 +10,8 @@ from fedml.ml.aggregator.agg_operator import FedMLAggOperator
 from torch import nn
 from torch.utils.tensorboard import SummaryWriter
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("fado")
+
 
 class FadoServerAggregator(ServerAggregator):
     def __init__(self, model, writer: SummaryWriter, args):
@@ -115,9 +116,9 @@ class FadoServerAggregator(ServerAggregator):
         # test on test dataset
         test_acc = sum(test_tot_corrects) / sum(test_num_samples)
         test_loss = sum(test_losses) / sum(test_num_samples)
-        
-        logger.trace(f'test_acc = {test_acc} , round = {args.round_idx}')
-        logger.trace(f'test_loss = {test_loss} , round = {args.round_idx}')
+
+        logger.info(f'test_acc = {test_acc} , round = {args.round_idx}')
+        logger.info(f'test_loss = {test_loss} , round = {args.round_idx}')
         # Write to tensorboard
         self.tensorboard_writer.add_scalar('test_acc', test_acc, args.round_idx)
         self.tensorboard_writer.add_scalar('test_loss', test_loss, args.round_idx)
@@ -148,15 +149,14 @@ class FadoServerAggregator(ServerAggregator):
             train_tot_corrects.append(copy.deepcopy(train_tot_correct))
             train_num_samples.append(copy.deepcopy(train_num_sample))
             train_losses.append(copy.deepcopy(train_loss))
-            # logging.info("testing client_idx = {}".format(client_idx))
-            # logger.trace("testing client_idx = {}".format(client_idx))
+            # logger.info("testing client_idx = {}".format(client_idx))
 
         # test on training dataset
         train_acc = sum(train_tot_corrects) / sum(train_num_samples)
         train_loss = sum(train_losses) / sum(train_num_samples)
 
-        logger.trace(f'train_acc = {train_acc} , round = {args.round_idx}')
-        logger.trace(f'train_loss = {train_loss} , round = {args.round_idx}')
+        logger.info(f'train_acc = {train_acc} , round = {args.round_idx}')
+        logger.info(f'train_loss = {train_loss} , round = {args.round_idx}')
         # Write to tensorboard
         self.tensorboard_writer.add_scalar('train_acc', train_acc, args.round_idx)
         self.tensorboard_writer.add_scalar('train_loss', train_loss, args.round_idx)
@@ -166,7 +166,7 @@ class FadoServerAggregator(ServerAggregator):
     # OVERRIDING THE FOLLOWING METHODS
 
     def on_before_aggregation(
-        self, raw_client_model_or_grad_list: List[Tuple[float, Dict]]
+            self, raw_client_model_or_grad_list: List[Tuple[float, Dict]]
     ) -> List[Tuple[float, Dict]]:
         """Method called before the aggregation process
 
@@ -183,7 +183,7 @@ class FadoServerAggregator(ServerAggregator):
                 raw_client_grad_list=raw_client_model_or_grad_list,
                 extra_auxiliary_info=self.get_model_params(),
             )
-        
+
         return raw_client_model_or_grad_list
 
     def aggregate(self, raw_client_model_or_grad_list: List[Tuple[float, Dict]]) -> Dict:
@@ -209,7 +209,6 @@ class FadoServerAggregator(ServerAggregator):
         """
         return FedMLAggOperator.agg(self.args, raw_client_model_or_grad_list)
 
-
     def on_after_aggregation(self, aggregated_model_or_grad: Dict) -> Dict:
         """Method called after the aggregation
 
@@ -232,4 +231,3 @@ class FadoServerAggregator(ServerAggregator):
         if FadoDefender.get_instance().is_defense_enabled():
             aggregated_model_or_grad = FadoDefender.get_instance().defend_after_aggregation(aggregated_model_or_grad)
         return aggregated_model_or_grad
-        
