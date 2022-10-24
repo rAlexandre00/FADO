@@ -1,3 +1,5 @@
+import random
+
 import yaml
 
 
@@ -5,17 +7,27 @@ class AttackArguments:
     def __init__(self, config_path):
         with open(config_path, 'r') as file:
             args = yaml.load(file, Loader=yaml.FullLoader)
-        self.malicious_clients = args['malicious_clients']
-        self.benign_clients = args['benign_clients']
-        self.grpc_ipconfig_out = args['grpc_ipconfig_out']
-        self.fedml_config_out = args['fedml_config_out']
-        self.fedml_config_out_malicious = args['fedml_config_out_malicious']
-        self.docker_compose_out = args['docker_compose_out']
-        self.all_data_folder = args['all_data_folder']
-        self.partition_data_folder = args['partition_data_folder']
-        self.model_file = args['model_file']
-        if 'attack_spec' in args:
-            self.attack_spec = args['attack_spec']
 
-        if 'defense_spec' in args:
-            self.defense_spec = args['defense_spec']
+        self._set_arguments_(args)
+        self._process_arguments_()
+
+    def _process_arguments_(self):
+        if 'random_seed' in self:
+            random.seed(self.random_seed)
+
+    def _set_arguments_(self, key_pairs):
+        self.malicious_clients = key_pairs['malicious_clients']
+        self.benign_clients = key_pairs['benign_clients']
+        self.grpc_ipconfig_out = key_pairs['grpc_ipconfig_out']
+        self.fedml_config_out = key_pairs['fedml_config_out']
+        self.fedml_config_out_malicious = key_pairs['fedml_config_out_malicious']
+        self.docker_compose_out = key_pairs['docker_compose_out']
+        self.all_data_folder = key_pairs['all_data_folder']
+        self.partition_data_folder = key_pairs['partition_data_folder']
+        self.model_file = key_pairs['model_file']
+        self.attack_spec = key_pairs['attack_spec']
+        self.defense_spec = key_pairs['defense_spec']
+        self.random_seed = key_pairs['random_seed']
+
+    def __contains__(self, key):
+        return hasattr(self, key)
