@@ -1,4 +1,5 @@
 from fado.docker.client.server_aggregator import FadoServerAggregator
+from fado.logging.prints import HiddenPrints
 from fado.security.utils import load_defense_class
 import fedml
 import torch
@@ -49,7 +50,8 @@ def load_data(args):
 
 if __name__ == "__main__":
     # init FedML framework
-    args = fedml.init()
+    with HiddenPrints():
+        args = fedml.init()
 
     """ 
     If the argument 'defense_spec' is specified, load its contents
@@ -72,7 +74,7 @@ if __name__ == "__main__":
     logger = logging.getLogger(log_file_path)
     logger.setLevel("TRACE")
     for handler in logger.handlers:
-        handler.setLevel("TRACE") 
+        handler.setLevel("TRACE")
 
     # init device
     device = fedml.device.get_device(args)
