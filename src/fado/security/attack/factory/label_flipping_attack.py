@@ -8,7 +8,7 @@ from fedml.core.security.common.utils import (
     log_client_data_statistics,
 )
 
-from .attack_base import DataAttack
+from fado.security.attack import DataAttack
 
 """
 ref: Tolpegin, Vale, Truex,  "Data Poisoning Attacks Against Federated Learning Systems."  (2021).

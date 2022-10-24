@@ -3,7 +3,7 @@ import random
 import fedml
 import numpy as np
 import torch
-from .attack_base import ModelAttack
+from fado.security.attack import ModelAttack
 from fedml.core.security.common.utils import is_weight_param
 from typing import List, Tuple, Dict, Any
 

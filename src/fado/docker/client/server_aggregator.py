@@ -116,6 +116,9 @@ class FadoServerAggregator(ServerAggregator):
         test_acc = sum(test_tot_corrects) / sum(test_num_samples)
         test_loss = sum(test_losses) / sum(test_num_samples)
         
+        logger.trace(f'test_acc = {test_acc} , round = {args.round_idx}')
+        logger.trace(f'test_loss = {test_loss} , round = {args.round_idx}')
+        # Write to tensorboard
         self.tensorboard_writer.add_scalar('test_acc', test_acc, args.round_idx)
         self.tensorboard_writer.add_scalar('test_loss', test_loss, args.round_idx)
 
@@ -152,6 +155,8 @@ class FadoServerAggregator(ServerAggregator):
         train_acc = sum(train_tot_corrects) / sum(train_num_samples)
         train_loss = sum(train_losses) / sum(train_num_samples)
 
+        logger.trace(f'train_acc = {train_acc} , round = {args.round_idx}')
+        logger.trace(f'train_loss = {train_loss} , round = {args.round_idx}')
         # Write to tensorboard
         self.tensorboard_writer.add_scalar('train_acc', train_acc, args.round_idx)
         self.tensorboard_writer.add_scalar('train_loss', train_loss, args.round_idx)
@@ -174,10 +179,10 @@ class FadoServerAggregator(ServerAggregator):
             List[Tuple[float, Dict]]: Clients gradients after being processed (if applicable)
         """
         if FadoDefender.get_instance().is_defense_enabled():
-                raw_client_model_or_grad_list = FadoDefender.get_instance().defend_before_aggregation(
-                    raw_client_grad_list=raw_client_model_or_grad_list,
-                    extra_auxiliary_info=self.get_model_params(),
-                )
+            raw_client_model_or_grad_list = FadoDefender.get_instance().defend_before_aggregation(
+                raw_client_grad_list=raw_client_model_or_grad_list,
+                extra_auxiliary_info=self.get_model_params(),
+            )
         
         return raw_client_model_or_grad_list
 
@@ -193,12 +198,15 @@ class FadoServerAggregator(ServerAggregator):
         Returns:
             Dict: Aggregated model
         """
-        if FadoDefender.get_instance().is_defense_on_aggregation():
+
+        """
+        if FadoDefender.get_instance().is_defense_enabled():
             return FadoDefender.get_instance().defend_on_aggregation(
                 raw_client_grad_list=raw_client_model_or_grad_list,
                 base_aggregation_func=FedMLAggOperator.agg,
                 extra_auxiliary_info=self.get_model_params(),
             )
+        """
         return FedMLAggOperator.agg(self.args, raw_client_model_or_grad_list)
 
 

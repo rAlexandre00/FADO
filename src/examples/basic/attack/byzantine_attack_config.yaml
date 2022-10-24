@@ -1,3 +1,0 @@
-attacker_class: "attack.byzantine_attack.ByzantineAttack"
-# extra args
-attack_mode: zero # random or zero

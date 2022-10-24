@@ -25,22 +25,13 @@ class FadoAttacker:
             if args.rank == 0: # do not initialize attacker for server
                 return
 
-            # We might need to do some verifications
-            attack_pkg, attack_module, attack_class = args.attacker_class.split('.')
-            self.attacker = getattr(import_module(f'{attack_pkg}.{attack_module}'), f'{attack_class}')(args)
-            logger.trace(f"Initializing attacker! {self.attacker}")
+            if isinstance(args.attack_spec , str):
+                attack_pkg, attack_module, attack_class = args.attacker_class.split('.')
+                self.attacker = getattr(import_module(f'{attack_pkg}.{attack_module}'), f'{attack_class}')(args)
+            else:
+                self.attacker = args.attack_spec(args)
 
-        if self.attacker:
-            if hasattr(args, MLEngineBackend.ml_engine_args_flag) and args.ml_engine in [
-                MLEngineBackend.ml_engine_backend_tf,
-                MLEngineBackend.ml_engine_backend_jax,
-                MLEngineBackend.ml_engine_backend_mxnet,
-            ]:
-                logging.info(
-                    "FedMLAttacker is not supported for the machine learning engine: %s. "
-                    "We will support more engines in the future iteration."
-                    % args.ml_engine
-                )
+            logger.trace(f"Initializing attacker! {self.attacker}")
 
     def is_model_attack(self):
         return self.attacker.is_model_attack() if self.attacker else False

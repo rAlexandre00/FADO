@@ -30,7 +30,7 @@ class KrumDefense(BaseDefenseMethod):
         base_aggregation_func: Callable = None,
         extra_auxiliary_info: Any = None,
     ) -> Dict:
-        pass
+        return self.defend_before_aggregation(raw_client_grad_list, extra_auxiliary_info)
 
     def defend_before_aggregation(
         self,
@@ -43,19 +43,6 @@ class KrumDefense(BaseDefenseMethod):
             raise ValueError(
                 "byzantine_client_num conflicts with requirements in Krum: 2 * byzantine_client_num + 2 < client number - krum_param_m"
             )
-
-        """
-        vec_local_w = [
-            utils.vectorize_weight(raw_client_grad_list[i][1])
-            for i in range(0, num_client)
-        ]
-        krum_scores = self._compute_krum_score(vec_local_w)
-        score_index = torch.argsort(
-            torch.Tensor(krum_scores)
-        ).tolist()  # indices; ascending
-        score_index = score_index[0 : self.krum_param_m]
-        return [raw_client_grad_list[i] for i in score_index]
-        """
 
         vec_local_w = [
             utils.vectorize_weight(raw_client_grad_list[i][1])

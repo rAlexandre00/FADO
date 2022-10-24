@@ -5,7 +5,7 @@ import numpy as np
 import torch
 from torch.utils.data import TensorDataset, DataLoader
 
-from .attack_base import ModelAttack
+from fado.security.attack import ModelAttack
 
 """
 ref: Baruch, Gilad, Moran Baruch, and Yoav Goldberg. 

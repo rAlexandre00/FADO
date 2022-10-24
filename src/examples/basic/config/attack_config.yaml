@@ -1,4 +1,4 @@
-malicious_clients: 5
+malicious_clients: 0
 benign_clients: 15
 
 grpc_ipconfig_out: config/grpc_ipconfig.csv
@@ -10,8 +10,5 @@ all_data_folder: data/all
 partition_data_folder: data/partitions
 
 model_file: get_model.py
-
-attack_spec: "attack/byzantine_attack_config.yaml"
-defense_spec: "defense/base_defense_config.yaml"
 
 random_seed: 0

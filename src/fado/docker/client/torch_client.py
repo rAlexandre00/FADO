@@ -1,9 +1,12 @@
+from importlib import import_module
 import torch
 import logging
 import fedml
 from fedml import FedMLRunner
 from fedml.core.mlops.mlops_runtime_log import MLOpsRuntimeLog
 from fado.data.data_loader import load_partition_data
+
+from fado.security.utils import load_defense_class, load_attack_class
 
 from client_trainer import FadoClientTrainer
 from utils import addLoggingLevel, load_yaml_config
@@ -58,9 +61,13 @@ if __name__ == "__main__":
     to the main arguments scope
     """
     if hasattr(args, "attack_spec"):
-        configuration = load_yaml_config(args.attack_spec)
-        for arg_key, arg_val in configuration.items():
-            setattr(args, arg_key, arg_val)
+
+        if '.yaml' in args.attack_spec:
+            configuration = load_yaml_config(args.attack_spec)
+            for arg_key, arg_val in configuration.items():
+                setattr(args, arg_key, arg_val)
+        else:
+            args.attack_spec = load_attack_class(args)
 
     """
     Add new logging level to filter out FedML logs
