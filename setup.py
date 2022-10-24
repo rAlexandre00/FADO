@@ -18,6 +18,8 @@ setup(
     package_dir={'': 'src'},
     url='https://github.com/rAlexandre00/FADO',
     keywords='Federated Attack and Defense Orchestrator',
-    install_requires=requirements
-
+    install_requires=requirements,
+    package_data={
+        "": ["*.yaml"]
+    }
 )

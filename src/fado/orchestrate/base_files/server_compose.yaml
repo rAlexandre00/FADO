@@ -4,10 +4,10 @@ build: ./docker/client
 volumes:
   - './certs/:/app/certs/'
   - './config/:/app/config/'
-  - './attack/:/app/attack/'
-  - './defense/:/app/defense/'
+  - './attack/:/app/attack/:rw'
+  - './defense/:/app/defense/:rw'
   - './data/all:/app/data'
-  - './runs/:/app/runs'
+  - './runs/:/app/runs:rw'
 cap_add:
   - NET_ADMIN # Authorize container to change network configurations
 command: >-

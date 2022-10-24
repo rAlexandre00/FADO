@@ -1,0 +1,6 @@
+ATTACK_TYPE_DATA = 'data'
+ATTACK_TYPE_MODEL = 'model'
+ATTACK_TYPE_NETWORK = 'network'
+
+ATTACK_BYZANTINE = 'byzantine'
+DEFENSE_KRUM = 'krum'

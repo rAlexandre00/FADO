@@ -36,8 +36,10 @@ class AttackArguments:
         self.all_data_folder = key_pairs['all_data_folder']
         self.partition_data_folder = key_pairs['partition_data_folder']
         self.model_file = key_pairs['model_file']
-        self.attack_spec = key_pairs['attack_spec']
-        self.defense_spec = key_pairs['defense_spec']
+        if 'attack_spec' in key_pairs:
+            self.attack_spec = key_pairs['attack_spec']
+        if 'defense_spec' in key_pairs:
+            self.defense_spec = key_pairs['defense_spec']
         self.random_seed = key_pairs['random_seed']
 
     def __contains__(self, key):

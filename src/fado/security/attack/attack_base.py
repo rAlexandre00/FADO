@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List, Tuple, Dict, Any
 from time import sleep
 
-from .constants import (
+from fado.security.constants import (
     ATTACK_TYPE_DATA,
     ATTACK_TYPE_MODEL,
     ATTACK_TYPE_NETWORK

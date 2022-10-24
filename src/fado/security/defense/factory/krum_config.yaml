@@ -1,3 +1,2 @@
-defense_type: 'multikrum'
 byzantine_client_num: 5
 krum_param_m: 5

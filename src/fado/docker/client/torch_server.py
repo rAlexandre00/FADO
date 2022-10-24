@@ -1,4 +1,5 @@
 from fado.docker.client.server_aggregator import FadoServerAggregator
+from fado.security.utils import load_defense_class
 import fedml
 import torch
 import logging
@@ -55,9 +56,13 @@ if __name__ == "__main__":
     to the main arguments scope
     """
     if hasattr(args, "defense_spec"):
-        configuration = load_yaml_config(args.defense_spec)
-        for arg_key, arg_val in configuration.items():
-            setattr(args, arg_key, arg_val)
+
+        if '.yaml' in args.defense_spec:
+            configuration = load_yaml_config(args.defense_spec)
+            for arg_key, arg_val in configuration.items():
+                setattr(args, arg_key, arg_val)
+        else:
+            args.defense_spec = load_defense_class(args)
 
     """
     Add new logging level to filter out FedML logs
