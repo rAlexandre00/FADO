@@ -50,13 +50,19 @@ if __name__ == "__main__":
     # init FedML framework
     args = fedml.init()
 
+    """ 
+    If the argument 'defense_spec' is specified, load its contents
+    to the main arguments scope
+    """
     if hasattr(args, "defense_spec"):
         configuration = load_yaml_config(args.defense_spec)
         for arg_key, arg_val in configuration.items():
             setattr(args, arg_key, arg_val)
 
+    """
+    Add new logging level to filter out FedML logs
+    """
     log_file_path, program_prefix = MLOpsRuntimeLog.build_log_file_path(args)
-
     addLoggingLevel('TRACE', logging.CRITICAL + 5)
     logger = logging.getLogger(log_file_path)
     logger.setLevel("TRACE")
@@ -69,7 +75,6 @@ if __name__ == "__main__":
     # load data
     dataset, output_dim = load_data(args)
 
-    # load model (the size of MNIST image is 28 x 28)
     model = fedml.model.create(args, output_dim)
 
     writer = SummaryWriter()
