@@ -8,6 +8,8 @@ from server_aggregator import FadoServerAggregator
 from utils import addLoggingLevel, load_yaml_config
 from fado.data.data_loader import load_partition_data
 
+from torch.utils.tensorboard import SummaryWriter
+
 
 def load_data(args):
     (
@@ -70,7 +72,9 @@ if __name__ == "__main__":
     # load model (the size of MNIST image is 28 x 28)
     model = fedml.model.create(args, output_dim)
 
-    server_aggregator = FadoServerAggregator(model, args)
+    writer = SummaryWriter()
+
+    server_aggregator = FadoServerAggregator(model, writer, args)
 
     # start training
     logger.trace("Starting training...")

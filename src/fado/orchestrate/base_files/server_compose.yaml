@@ -7,6 +7,7 @@ volumes:
   - './attack/:/app/attack/'
   - './defense/:/app/defense/'
   - './data/partitions/server:/app/data'
+  - './runs/'
 cap_add:
   - NET_ADMIN # Authorize container to change network configurations
 command: >-

@@ -49,6 +49,10 @@ def prepare_orchestrate(config_path, dev=False):
         # Split data for each client for train and test
         split_data(args.all_data_folder, args.partition_data_folder, args.benign_clients + args.malicious_clients)
 
+        logger.info("Creating runs directory for Tensorboard")
+        certs_path = os.path.join('.', 'runs')
+        os.makedirs(certs_path, exist_ok=True)
+
 
 def generate_image_files(model_file, dev=False):
     from fado.constants import CLIENT_PATH, ROUTER_PATH, MAL_CLIENT_PATH

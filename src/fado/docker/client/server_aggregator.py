@@ -7,14 +7,16 @@ import torch
 from torch import nn
 from fedml.core.alg_frame.server_aggregator import ServerAggregator
 import numpy as np
+from torch.utils.tensorboard import SummaryWriter
 
 from defense.fado_defender import FadoDefender
 
 logger = logging.getLogger(__name__)
 
 class FadoServerAggregator(ServerAggregator):
-    def __init__(self, model, args):
+    def __init__(self, model, writer: SummaryWriter, args):
         super().__init__(model, args)
+        self.tensorboard_writer = writer
         FadoDefender.get_instance().init(args)
         self.cpu_transfer = False if not hasattr(self.args, "cpu_transfer") else self.args.cpu_transfer
 
@@ -99,9 +101,8 @@ class FadoServerAggregator(ServerAggregator):
         test_acc = sum(test_tot_corrects) / sum(test_num_samples)
         test_loss = sum(test_losses) / sum(test_num_samples)
         
-        logger.trace(f"Round: {args.round_idx}")
-        logger.trace(f"\tTest/Acc: {test_acc}")
-        logger.trace(f"\tTest/Loss: {test_loss}")
+        self.tensorboard_writer.add_scalar('test_acc', test_acc, args.round_idx)
+        self.tensorboard_writer.add_scalar('test_loss', test_loss, args.round_idx)
 
     def test_all(self, train_data_local_dict, test_data_local_dict, device, args) -> bool:
         train_num_samples = []
@@ -125,9 +126,8 @@ class FadoServerAggregator(ServerAggregator):
         train_acc = sum(train_tot_corrects) / sum(train_num_samples)
         train_loss = sum(train_losses) / sum(train_num_samples)
 
-        logger.trace(f"Round: {args.round_idx}")
-        logger.trace(f"\tTrain/Acc: {train_acc}")
-        logger.trace(f"\tTrain/Loss: {train_loss}")
+        self.tensorboard_writer.add_scalar('train_acc', train_acc, args.round_idx)
+        self.tensorboard_writer.add_scalar('train_loss', train_loss, args.round_idx)
 
         return True
 
@@ -151,7 +151,6 @@ class FadoServerAggregator(ServerAggregator):
                 base_aggregation_func=FedMLAggOperator.agg,
                 extra_auxiliary_info=self.get_model_params(),
             )
-        logger.trace("aggregating as usual...")
         return FedMLAggOperator.agg(self.args, raw_client_model_or_grad_list)
 
 
