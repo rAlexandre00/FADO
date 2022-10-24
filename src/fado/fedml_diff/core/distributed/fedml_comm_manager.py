@@ -7,6 +7,7 @@ from fedml.core.distributed.communication.constants import CommunicationConstant
 #class FedMLCommManager(Observer):
 
 def _init_manager(self):
+    """ This monkey patch is meant to add TLS gRPC support to FedML """
     if self.backend == "MPI":
         from fedml.core.distributed.communication.mpi.com_manager import MpiCommunicationManager
 
@@ -56,6 +57,7 @@ def _init_manager(self):
 
         HOST = "0.0.0.0"
         PORT = CommunicationConstants.GRPC_BASE_PORT + self.rank
+        """ GRPC TLS SUPPORT """
         if hasattr(self.args, "grpc_certificate") and hasattr(self.args, "grpc_private_key"):
             private_key = open(self.args.grpc_private_key, 'rb').read()
             certificate = open(self.args.grpc_certificate, 'rb').read()
