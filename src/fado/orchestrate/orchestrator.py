@@ -56,9 +56,10 @@ def prepare_orchestrate(config_path, dev=False):
         create_fedml_config(args)
         create_fedml_config(args, True)
 
-        logger.info("Creating TLS certificates")
-        # Generate tls certificates (if defined in attacks args)
-        create_certs()
+        if "encrypt_comm" in args and args.encrypt_comm:
+            logger.info("Creating TLS certificates")
+            # Generate tls certificates (if defined in attacks args)
+            create_certs()
 
         logger.info("Creating partitions for server and clients")
         # Split data for each client for train and test
@@ -150,6 +151,7 @@ def generate_compose(number_ben_clients, number_mal_clients, docker_compose_out)
 
     # Generate benign compose services
     base = docker_compose['services']['fedml-client-benign']
+
     for client_rank in benign_ranks:
         client_compose = copy.deepcopy(base)
         client_compose['container_name'] += f'-{client_rank}'
@@ -209,8 +211,13 @@ def create_fedml_config(args, malicious=False):
 
     config['common_args']['random_seed'] = args.random_seed
     config['train_args']['client_num_in_total'] = client_num
-    config['train_args']['client_num_per_round'] = client_num
+    config['train_args']['client_num_per_round'] = args.clients_per_round
+    config['train_args']['comm_round'] = args.rounds
+    config['train_args']['epochs'] = args.epochs
+    config['train_args']['batch_size'] = args.batch_size
     config['device_args']['worker_num'] = client_num
+    if "encrypt_comm" in args:
+        config['comm_args']['encrypt'] = args.encrypt_comm
     with open(fedml_config_out, 'w') as f:
         yaml.dump(config, f, sort_keys=False)
 
