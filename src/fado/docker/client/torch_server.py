@@ -1,4 +1,6 @@
 import os
+from datetime import datetime
+
 from fado.docker.client.server_aggregator import FadoServerAggregator
 from fado.logging.prints import HiddenPrints
 from fado.security.utils import load_defense_class
@@ -81,7 +83,10 @@ if __name__ == "__main__":
 
     model = fedml.model.create(args, output_dim)
 
-    writer = SummaryWriter()
+    simulation_datetime = datetime.now()
+    board_out = f'runs/{simulation_datetime.strftime("%d.%m.%Y_%H:%M:%S")}'
+    os.makedirs(board_out, exist_ok=True)
+    writer = SummaryWriter(board_out)
 
     server_aggregator = FadoServerAggregator(model, writer, args)
 
