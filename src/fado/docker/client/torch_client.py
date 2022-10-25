@@ -71,9 +71,9 @@ def enable_prints():
 
 if __name__ == "__main__":
     # init FedML framework
-    with HiddenPrints():
-        args = fedml.init()
-
+    #with HiddenPrints():
+    #    args = fedml.init()
+    args = fedml.init()
     """ 
     If the argument 'attack_spec' is specified, load its contents
     to the main arguments scope

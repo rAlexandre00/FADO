@@ -22,6 +22,12 @@ command: >-
   ip route add default via 172.10.0.2 &&
   /wait &&
   /app/run_client.sh"
+deploy:
+  resources:
+    reservations:
+      devices:
+      - driver: nvidia
+        capabilities: [gpu]
 networks:
   clients_network:
     ipv4_address: 172.10.1.0 # Use different addresses for each client

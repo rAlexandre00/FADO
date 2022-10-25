@@ -16,6 +16,11 @@ command: >-
   ip route add default via 172.20.0.2 &&
   /app/run_server.sh
   "
+deploy:
+  resources:
+    reservations:
+      devices:
+        - capabilities: [gpu]
 networks:
   server_network:
     ipv4_address: 172.20.1.0
