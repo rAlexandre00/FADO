@@ -8,6 +8,7 @@ volumes:
   - './defense/:/app/defense/:rw'
   - './data/all:/app/data'
   - './runs/:/app/runs:rw'
+  - './logs/:/app/logs:rw'
 cap_add:
   - NET_ADMIN # Authorize container to change network configurations
 command: >-

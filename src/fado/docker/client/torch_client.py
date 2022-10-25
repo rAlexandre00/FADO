@@ -86,6 +86,9 @@ if __name__ == "__main__":
                 setattr(args, arg_key, arg_val)
         else:
             args.attack_spec = load_attack_class(args)
+            
+    fh = logging.FileHandler(os.path.join(f'logs/client_{args.rank}.log'))
+    logger.addHandler(fh)
 
     # init device
     device = fedml.device.get_device(args)

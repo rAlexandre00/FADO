@@ -1,3 +1,4 @@
+import os
 from fado.docker.client.server_aggregator import FadoServerAggregator
 from fado.logging.prints import HiddenPrints
 from fado.security.utils import load_defense_class
@@ -67,6 +68,10 @@ if __name__ == "__main__":
                 setattr(args, arg_key, arg_val)
         else:
             args.defense_spec = load_defense_class(args)
+
+
+    fh = logging.FileHandler(os.path.join(f'logs/server.log'))
+    logger.addHandler(fh)
 
     # init device
     device = fedml.device.get_device(args)

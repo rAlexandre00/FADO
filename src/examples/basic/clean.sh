@@ -1,12 +1,15 @@
-docker stop $(docker ps -a -q)
-docker rm $(docker ps -a -q)
+#!/bin/su filipedfr
+
+docker stop $(docker ps -a -q) 2> /dev/null
+docker rm $(docker ps -a -q) 2> /dev/null
 #docker rmi $(docker images -q)
 rm -rf certs
-rm -rf __pycache__
+sudo find . | grep -E "(/__pycache__$|\.pyc$|\.pyo$)" | sudo xargs rm -rf
 rm -rf docker
 rm -rf data/partitions
-rm -rf runs
-rm .config_hash
+sudo rm -rf runs
+rm -rf logs
+rm .config_hash 2> /dev/null
 rm docker-compose.yml 2> /dev/null
 rm config/fedml* 2> /dev/null
 rm config/grpc* 2> /dev/null

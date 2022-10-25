@@ -65,8 +65,12 @@ def prepare_orchestrate(config_path, dev=False):
         split_data(args.all_data_folder, args.partition_data_folder, args.benign_clients + args.malicious_clients)
 
         logger.info("Creating runs directory for Tensorboard")
-        certs_path = os.path.join('.', 'runs')
-        os.makedirs(certs_path, exist_ok=True)
+        tensorboard_path = os.path.join('.', 'runs')
+        os.makedirs(tensorboard_path, exist_ok=True)
+
+        logger.info("Creating logs directory")
+        logs_path = os.path.join('.', 'logs')
+        os.makedirs(logs_path, exist_ok=True)
 
 
 def generate_image_files(model_file, dev=False):
