@@ -33,7 +33,6 @@ class FedMLServerManager(FedMLCommManager):
 
     def send_init_msg(self):
         global_model_params = self.aggregator.get_global_model_params()
-        logger.info(f"ID LIST IN THIS ROUND -------- {str(self.client_id_list_in_this_round)}")
         for client_id in self.client_id_list_in_this_round:
             self.send_message_init_config(
                 client_id, global_model_params, client_id - 1,

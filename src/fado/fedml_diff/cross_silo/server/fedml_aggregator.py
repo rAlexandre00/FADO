@@ -52,8 +52,6 @@ class FedMLAggregator(object):
         self.aggregator.set_model_params(model_parameters)
 
     def add_local_trained_result(self, index, model_params, sample_num):
-        logger.info("add_model. index = %d" % index)
-
         # for dictionary model_params, we let the user level code to control the device
         if type(model_params) is not dict:
             model_params = ml_engine_adapter.model_params_to_device(self.args, model_params, self.device)
@@ -63,7 +61,6 @@ class FedMLAggregator(object):
         self.client_model_uploaded_dict[index] = True
 
     def check_whether_all_receive(self):
-        logger.info("client_num = {}".format(self.args.client_num_per_round))
         if len(self.client_model_uploaded_dict) < self.args.client_num_per_round:
             return False
         self.done_models = list(self.client_model_uploaded_dict.keys())
