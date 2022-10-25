@@ -58,7 +58,7 @@ def _init_manager(self):
         HOST = "0.0.0.0"
         PORT = CommunicationConstants.GRPC_BASE_PORT + self.rank
         """ GRPC TLS SUPPORT """
-        if hasattr(self.args, "grpc_certificate") and hasattr(self.args, "grpc_private_key"):
+        if hasattr(self.args, "encrypt") and self.args.encrypt:
             private_key = open(self.args.grpc_private_key, 'rb').read()
             certificate = open(self.args.grpc_certificate, 'rb').read()
             credentials = grpc.ssl_server_credentials([(

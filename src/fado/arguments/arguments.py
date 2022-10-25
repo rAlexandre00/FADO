@@ -27,20 +27,8 @@ class AttackArguments:
             Parameters:
                 key_pairs(dict): key, value pairs with (property_name, property_value)
         """
-        self.malicious_clients = key_pairs['malicious_clients']
-        self.benign_clients = key_pairs['benign_clients']
-        self.grpc_ipconfig_out = key_pairs['grpc_ipconfig_out']
-        self.fedml_config_out = key_pairs['fedml_config_out']
-        self.fedml_config_out_malicious = key_pairs['fedml_config_out_malicious']
-        self.docker_compose_out = key_pairs['docker_compose_out']
-        self.all_data_folder = key_pairs['all_data_folder']
-        self.partition_data_folder = key_pairs['partition_data_folder']
-        self.model_file = key_pairs['model_file']
-        if 'attack_spec' in key_pairs:
-            self.attack_spec = key_pairs['attack_spec']
-        if 'defense_spec' in key_pairs:
-            self.defense_spec = key_pairs['defense_spec']
-        self.random_seed = key_pairs['random_seed']
+        for key, value in key_pairs.items():
+            setattr(self, key, value)
 
     def __contains__(self, key):
         return hasattr(self, key)

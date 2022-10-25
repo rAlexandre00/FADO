@@ -1,6 +1,11 @@
 malicious_clients: 0
 benign_clients: 15
+clients_per_round: 3
+rounds: 50
+epochs: 1
+batch_size: 10
 
+encrypt_comm: true
 grpc_ipconfig_out: config/grpc_ipconfig.csv
 fedml_config_out: config/fedml_config.yaml
 fedml_config_out_malicious: config/fedml_config_malicious.yaml
