@@ -12,7 +12,6 @@ from fado.logging.prints import HiddenPrints
 from fado.security.utils import load_defense_class, load_attack_class
 
 from client_trainer import FadoClientTrainer
-from utils import addLoggingLevel, load_yaml_config
 
 logger = logging.getLogger("fado")
 
@@ -57,36 +56,11 @@ def load_data(args):
     return dataset, class_num
 
 
-def disable_prints():
-    global _original_stdout
-    _original_stdout = sys.stdout
-    sys.stdout = open(os.devnull, 'w')
-
-
-def enable_prints():
-    global _original_stdout
-    sys.stdout.close()
-    sys.stdout = _original_stdout
-
-
 if __name__ == "__main__":
     # init FedML framework
     with HiddenPrints():
         args = fedml.init()
 
-    """ 
-    If the argument 'attack_spec' is specified, load its contents
-    to the main arguments scope
-    """
-    if hasattr(args, "attack_spec"):
-
-        if '.yaml' in args.attack_spec:
-            configuration = load_yaml_config(args.attack_spec)
-            for arg_key, arg_val in configuration.items():
-                setattr(args, arg_key, arg_val)
-        else:
-            args.attack_spec = load_attack_class(args)
-            
     fh = logging.FileHandler(os.path.join(f'logs/client_{args.rank}.log'))
     logger.addHandler(fh)
 
