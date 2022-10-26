@@ -13,7 +13,6 @@ COPY torch_server.py torch_server.py
 COPY get_model.py get_model.py
 COPY server_aggregator.py server_aggregator.py
 COPY client_trainer.py client_trainer.py
-COPY utils.py utils.py
 
 ## Add the wait script to the image
 ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.9.0/wait /wait

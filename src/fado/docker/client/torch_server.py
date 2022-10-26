@@ -1,16 +1,16 @@
 import os
+import yaml
 from datetime import datetime
 
 from fado.docker.client.server_aggregator import FadoServerAggregator
 from fado.logging.prints import HiddenPrints
-from fado.security.utils import load_defense_class
+from fado.security.utils import load_defense
 import fedml
 import torch
 import logging
 from fedml import FedMLRunner
 from fedml.core.mlops.mlops_runtime_log import MLOpsRuntimeLog
 from server_aggregator import FadoServerAggregator
-from utils import addLoggingLevel, load_yaml_config
 from fado.data.data_loader import load_partition_data
 
 from torch.utils.tensorboard import SummaryWriter
@@ -58,19 +58,7 @@ if __name__ == "__main__":
     with HiddenPrints():
         args = fedml.init()
 
-    """ 
-    If the argument 'defense_spec' is specified, load its contents
-    to the main arguments scope
-    """
-    if hasattr(args, "defense_spec"):
-
-        if '.yaml' in args.defense_spec:
-            configuration = load_yaml_config(args.defense_spec)
-            for arg_key, arg_val in configuration.items():
-                setattr(args, arg_key, arg_val)
-        else:
-            args.defense_spec = load_defense_class(args)
-
+    load_defense(args)
 
     fh = logging.FileHandler(os.path.join(f'logs/server.log'))
     logger.addHandler(fh)

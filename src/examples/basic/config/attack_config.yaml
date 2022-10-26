@@ -1,6 +1,6 @@
-malicious_clients: 0
-benign_clients: 15
-clients_per_round: 3
+malicious_clients: 1
+benign_clients: 12
+clients_per_round: 9
 rounds: 50
 epochs: 1
 batch_size: 10
@@ -15,5 +15,8 @@ all_data_folder: data/all
 partition_data_folder: data/partitions
 
 model_file: get_model.py
+
+attack_spec: 'byzantine'
+defense_spec: 'krum'
 
 random_seed: 0

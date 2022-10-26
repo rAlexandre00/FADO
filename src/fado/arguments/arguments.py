@@ -5,6 +5,7 @@ import yaml
 
 class AttackArguments:
     """ A class for reading arguments from a yaml file """
+
     def __init__(self, config_path):
         """
             Parameters:
