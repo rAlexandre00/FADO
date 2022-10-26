@@ -1,5 +1,5 @@
 malicious_clients: 0
-benign_clients: 15
+benign_clients: 10
 
 grpc_ipconfig_out: config/grpc_ipconfig.csv
 fedml_config_out: config/fedml_config.yaml

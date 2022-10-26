@@ -10,6 +10,7 @@ from fado.data.data_loader import load_partition_data
 from fado.logging.prints import HiddenPrints
 
 from fado.security.utils import load_defense_class, load_attack_class
+from fedml.ml.engine.ml_engine_adapter import get_torch_device
 
 from client_trainer import FadoClientTrainer
 from utils import addLoggingLevel, load_yaml_config
@@ -71,9 +72,8 @@ def enable_prints():
 
 if __name__ == "__main__":
     # init FedML framework
-    #with HiddenPrints():
-    #    args = fedml.init()
-    args = fedml.init()
+    with HiddenPrints():
+        args = fedml.init()
     """ 
     If the argument 'attack_spec' is specified, load its contents
     to the main arguments scope
@@ -90,8 +90,7 @@ if __name__ == "__main__":
     fh = logging.FileHandler(os.path.join(f'logs/client_{args.rank}.log'))
     logger.addHandler(fh)
 
-    # init device
-    device = fedml.device.get_device(args)
+    device = get_torch_device(args, args.using_gpu, 0, "gpu")
 
     # load data
     dataset, output_dim = load_data(args)

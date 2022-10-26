@@ -10,6 +10,7 @@ from fedml.core.mlops.mlops_runtime_log import MLOpsRuntimeLog
 from server_aggregator import FadoServerAggregator
 from utils import addLoggingLevel, load_yaml_config
 from fado.data.data_loader import load_partition_data
+from fedml.ml.engine.ml_engine_adapter import get_torch_device
 
 from torch.utils.tensorboard import SummaryWriter
 
@@ -56,6 +57,7 @@ if __name__ == "__main__":
     #with HiddenPrints():
     #    args = fedml.init()
     args = fedml.init()
+
     """ 
     If the argument 'defense_spec' is specified, load its contents
     to the main arguments scope
@@ -73,8 +75,7 @@ if __name__ == "__main__":
     fh = logging.FileHandler(os.path.join(f'logs/server.log'))
     logger.addHandler(fh)
 
-    # init device
-    device = fedml.device.get_device(args)
+    device = get_torch_device(args, args.using_gpu, 0, "gpu")
 
     # load data
     dataset, output_dim = load_data(args)
