@@ -9,7 +9,7 @@ from fedml.core.mlops.mlops_runtime_log import MLOpsRuntimeLog
 from fado.data.data_loader import load_partition_data
 from fado.logging.prints import HiddenPrints
 
-from fado.security.utils import load_defense_class, load_attack_class
+from fado.security.utils import load_attack
 
 from client_trainer import FadoClientTrainer
 
@@ -60,6 +60,8 @@ if __name__ == "__main__":
     # init FedML framework
     with HiddenPrints():
         args = fedml.init()
+
+    load_attack(args)
 
     fh = logging.FileHandler(os.path.join(f'logs/client_{args.rank}.log'))
     logger.addHandler(fh)

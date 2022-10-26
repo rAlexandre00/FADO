@@ -1,6 +1,6 @@
-malicious_clients: 5
-benign_clients: 10
-clients_per_round: 3
+malicious_clients: 1
+benign_clients: 12
+clients_per_round: 9
 rounds: 50
 epochs: 1
 batch_size: 10

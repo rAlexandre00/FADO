@@ -4,7 +4,7 @@ import yaml
 
 from fado.docker.client.server_aggregator import FadoServerAggregator
 from fado.logging.prints import HiddenPrints
-from fado.security.utils import load_defense_class
+from fado.security.utils import load_defense
 import fedml
 import torch
 import logging
@@ -57,6 +57,8 @@ if __name__ == "__main__":
     # init FedML framework
     with HiddenPrints():
         args = fedml.init()
+
+    load_defense(args)
 
     fh = logging.FileHandler(os.path.join(f'logs/server.log'))
     logger.addHandler(fh)
