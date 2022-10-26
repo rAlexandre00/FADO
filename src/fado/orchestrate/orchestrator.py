@@ -18,7 +18,7 @@ logger = logging.getLogger("fado")
 __all__ = ['prepare_orchestrate']
 
 
-def prepare_orchestrate(config_path, dev=False):
+def prepare_orchestrate(config_path, args, dev=False):
     """Creates the necessary files so that 'docker compose up' is possible
         1 - Generate image files
         2 - Generate docker-compose file
@@ -36,9 +36,7 @@ def prepare_orchestrate(config_path, dev=False):
         logger.warning('Attack config has not changed. Data and configuration files will not change')
     else:
         write_file_hash(config_path, '.config_hash')
-
-    args = AttackArguments(config_path)
-
+        
     if config_changed or dev:
         logger.info("Creating docker files")
         # Generate image files

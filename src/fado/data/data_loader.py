@@ -114,7 +114,7 @@ def load_partition_data(
             test_data_global += test_batch
         client_idx += 1
     client_num = client_idx
-    class_num = 10
+    class_num = 62
 
     return (
         client_num,
