@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-server="172.20.1.0"
+/etc/init.d/bind9 start &>/dev/null
+
+server="fado_server"
 
 # Sleep while server is starting
 while true

@@ -1,16 +1,16 @@
-container_name: fedml-benign-client # For each client it will be container_name + client_rank
+container_name: fado_beg-client # For each client it will be container_name + client_rank
 image: fedml-client
 build: ./docker/client
 volumes:
-  - './certs/:/app/certs/'
-  - './config/:/app/config/'
-  - './attack/:/app/attack/:rw'
-  - './defense/:/app/defense/:rw'
-  - './logs/:/app/logs:rw'
-  # - './data:/app/data' Data will be different for each client
+  - '~/.fado/certs/:/app/certs/'
+  - '~/.fado/config/:/app/config/'
+  - '~/.fado/attack/:/app/attack/:rw'
+  - '~/.fado/defense/:/app/defense/:rw'
+  - '~/.fado/logs/:/app/logs:rw'
+  # - '~/.fado/data:/app/data' Data will be different for each client
 environment:
   # - FEDML_RANK=<set after hand> Each client will have a unique rank
-  - WAIT_HOSTS=172.20.1.0:8890
+  - WAIT_HOSTS=fado_server:8890
   - WAIT_HOST_CONNECT_TIMEOUT=360
   - WAIT_SLEEP_INTERVAL=5
   - WAIT_LOGGER_LEVEL=error
@@ -18,10 +18,8 @@ restart: on-failure
 cap_add:
   - NET_ADMIN # Authorize container to change network configurations
 command: >-
-  sh -c "ip route del default &&
-  ip route add default via 172.10.0.2 &&
-  /wait &&
-  /app/run_client.sh"
+  sh -c "/app/configure_ip.sh && /wait && /app/run_client.sh"
 networks:
   clients_network:
-    ipv4_address: 172.10.1.0 # Use different addresses for each client
+depends_on:
+  - "server"
