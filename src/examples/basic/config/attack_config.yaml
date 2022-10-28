@@ -11,7 +11,7 @@ fedml_config_out: config/fedml_config.yaml
 fedml_config_out_malicious: config/fedml_config_malicious.yaml
 docker_compose_out: docker-compose.yml
 
-dataset: femnist
+dataset: shakespeare
 
 all_data_folder: data/all
 partition_data_folder: data/partitions
