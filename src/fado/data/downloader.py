@@ -48,6 +48,7 @@ def leaf_executor(args):
     # Copying LEAF's dataset folder to temp directory
     shutil.copytree(os.path.join(leaf_path, dataset), os.path.join(temp_dir, dataset), dirs_exist_ok=True)
 
+    curr_dir = os.getcwd() # will be useful to return to current directory
     os.chdir(os.path.join(temp_dir, dataset)) # changing current directory
 
     # Calling LEAF script
@@ -65,6 +66,9 @@ def leaf_executor(args):
     shutil.copytree(train_dir, os.path.join(data_fado, 'train'))
     shutil.copytree(test_dir, os.path.join(data_fado, 'test'))
 
-    # Clean temporary directory
+    # Clean temporary directory and reset directory
     if os.path.exists(temp_dir):
-        shutil.rmtree(temp_dir)    
+        shutil.rmtree(temp_dir)   
+
+    os.chdir(curr_dir) 
+    
