@@ -166,6 +166,7 @@ src/examples/*/config/grpc_ipconfig.csv
 src/examples/*/data/
 src/examples/*/docker-compose.yml
 src/examples/*/docker
+src/examples/*/runs
 src/examples/*/.config_hash
 
 # Created by https://www.toptal.com/developers/gitignore/api/macos
@@ -230,6 +231,3 @@ Temporary Items
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode
 
-data/
-certs/
-runs/
