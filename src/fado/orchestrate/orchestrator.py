@@ -44,7 +44,7 @@ def prepare_orchestrate(config_path, args, dev=False):
 
     if config_changed:
         # Generate docker-compose file
-        benign_ranks, malicious_ranks = generate_compose(args.benign_clients, args.malicious_clients,
+        benign_ranks, malicious_ranks = generate_compose(args.dataset, args.benign_clients, args.malicious_clients,
                                                          args.docker_compose_out)
 
         logger.info("Creating configuration files")
@@ -61,7 +61,7 @@ def prepare_orchestrate(config_path, args, dev=False):
 
         logger.info("Creating partitions for server and clients")
         # Split data for each client for train and test
-        split_data(args.all_data_folder, args.partition_data_folder, args.benign_clients + args.malicious_clients)
+        split_data(args.dataset, args.all_data_folder, args.partition_data_folder, args.benign_clients + args.malicious_clients)
 
         logger.info("Creating runs directory for Tensorboard")
         tensorboard_path = os.path.join('.', 'runs')
@@ -119,7 +119,7 @@ def create_ipconfig(ipconfig_out, number_ben_clients):
             f.write(f'{rank},{client_base_address + rank}\n')
 
 
-def generate_compose(number_ben_clients, number_mal_clients, docker_compose_out):
+def generate_compose(dataset, number_ben_clients, number_mal_clients, docker_compose_out):
     """
     Loads a default compose file and generates 'number_clients' of client services
 
@@ -154,7 +154,7 @@ def generate_compose(number_ben_clients, number_mal_clients, docker_compose_out)
         client_compose = copy.deepcopy(base)
         client_compose['container_name'] += f'-{client_rank}'
         client_compose['environment'] += [f'FEDML_RANK={client_rank}']
-        client_compose['volumes'] += [f'./data/partitions/user_{client_rank}:/app/data/']
+        client_compose['volumes'] += [f'./data/partitions/{dataset}/user_{client_rank}:/app/data/']
         client_ipv4_address = IPv4Address(client_compose['networks']['clients_network']['ipv4_address']) + client_rank
         client_compose['networks']['clients_network']['ipv4_address'] = str(client_ipv4_address)
         docker_compose['services'][f'fedml-beg-client-{client_rank}'] = client_compose
@@ -166,11 +166,15 @@ def generate_compose(number_ben_clients, number_mal_clients, docker_compose_out)
         client_compose = copy.deepcopy(base)
         client_compose['container_name'] += f'-{client_rank}'
         client_compose['environment'] += [f'FEDML_RANK={client_rank}']
-        client_compose['volumes'] += [f'./data/partitions/user_{client_rank}:/app/data/']
+        client_compose['volumes'] += f'./data/partitions/{dataset}/user_{client_rank}:/app/data/'
         client_ipv4_address = IPv4Address(client_compose['networks']['clients_network']['ipv4_address']) + client_rank
         client_compose['networks']['clients_network']['ipv4_address'] = str(client_ipv4_address)
         docker_compose['services'][f'fedml-mal-client-{client_rank}'] = client_compose
     docker_compose['services'].pop('fedml-client-malicious')
+
+    # Customize volume for data in server
+    # TODO optimize this?
+    docker_compose['services']['fedml-server']['volumes'] += [f'./data/all/{dataset}:/app/data/']
 
     with open(docker_compose_out, 'w') as f:
         yaml.dump(docker_compose, f, sort_keys=False)
