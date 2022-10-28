@@ -5,6 +5,7 @@ from datetime import datetime
 from fado.docker.client.server_aggregator import FadoServerAggregator
 from fado.logging.prints import HiddenPrints
 from fado.security.utils import load_defense
+from fado.models import get_model
 import fedml
 import torch
 import logging
@@ -66,10 +67,12 @@ if __name__ == "__main__":
     # init device
     device = fedml.device.get_device(args)
 
-    # load data
-    dataset, output_dim = load_data(args)
+    # Get the model
+    model = get_model(args.dataset, args.model)
 
-    model = fedml.model.create(args, output_dim)
+    # load data
+    logger.info("Loading data...")
+    dataset, output_dim = load_data(args)
 
     simulation_datetime = datetime.now()
     board_out = f'runs/{simulation_datetime.strftime("%d.%m.%Y_%H:%M:%S")}'

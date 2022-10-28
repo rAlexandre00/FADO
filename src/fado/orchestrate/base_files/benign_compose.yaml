@@ -14,6 +14,7 @@ environment:
   - WAIT_HOST_CONNECT_TIMEOUT=360
   - WAIT_SLEEP_INTERVAL=5
   - WAIT_LOGGER_LEVEL=error
+  - WAIT_TIMEOUT=60
 restart: on-failure
 cap_add:
   - NET_ADMIN # Authorize container to change network configurations

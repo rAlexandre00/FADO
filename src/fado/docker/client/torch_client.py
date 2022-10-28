@@ -8,6 +8,7 @@ from fedml import FedMLRunner
 from fedml.core.mlops.mlops_runtime_log import MLOpsRuntimeLog
 from fado.data.data_loader import load_partition_data
 from fado.logging.prints import HiddenPrints
+from fado.models import get_model
 
 from fado.security.utils import load_attack
 
@@ -69,11 +70,11 @@ if __name__ == "__main__":
     # init device
     device = fedml.device.get_device(args)
 
+    # Get the model
+    model = get_model(args.dataset, args.model)
+
     # load data
     dataset, output_dim = load_data(args)
-
-    model = fedml.model.create(args, output_dim)
-
     # Initialize client trainer
     client_trainer = FadoClientTrainer(model, args)
 
