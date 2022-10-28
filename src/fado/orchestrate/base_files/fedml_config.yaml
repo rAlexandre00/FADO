@@ -15,7 +15,7 @@ data_args:
   partition_alpha: 0.5
 
 model_args:
-  model: "lr"
+  model: "cnn"
   model_file_cache_folder: "./model_file_cache" # will be filled by the server automatically
   global_model_file_path: "./model_file_cache/global_model.pt"
 
@@ -25,8 +25,8 @@ train_args:
   client_num_in_total: 4
   client_num_per_round: 4
   comm_round: 50
-  epochs: 1
-  batch_size: 10
+  epochs: 10
+  batch_size: 64
   client_optimizer: sgd
   learning_rate: 0.03
   weight_decay: 0.001

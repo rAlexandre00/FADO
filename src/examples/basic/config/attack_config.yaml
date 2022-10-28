@@ -1,9 +1,9 @@
-malicious_clients: 1
-benign_clients: 12
-clients_per_round: 9
-rounds: 50
-epochs: 1
-batch_size: 10
+malicious_clients: 0
+benign_clients: 5
+clients_per_round: 3
+rounds: 100
+epochs: 2
+batch_size: 20
 
 encrypt_comm: true
 grpc_ipconfig_out: config/grpc_ipconfig.csv
@@ -11,12 +11,10 @@ fedml_config_out: config/fedml_config.yaml
 fedml_config_out_malicious: config/fedml_config_malicious.yaml
 docker_compose_out: docker-compose.yml
 
+dataset: shakespeare
+
 all_data_folder: data/all
 partition_data_folder: data/partitions
 
 model_file: get_model.py
-
-attack_spec: 'byzantine'
-defense_spec: 'krum'
-
 random_seed: 0

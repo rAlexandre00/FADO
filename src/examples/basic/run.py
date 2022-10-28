@@ -1,6 +1,9 @@
+from fado.arguments.arguments import AttackArguments
 from fado.orchestrate import prepare_orchestrate
+from fado.data.downloader import leaf_executor
 
-from download_data import download_mnist
+config_path = 'config/attack_config.yaml'
 
-download_mnist('data')
-prepare_orchestrate('config/attack_config.yaml', dev=True)
+args = AttackArguments(config_path)
+leaf_executor(args)
+prepare_orchestrate(config_path, args, dev=True)

@@ -6,7 +6,7 @@ volumes:
   - './config/:/app/config/'
   - './attack/:/app/attack/:rw'
   - './defense/:/app/defense/:rw'
-  - './data/all:/app/data'
+  #- './data/all:/app/data' now has to take into account the dataset
   - './runs/:/app/runs:rw'
   - './logs/:/app/logs:rw'
 cap_add:
