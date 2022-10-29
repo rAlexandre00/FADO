@@ -3,6 +3,7 @@ import shutil
 import subprocess
 
 from fado import leaf
+from fado.constants import ALL_DATA_FOLDER, FADO_DIR
 
 DATASETS = ['femnist', 'shakespeare', 'sent140', 'celeba']
 
@@ -31,8 +32,8 @@ def leaf_executor(args):
     if dataset not in DATASETS:
         raise Exception(f"Dataset {dataset} not supported! Choose one of the following: {DATASETS}")
 
-    temp_dir = os.path.abspath(os.path.join('.', 'temp_leaf'))
-    data_fado = os.path.abspath(os.path.join('.', args.all_data_folder, dataset))
+    temp_dir = os.path.join(FADO_DIR, 'temp_leaf')
+    data_fado = os.path.join(ALL_DATA_FOLDER, dataset)
 
     if not os.path.exists(data_fado):
         os.makedirs(data_fado, exist_ok=True)

@@ -24,8 +24,8 @@ GRPC_CONFIG_OUT = os.path.join(FADO_DIR, 'config', 'grpc_ipconfig.csv')
 CERTS_OUT = os.path.join(FADO_DIR, 'certs')
 DOCKER_COMPOSE_OUT = os.path.join(FADO_DIR, 'docker-compose.yml')
 
-ALL_DATA_FOLDER = os.path.join('~', '.fado', 'data', 'all')
-PARTITION_DATA_FOLDER = os.path.join('~', '.fado', 'data', 'partitions')
+ALL_DATA_FOLDER = os.path.join(FADO_DIR, 'data', 'all')
+PARTITION_DATA_FOLDER = os.path.join(FADO_DIR, 'data', 'partitions')
 
 IMAGES_PATH = os.path.join(FADO_DIR, 'docker')
 FEDML_IMAGE = os.path.join(IMAGES_PATH, 'client')

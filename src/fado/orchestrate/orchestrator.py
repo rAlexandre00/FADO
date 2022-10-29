@@ -71,7 +71,7 @@ def prepare_orchestrate(config_path, args, dev=False):
 
         logger.info("Creating partitions for server and clients")
         # Split data for each client for train and test
-        split_data(args.dataset, args.all_data_folder, args.partition_data_folder, args.benign_clients + args.malicious_clients)
+        split_data(args.dataset, ALL_DATA_FOLDER, PARTITION_DATA_FOLDER, args.benign_clients + args.malicious_clients)
 
         logger.info("Creating needed folders")
         os.makedirs(TENSORBOARD_DIRECTORY, exist_ok=True)
@@ -213,8 +213,7 @@ def generate_compose(dataset, number_ben_clients, number_mal_clients, docker_com
     docker_compose['services'].pop('mal-client')
 
     # Customize volume for data in server
-    # TODO optimize this?
-    docker_compose['services']['fedml-server']['volumes'] += [f'./data/all/{dataset}:/app/data/']
+    docker_compose['services']['server']['volumes'] += [f'{ALL_DATA_FOLDER}/{dataset}:/app/data/']
 
     with open(docker_compose_out, 'w') as f:
         yaml.dump(docker_compose, f, sort_keys=False)
