@@ -6,7 +6,7 @@ volumes:
   - '~/.fado/config/:/app/config/'
   - '~/.fado/attack/:/app/attack/:rw'
   - '~/.fado/defense/:/app/defense/:rw'
-  - '~/.fado/data/all:/app/data'
+  #- '~/.fado/data/all:/app/data'
   - '~/.fado/runs/:/app/runs:rw'
   - '~/.fado/logs/:/app/logs:rw'
 cap_add:

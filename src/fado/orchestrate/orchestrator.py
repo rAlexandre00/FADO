@@ -23,7 +23,7 @@ logger = logging.getLogger("fado")
 __all__ = ['prepare_orchestrate']
 
 
-def prepare_orchestrate(config_path, dev=False):
+def prepare_orchestrate(config_path, args, dev=False):
     """Creates the necessary files so that 'docker compose up' is possible
         1 - Generate image files
         2 - Generate docker-compose file
@@ -52,13 +52,12 @@ def prepare_orchestrate(config_path, dev=False):
 
     if config_changed:
         # Generate docker-compose file
-        benign_ranks, malicious_ranks = generate_compose(args.benign_clients, args.malicious_clients,
+        benign_ranks, malicious_ranks = generate_compose(args.dataset, args.benign_clients, args.malicious_clients,
                                                          DOCKER_COMPOSE_OUT)
 
+        logger.info("Creating networking files")
         # Create script that will tell how the router should forward packets
         generate_router_nat(benign_ranks, malicious_ranks, ROUTER_IMAGE)
-
-        logger.info("Creating configuration files")
         # Create grpc_ipconfig file and fedml_config.yaml
         create_ipconfig(GRPC_CONFIG_OUT, args.benign_clients + args.malicious_clients)
         # Create fedml_config.yaml for server/benign client and for malicious client
@@ -72,8 +71,7 @@ def prepare_orchestrate(config_path, dev=False):
 
         logger.info("Creating partitions for server and clients")
         # Split data for each client for train and test
-        split_data(os.path.expanduser(ALL_DATA_FOLDER), os.path.expanduser(PARTITION_DATA_FOLDER),
-                   args.benign_clients + args.malicious_clients)
+        split_data(args.dataset, args.all_data_folder, args.partition_data_folder, args.benign_clients + args.malicious_clients)
 
         logger.info("Creating needed folders")
         os.makedirs(TENSORBOARD_DIRECTORY, exist_ok=True)
@@ -166,7 +164,7 @@ def create_ipconfig(ipconfig_out, num_clients):
             f.write(f'{rank},fado_router\n')
 
 
-def generate_compose(number_ben_clients, number_mal_clients, docker_compose_out):
+def generate_compose(dataset, number_ben_clients, number_mal_clients, docker_compose_out):
     """
     Loads a default compose file and generates 'number_clients' of client services
 
@@ -200,7 +198,7 @@ def generate_compose(number_ben_clients, number_mal_clients, docker_compose_out)
         client_compose = copy.deepcopy(base)
         client_compose['container_name'] += f'-{client_rank}'
         client_compose['environment'] += [f'FEDML_RANK={client_rank}']
-        client_compose['volumes'] += [f'{PARTITION_DATA_FOLDER}/user_{client_rank}:/app/data/']
+        client_compose['volumes'] += [f'{PARTITION_DATA_FOLDER}/{dataset}/user_{client_rank}:/app/data/']
         docker_compose['services'][f'beg-client-{client_rank}'] = client_compose
     docker_compose['services'].pop('beg-client')
 
@@ -210,9 +208,13 @@ def generate_compose(number_ben_clients, number_mal_clients, docker_compose_out)
         client_compose = copy.deepcopy(base)
         client_compose['container_name'] += f'-{client_rank}'
         client_compose['environment'] += [f'FEDML_RANK={client_rank}']
-        client_compose['volumes'] += [f'{PARTITION_DATA_FOLDER}/user_{client_rank}:/app/data/']
+        client_compose['volumes'] += f'{PARTITION_DATA_FOLDER}/{dataset}/user_{client_rank}:/app/data/'
         docker_compose['services'][f'mal-client-{client_rank}'] = client_compose
     docker_compose['services'].pop('mal-client')
+
+    # Customize volume for data in server
+    # TODO optimize this?
+    docker_compose['services']['fedml-server']['volumes'] += [f'./data/all/{dataset}:/app/data/']
 
     with open(docker_compose_out, 'w') as f:
         yaml.dump(docker_compose, f, sort_keys=False)
