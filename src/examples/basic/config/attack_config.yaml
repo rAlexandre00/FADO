@@ -6,10 +6,6 @@ epochs: 2
 batch_size: 20
 
 encrypt_comm: true
-grpc_ipconfig_out: config/grpc_ipconfig.csv
-fedml_config_out: config/fedml_config.yaml
-fedml_config_out_malicious: config/fedml_config_malicious.yaml
-docker_compose_out: docker-compose.yml
 
 dataset: shakespeare
 

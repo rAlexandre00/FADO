@@ -1,21 +1,23 @@
-container_name: fedml-server
+container_name: fado_server
 image: fedml-client
 build: ./docker/client
 volumes:
-  - './certs/:/app/certs/'
-  - './config/:/app/config/'
-  - './attack/:/app/attack/:rw'
-  - './defense/:/app/defense/:rw'
-  #- './data/all:/app/data' now has to take into account the dataset
-  - './runs/:/app/runs:rw'
-  - './logs/:/app/logs:rw'
+  - '~/.fado/certs/:/app/certs/'
+  - '~/.fado/config/:/app/config/'
+  - '~/.fado/attack/:/app/attack/:rw'
+  - '~/.fado/defense/:/app/defense/:rw'
+  #- '~/.fado/data/all:/app/data'
+  - '~/.fado/runs/:/app/runs:rw'
+  - '~/.fado/logs/:/app/logs:rw'
 cap_add:
   - NET_ADMIN # Authorize container to change network configurations
 command: >-
-  sh -c "ip route del default &&
-  ip route add default via 172.20.0.2 &&
-  /app/run_server.sh
-  "
+  sh -c "/app/configure_ip.sh && /app/run_server.sh"
+deploy:
+  placement:
+    constraints:
+      - node.role == manager
 networks:
   server_network:
-    ipv4_address: 172.20.1.0
+depends_on:
+  - "router"

@@ -13,8 +13,18 @@ COPY get_model.py get_model.py
 COPY server_aggregator.py server_aggregator.py
 COPY client_trainer.py client_trainer.py
 
+RUN chmod +x run_client.sh
+RUN chmod +x run_server.sh
+RUN chmod +x run_malicious_client.sh
+
 ## Add the wait script to the image
 ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.9.0/wait /wait
 RUN chmod +x /wait
+
+COPY configure_ip.sh configure_ip.sh
+RUN chmod +x configure_ip.sh
+
+RUN apt-get update \
+        && apt-get install -y dnsutils
 
 ENTRYPOINT [ ]
