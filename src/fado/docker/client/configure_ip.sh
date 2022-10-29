@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-router=$(dig +short fado_router)
+while [ -z "$router" ]
+do
+router=$(dig +short fado_router A)
+done
+
 ip route del default
 ip route add default via "$router"
-
-printf "nameserver ${router}" > /etc/resolv.conf

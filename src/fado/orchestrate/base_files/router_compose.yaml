@@ -4,7 +4,7 @@ build: ./docker/router
 cap_add:
   - NET_ADMIN # Authorize container to change network configurations
 command: >-
-  sh -c "/app/run_router.sh"
+  sh -c "/app/apply_nat.sh && /app/run_router.sh"
 deploy:
   placement:
     constraints:

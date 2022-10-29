@@ -10,7 +10,7 @@ volumes:
   # - '~/.fado/data:/app/data' Data will be different for each client
 environment:
   # - FEDML_RANK=<set after hand> Each client will have a unique rank
-  - WAIT_HOSTS=fado_server:8890
+  - WAIT_HOSTS=fado_router:8890
   - WAIT_HOST_CONNECT_TIMEOUT=360
   - WAIT_SLEEP_INTERVAL=5
   - WAIT_LOGGER_LEVEL=error

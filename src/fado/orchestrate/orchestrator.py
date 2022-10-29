@@ -2,6 +2,7 @@ import os
 from distutils.dir_util import copy_tree
 from os.path import abspath
 from pathlib import Path
+from typing import List
 
 import yaml
 import shutil
@@ -11,7 +12,7 @@ from fado.data import split_data
 from fado.crypto import generate_self_signed_certs, generate_certs
 from fado.constants import FEDML_CONFIG_FILE_PATH, LOGS_DIRECTORY, GRPC_CONFIG_OUT, FEDML_BEN_CONFIG_OUT, \
     FEDML_MAL_CONFIG_OUT, CERTS_OUT, ALL_DATA_FOLDER, PARTITION_DATA_FOLDER, DOCKER_COMPOSE_OUT, FEDML_IMAGE, \
-    ROUTER_IMAGE, TENSORBOARD_DIRECTORY, CONFIG_HASH, FADO_DIR
+    ROUTER_IMAGE, TENSORBOARD_DIRECTORY, CONFIG_HASH, FADO_DIR, ATTACK_DIRECTORY, DEFENSE_DIRECTORY
 from fado.crypto.hash_verifier import file_changed, write_file_hash
 
 import logging
@@ -54,9 +55,12 @@ def prepare_orchestrate(config_path, dev=False):
         benign_ranks, malicious_ranks = generate_compose(args.benign_clients, args.malicious_clients,
                                                          DOCKER_COMPOSE_OUT)
 
+        # Create script that will tell how the router should forward packets
+        generate_router_nat(benign_ranks, malicious_ranks, ROUTER_IMAGE)
+
         logger.info("Creating configuration files")
         # Create grpc_ipconfig file and fedml_config.yaml
-        create_ipconfig(GRPC_CONFIG_OUT, benign_ranks, malicious_ranks)
+        create_ipconfig(GRPC_CONFIG_OUT, args.benign_clients + args.malicious_clients)
         # Create fedml_config.yaml for server/benign client and for malicious client
         create_fedml_config(args)
         create_fedml_config(args, True)
@@ -68,14 +72,52 @@ def prepare_orchestrate(config_path, dev=False):
 
         logger.info("Creating partitions for server and clients")
         # Split data for each client for train and test
-        split_data(os.path.expanduser(ALL_DATA_FOLDER), os.path.expanduser(PARTITION_DATA_FOLDER), args.benign_clients + args.malicious_clients)
+        split_data(os.path.expanduser(ALL_DATA_FOLDER), os.path.expanduser(PARTITION_DATA_FOLDER),
+                   args.benign_clients + args.malicious_clients)
 
-        logger.info("Creating runs directory for Tensorboard")
-        tensorboard_path = os.path.join('.', 'runs')
+        logger.info("Creating needed folders")
         os.makedirs(TENSORBOARD_DIRECTORY, exist_ok=True)
+        os.makedirs(ATTACK_DIRECTORY, exist_ok=True)
+        os.makedirs(DEFENSE_DIRECTORY, exist_ok=True)
 
         logger.info("Creating logs directory")
         os.makedirs(LOGS_DIRECTORY, exist_ok=True)
+
+
+def generate_router_nat(benign_ranks, malicious_ranks, router_user_path):
+    """Creates a script in the router that will create port forwarding rules and enable NAT
+       This enables the communication between nodes in different overlay networks
+
+        Parameters:
+            benign_ranks: Ranks of benign clients
+            malicious_ranks: Ranks of malicious clients
+            client_user_path: Path of the docker image to be generated
+
+    """
+    lines: list[str] = []
+    # Wait for the resolution of all nodes names
+    lines.append('while [ -z "$fado_server" ]; '
+                 'do fado_server=$(dig +short fado_server A); '
+                 'done' + "\n")
+    for rank in benign_ranks:
+        lines.append(f'while [ -z "$fado_client_{rank}" ]; '
+                     f'do fado_client_{rank}=$(dig +short fado_beg-client-{rank} A); '
+                     f'done' + "\n")
+    for rank in malicious_ranks:
+        lines.append(f'while [ -z "$fado_client_{rank}" ]; '
+                     f'do fado_client_{rank}=$(dig +short fado_mal-client-{rank} A); '
+                     f'done' + "\n")
+    # Create port forwarding for each node
+    lines.append('iptables -t nat -A PREROUTING -p tcp --dport 8890 -j DNAT --to-destination "$fado_server":8890' + "\n")
+    for rank in benign_ranks + malicious_ranks:
+        lines.append(f'iptables -t nat -A PREROUTING -p tcp --dport {8890 + rank} -j DNAT '
+                     f'--to-destination "$fado_client_{rank}":{8890 + rank}' + "\n")
+    # Enables NAT for eth0 and eth1
+    lines.append(f'iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE' + "\n")
+    lines.append(f'iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE')
+
+    with open(os.path.join(router_user_path, "apply_nat.sh"), "w") as f:
+        f.writelines(lines)
 
 
 def generate_image_files(model_file, dev=False):
@@ -87,44 +129,41 @@ def generate_image_files(model_file, dev=False):
     :return:
     """
     from fado.constants import CLIENT_PATH, ROUTER_PATH, MAL_CLIENT_PATH
-    client_path = FEDML_IMAGE
-    router_path = ROUTER_IMAGE
+    client_user_path = FEDML_IMAGE
+    router_user_path = ROUTER_IMAGE
 
-    copy_tree(CLIENT_PATH, client_path)
-    copy_tree(ROUTER_PATH, router_path)
-    shutil.copy2(model_file, os.path.join(client_path, 'get_model.py'))
+    # Copies docker files in fado library to user space
+    copy_tree(CLIENT_PATH, client_user_path)
+    copy_tree(ROUTER_PATH, router_user_path)
+    shutil.copy2(model_file, os.path.join(client_user_path, 'get_model.py'))
     if dev:
         import pathlib
         import fado.docker.dev
-        fado_path = os.path.join(client_path, 'fado')
+        fado_path = os.path.join(client_user_path, 'fado')
         fado_folder = str(pathlib.Path(__file__).parents[1])
         root_folder = str(pathlib.Path(__file__).parents[3])
         copy_tree(fado_folder, os.path.join(fado_path, 'src', 'fado'))
         shutil.copy2(os.path.join(root_folder, 'setup.py'),
                      os.path.join(fado_path, 'setup.py'))
         shutil.copy2(os.path.join(os.path.dirname(fado.docker.dev.__file__), 'Dockerfile'),
-                     os.path.join(client_path, 'Dockerfile'))
+                     os.path.join(client_user_path, 'Dockerfile'))
         shutil.copy2(os.path.join(os.path.dirname(fado.docker.dev.__file__), 'requirements.txt'),
-                     os.path.join(client_path, 'requirements.txt'))
+                     os.path.join(client_user_path, 'requirements.txt'))
 
 
-def create_ipconfig(ipconfig_out, ben_ranks, mal_ranks):
+def create_ipconfig(ipconfig_out, num_clients):
     """ Creates ipconfig file that tells FedML the IP of each node
 
         Parameters:
             ipconfig_out(str): Path for writing the ipconfig file
-            ben_ranks: Number of benign clients
-            mal_ranks: Number of malicious clients
+            num_clients: Number of clients
     """
     path = Path(ipconfig_out)
     os.makedirs(path.parent.absolute(), exist_ok=True)
     with open(ipconfig_out, 'w') as f:
         f.write('receiver_id,ip\n')
-        f.write(f'0,fado_server\n')
-        for rank in ben_ranks:
-            f.write(f'{rank},fado_beg-client-{rank}\n')
-        for rank in mal_ranks:
-            f.write(f'{rank},fado_mal-client-{rank}\n')
+        for rank in range(num_clients + 1):
+            f.write(f'{rank},fado_router\n')
 
 
 def generate_compose(number_ben_clients, number_mal_clients, docker_compose_out):
