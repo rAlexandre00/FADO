@@ -1,13 +1,13 @@
 malicious_clients: 0
-benign_clients: 5
-clients_per_round: 3
-rounds: 100
-epochs: 2
+benign_clients: 10
+clients_per_round: 5
+rounds: 30
+epochs: 1
 batch_size: 20
 
 encrypt_comm: true
 
-dataset: shakespeare
+dataset: femnist
 
 all_data_folder: data/all
 partition_data_folder: data/partitions
