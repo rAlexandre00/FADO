@@ -1,5 +1,5 @@
 malicious_clients: 0
-benign_clients: 10
+benign_clients: 5
 clients_per_round: 5
 rounds: 30
 epochs: 1

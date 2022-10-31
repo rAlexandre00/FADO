@@ -136,7 +136,6 @@ def generate_image_files(model, dev=False):
     # Copies docker files in fado library to user space
     copy_tree(CLIENT_PATH, client_user_path)
     copy_tree(ROUTER_PATH, router_user_path)
-    shutil.copy2(model, os.path.join(client_user_path, 'get_model.py'))
 
     if os.path.exists(model): # if model is a file, copy it
         shutil.copy2(model, os.path.join(client_user_path, 'get_model.py'))

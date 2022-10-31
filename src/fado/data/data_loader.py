@@ -14,8 +14,11 @@ def convert_numpy_to_tensor(args, batched_x, batched_y):
     import torch
     import numpy as np
 
-    if args.dataset == "femnist":
+    if args.dataset == "femnist" and args.model == "cnn":
         batched_x = torch.from_numpy(np.asarray(batched_x)).float().reshape(-1, 28, 28)
+        batched_y = torch.from_numpy(np.asarray(batched_y)).long()
+    elif args.dataset == "femnist" and args.model == "lr":
+        batched_x = torch.from_numpy(np.asarray(batched_x)).float()
         batched_y = torch.from_numpy(np.asarray(batched_y)).long()
     elif args.dataset == "shakespeare":
         batched_x = [word_to_indices(word) for word in batched_x]
