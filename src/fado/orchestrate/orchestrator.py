@@ -12,7 +12,7 @@ from fado.data import split_data
 from fado.crypto import generate_self_signed_certs, generate_certs
 from fado.constants import FEDML_CONFIG_FILE_PATH, LOGS_DIRECTORY, GRPC_CONFIG_OUT, FEDML_BEN_CONFIG_OUT, \
     FEDML_MAL_CONFIG_OUT, CERTS_OUT, ALL_DATA_FOLDER, PARTITION_DATA_FOLDER, DOCKER_COMPOSE_OUT, FEDML_IMAGE, \
-    ROUTER_IMAGE, TENSORBOARD_DIRECTORY, CONFIG_HASH, FADO_DIR, ATTACK_DIRECTORY, DEFENSE_DIRECTORY
+    ROUTER_IMAGE, TENSORBOARD_DIRECTORY, CONFIG_HASH, FADO_DIR, ATTACK_DIRECTORY, DEFENSE_DIRECTORY, CERTS_PATH
 from fado.crypto.hash_verifier import file_changed, write_file_hash
 
 import logging
@@ -70,7 +70,7 @@ def prepare_orchestrate(config_path, args, dev=False):
         if "encrypt_comm" in args and args.encrypt_comm:
             logger.info("Creating TLS certificates")
             # Generate tls certificates (if defined in attacks args)
-            create_certs(CERTS_OUT)
+            create_certs()
 
         logger.info("Creating partitions for server and clients")
         # Split data for each client for train and test
@@ -273,16 +273,19 @@ def create_fedml_config(args, malicious=False):
         yaml.dump(config, f, sort_keys=False)
 
 
-def create_certs(certs_path):
+def create_certs():
     """Generates ca_certs and node_certs that are signed with the ca key
     """
-    os.makedirs(certs_path, exist_ok=True)
-    generate_self_signed_certs(out_key_file=os.path.join(certs_path, 'ca-key.pem'),
-                               out_cert_file=os.path.join(certs_path, 'ca-cert.pem'))
-    generate_certs(out_key_file=os.path.join(certs_path, 'server-key.pem'),
-                   out_cert_file=os.path.join(certs_path, 'server-cert.pem'),
-                   ca_key_file=os.path.join(certs_path, 'ca-key.pem'),
-                   ca_cert_file=os.path.join(certs_path, 'ca-cert.pem'))
+    # os.makedirs(CERTS_OUT, exist_ok=True)
+    # generate_self_signed_certs(out_key_file=os.path.join(certs_path, 'ca-key.pem'),
+    #                            out_cert_file=os.path.join(certs_path, 'ca-cert.pem'))
+    # generate_certs(out_key_file=os.path.join(certs_path, 'server-key.pem'),
+    #                out_cert_file=os.path.join(certs_path, 'server-cert.pem'),
+    #                ca_key_file=os.path.join(certs_path, 'ca-key.pem'),
+    #                ca_cert_file=os.path.join(certs_path, 'ca-cert.pem'))
+    """ Certs are pre-generated to simplify multi node setups """
+    copy_tree(CERTS_PATH, CERTS_OUT)
+
 
 
 def load_base_compose():
