@@ -1,9 +1,10 @@
 import os
 
-from fado import orchestrate, docker
+from fado import orchestrate, docker, crypto
 
 orchestrate_module_dir = os.path.dirname(orchestrate.__file__)
 docker_module_dir = os.path.dirname(docker.__file__)
+crypto_module_dir = os.path.dirname(crypto.__file__)
 
 FADO_DIR = os.path.join(os.path.expanduser("~"), '.fado')
 
@@ -12,6 +13,7 @@ FEDML_CONFIG_FILE_PATH = os.path.join(orchestrate_module_dir, 'base_files', 'fed
 CLIENT_PATH = os.path.join(docker_module_dir, 'client')
 ROUTER_PATH = os.path.join(docker_module_dir, 'router')
 MAL_CLIENT_PATH = os.path.join(docker_module_dir, 'malicious-client')
+CERTS_PATH = os.path.join(crypto_module_dir, 'certs')
 
 CONFIG_HASH = os.path.join(FADO_DIR, '.config_hash')
 LOGS_DIRECTORY = os.path.join(FADO_DIR, 'logs')
