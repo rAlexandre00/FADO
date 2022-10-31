@@ -25,7 +25,4 @@ RUN chmod +x /wait
 COPY configure_ip.sh configure_ip.sh
 RUN chmod +x configure_ip.sh
 
-RUN apt-get update \
-        && apt-get install -y dnsutils
-
 ENTRYPOINT [ ]

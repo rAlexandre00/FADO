@@ -5,5 +5,5 @@ COPY requirements.txt requirements.txt
 RUN pip3 install -r requirements.txt
 
 RUN apt-get update \
-    && DEBIAN_FRONTEND=noninteractive apt-get install -y iproute2 inetutils-ping curl host mtr-tiny tcpdump iptables \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y iproute2 inetutils-ping curl host mtr-tiny tcpdump iptables dnsutils \
     && rm -rf /var/lib/apt/lists/*
