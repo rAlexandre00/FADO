@@ -45,10 +45,13 @@ def prepare_orchestrate(config_path, args, dev=False):
 
     args = AttackArguments(config_path)
 
+    # if user omits args.model in fado_config.yaml we want it to be blank
+    args.model = args.model if 'model' in args else ''
+
     if config_changed or dev:
         logger.info("Creating docker files")
         # Generate image files
-        generate_image_files(args.model_file, dev)
+        generate_image_files(args.model, dev)
 
     if config_changed:
         # Generate docker-compose file
@@ -118,7 +121,7 @@ def generate_router_nat(benign_ranks, malicious_ranks, router_user_path):
         f.writelines(lines)
 
 
-def generate_image_files(model_file, dev=False):
+def generate_image_files(model, dev=False):
     """Creates the docker folder that has fedml and router docker files
 
         Parameters:
@@ -133,7 +136,13 @@ def generate_image_files(model_file, dev=False):
     # Copies docker files in fado library to user space
     copy_tree(CLIENT_PATH, client_user_path)
     copy_tree(ROUTER_PATH, router_user_path)
-    shutil.copy2(model_file, os.path.join(client_user_path, 'get_model.py'))
+    shutil.copy2(model, os.path.join(client_user_path, 'get_model.py'))
+
+    if os.path.exists(model): # if model is a file, copy it
+        shutil.copy2(model, os.path.join(client_user_path, 'get_model.py'))
+    else:
+        shutil.copy2('get_model.py', os.path.join(client_user_path, 'get_model.py'))
+
     if dev:
         import pathlib
         import fado.docker.dev
@@ -257,7 +266,8 @@ def create_fedml_config(args, malicious=False):
     config['train_args']['epochs'] = args.epochs
     config['train_args']['batch_size'] = args.batch_size
     config['device_args']['worker_num'] = client_num
-
+    config['data_args']['dataset'] = args.dataset
+    config['model_args']['model'] = args.model
     if "encrypt_comm" in args:
         config['comm_args']['encrypt'] = args.encrypt_comm
     with open(fedml_config_out, 'w') as f:

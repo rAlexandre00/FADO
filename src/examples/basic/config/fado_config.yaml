@@ -12,5 +12,5 @@ dataset: femnist
 all_data_folder: data/all
 partition_data_folder: data/partitions
 
-model_file: get_model.py
 random_seed: 0
+model: 'lr'

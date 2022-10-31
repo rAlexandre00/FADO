@@ -4,11 +4,28 @@ import json
 import logging
 import numpy as np
 from fedml.ml.engine import ml_engine_adapter
+from fado.data.language_utils import word_to_indices, letter_to_vec
 
 cwd = os.getcwd()
 
 __all__ = ['load_partition_data']
 
+def convert_numpy_to_tensor(args, batched_x, batched_y):
+    import torch
+    import numpy as np
+
+    if args.dataset == "femnist":
+        batched_x = torch.from_numpy(np.asarray(batched_x)).float().reshape(-1, 28, 28)
+        batched_y = torch.from_numpy(np.asarray(batched_y)).long()
+    elif args.dataset == "shakespeare":
+        batched_x = [word_to_indices(word) for word in batched_x]
+        batched_x = torch.from_numpy(np.array(batched_x)).long()
+        batched_y = torch.from_numpy(np.array([letter_to_vec(c) for c in batched_y])).long()
+    else:
+        batched_x = torch.from_numpy(np.asarray(batched_x)).float()
+        batched_y = torch.from_numpy(np.asarray(batched_y)).long()
+
+    return batched_x, batched_y
 
 def read_data(train_data_dir, test_data_dir):
     """parses data in given train and test data directories
@@ -58,7 +75,7 @@ def batch_data(args, data, batch_size):
     for i in range(0, len(data_x), batch_size):
         batched_x = data_x[i: i + batch_size]
         batched_y = data_y[i: i + batch_size]
-        batched_x, batched_y = ml_engine_adapter.convert_numpy_to_ml_engine_data_format(args, batched_x, batched_y)
+        batched_x, batched_y = convert_numpy_to_tensor(args, batched_x, batched_y)
         batch_data.append((batched_x, batched_y))
     return batch_data
 
