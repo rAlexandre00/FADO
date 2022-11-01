@@ -34,6 +34,8 @@ def clean():
     
 def parse_args(args):
     parser = argparse.ArgumentParser()
+
+    parser.add_argument('-f', dest='yaml_file', type=str, help='Specify a custom yaml configuration file', required=False)
     mode_parser = parser.add_subparsers(dest="mode", required=True)
 
     build_parser = mode_parser.add_parser('build')
@@ -55,8 +57,10 @@ if __name__ == '__main__':
 
     args = parse_args(sys.argv[1:])
 
-    config_path = 'config/fado_config.yaml'
-    fado_arguments = AttackArguments(config_path) 
+    if args.yaml_file:
+        fado_arguments = AttackArguments(args.yaml_file) 
+    else:
+        fado_arguments = AttackArguments('config/fado_config.yaml')     
 
     if args.mode == 'build':
         build_mode = args.build_mode
