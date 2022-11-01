@@ -58,15 +58,15 @@ if __name__ == '__main__':
     config_path = 'config/fado_config.yaml'
     fado_arguments = AttackArguments(config_path) 
 
-    if args.number_benign:
-        fado_arguments['benign_clients'] = args.number_benign
-    if args.number_malicious:
-        fado_arguments['malicious_clients'] = args.number_malicious
-    if args.dataset:
-        fado_arguments['dataset'] = args.dataset
-
     if args.mode == 'build':
         build_mode = args.build_mode
+
+        if args.number_benign:
+            fado_arguments['benign_clients'] = args.number_benign
+        if args.number_malicious:
+            fado_arguments['malicious_clients'] = args.number_malicious
+        if args.dataset:
+            fado_arguments['dataset'] = args.dataset
 
         if build_mode == 'data':
             data(fado_arguments)
