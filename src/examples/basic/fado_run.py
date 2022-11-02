@@ -10,6 +10,8 @@ from fado.orchestrate import prepare_orchestrate
 from fado.data.downloader import leaf_executor
 from fado.data.data_splitter import split_data
 
+
+
 def data(args):
     leaf_executor(args)
 
@@ -21,8 +23,8 @@ def partitions(args):
         args.benign_clients + args.malicious_clients
     )
 
-def compose():
-    pass
+def compose(args, config, dev=True):
+    prepare_orchestrate(config, args, dev)
 
 def run():
     os.chdir(FADO_DIR)
@@ -36,7 +38,7 @@ def parse_args(args):
     parser = argparse.ArgumentParser()
 
     parser.add_argument('-f', dest='yaml_file', type=str, help='Specify a custom yaml configuration file', required=False)
-    mode_parser = parser.add_subparsers(dest="mode", required=True)
+    mode_parser = parser.add_subparsers(dest="mode", required=False)
 
     build_parser = mode_parser.add_parser('build')
     mode_parser.add_parser('run')
@@ -55,12 +57,13 @@ def parse_args(args):
 
 if __name__ == '__main__':
 
+    os.umask(0)
+
     args = parse_args(sys.argv[1:])
 
-    if args.yaml_file:
-        fado_arguments = AttackArguments(args.yaml_file) 
-    else:
-        fado_arguments = AttackArguments('config/fado_config.yaml')     
+    config_file = args.yaml_file if args.yaml_file else 'config/fado_config.yaml'
+
+    fado_arguments = AttackArguments(config_file)    
 
     if args.mode == 'build':
         build_mode = args.build_mode
@@ -78,13 +81,18 @@ if __name__ == '__main__':
             partitions(fado_arguments)
         elif build_mode == 'compose':
             # generate_compose on orchestrator.py
-            compose()
+            compose(fado_arguments, config_file, True)
         else:
             data(fado_arguments)
             partitions(fado_arguments)
-            compose()
+            compose(fado_arguments, config_file, True)
 
     elif args.mode == 'run':
         run()
     elif args.mode == 'clean':
         clean()
+    else:
+        data(fado_arguments)
+        partitions(fado_arguments)
+        compose(fado_arguments, config_file, True)
+        run()
