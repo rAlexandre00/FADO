@@ -38,6 +38,8 @@ def prepare_orchestrate(config_path, args, dev=False):
     """
     os.makedirs(FADO_DIR, exist_ok=True)
     config_changed = file_changed(config_path, CONFIG_HASH)
+    # pedreiro
+    config_changed = True
     if not config_changed:
         logger.warning('Attack config has not changed. Data and configuration files will not change')
     else:
@@ -72,9 +74,10 @@ def prepare_orchestrate(config_path, args, dev=False):
             # Generate tls certificates (if defined in attacks args)
             create_certs()
 
-        logger.info("Creating partitions for server and clients")
+        # Commenting this section as will not be part of the compose part
+        #logger.info("Creating partitions for server and clients")
         # Split data for each client for train and test
-        split_data(args.dataset, ALL_DATA_FOLDER, PARTITION_DATA_FOLDER, args.benign_clients + args.malicious_clients)
+        #split_data(args.dataset, ALL_DATA_FOLDER, PARTITION_DATA_FOLDER, args.benign_clients + args.malicious_clients)
 
         logger.info("Creating needed folders")
         os.makedirs(TENSORBOARD_DIRECTORY, exist_ok=True)
@@ -284,6 +287,7 @@ def create_certs():
     #                ca_key_file=os.path.join(certs_path, 'ca-key.pem'),
     #                ca_cert_file=os.path.join(certs_path, 'ca-cert.pem'))
     """ Certs are pre-generated to simplify multi node setups """
+
     copy_tree(CERTS_PATH, CERTS_OUT)
 
 
