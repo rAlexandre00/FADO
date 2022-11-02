@@ -1,3 +1,4 @@
+import json
 import os
 from distutils.dir_util import copy_tree
 from os.path import abspath
@@ -12,11 +13,14 @@ from fado.data import split_data
 from fado.crypto import generate_self_signed_certs, generate_certs
 from fado.constants import FEDML_CONFIG_FILE_PATH, LOGS_DIRECTORY, GRPC_CONFIG_OUT, FEDML_BEN_CONFIG_OUT, \
     FEDML_MAL_CONFIG_OUT, CERTS_OUT, ALL_DATA_FOLDER, PARTITION_DATA_FOLDER, DOCKER_COMPOSE_OUT, FEDML_IMAGE, \
-    ROUTER_IMAGE, TENSORBOARD_DIRECTORY, CONFIG_HASH, FADO_DIR, ATTACK_DIRECTORY, DEFENSE_DIRECTORY, CERTS_PATH
+    ROUTER_IMAGE, TENSORBOARD_DIRECTORY, CONFIG_HASH, FADO_DIR, ATTACK_DIRECTORY, DEFENSE_DIRECTORY, CERTS_PATH, \
+    FADO_CONFIG_OUT
 from fado.crypto.hash_verifier import file_changed, write_file_hash
 
 import logging
 import random
+
+from fado.security.utils import load_attack
 
 logger = logging.getLogger("fado")
 
@@ -33,6 +37,7 @@ def prepare_orchestrate(config_path, args, dev=False):
 
         Parameters:
             config_path(str): Path for the yaml configuration file
+            args(AttackArguments): FADO arguments
             dev: Identifies if development mode is enabled
 
     """
@@ -42,8 +47,6 @@ def prepare_orchestrate(config_path, args, dev=False):
         logger.warning('Attack config has not changed. Data and configuration files will not change')
     else:
         write_file_hash(config_path, CONFIG_HASH)
-
-    args = AttackArguments(config_path)
 
     # if user omits args.model in fado_config.yaml we want it to be blank
     args.model = args.model if 'model' in args else ''
@@ -60,7 +63,7 @@ def prepare_orchestrate(config_path, args, dev=False):
 
         logger.info("Creating networking files")
         # Create script that will tell how the router should forward packets
-        generate_router_nat(benign_ranks, malicious_ranks, ROUTER_IMAGE)
+        generate_router_files(args, benign_ranks, malicious_ranks)
         # Create grpc_ipconfig file and fedml_config.yaml
         create_ipconfig(GRPC_CONFIG_OUT, args.benign_clients + args.malicious_clients)
         # Create fedml_config.yaml for server/benign client and for malicious client
@@ -83,6 +86,12 @@ def prepare_orchestrate(config_path, args, dev=False):
 
         logger.info("Creating logs directory")
         os.makedirs(LOGS_DIRECTORY, exist_ok=True)
+
+
+def generate_router_files(args, benign_ranks, malicious_ranks):
+    generate_router_nat(benign_ranks, malicious_ranks, ROUTER_IMAGE)
+    with open(FADO_CONFIG_OUT, 'w') as f:
+        yaml.dump(args, f)
 
 
 def generate_router_nat(benign_ranks, malicious_ranks, router_user_path):
@@ -109,7 +118,8 @@ def generate_router_nat(benign_ranks, malicious_ranks, router_user_path):
                      f'do fado_client_{rank}=$(dig +short fado_mal-client-{rank} A); '
                      f'done' + "\n")
     # Create port forwarding for each node
-    lines.append('iptables -t nat -A PREROUTING -p tcp --dport 8890 -j DNAT --to-destination "$fado_server":8890' + "\n")
+    lines.append(
+        'iptables -t nat -A PREROUTING -p tcp --dport 8890 -j DNAT --to-destination "$fado_server":8890' + "\n")
     for rank in benign_ranks + malicious_ranks:
         lines.append(f'iptables -t nat -A PREROUTING -p tcp --dport {8890 + rank} -j DNAT '
                      f'--to-destination "$fado_client_{rank}":{8890 + rank}' + "\n")
@@ -137,7 +147,7 @@ def generate_image_files(model, dev=False):
     copy_tree(CLIENT_PATH, client_user_path)
     copy_tree(ROUTER_PATH, router_user_path)
 
-    if os.path.exists(model): # if model is a file, copy it
+    if os.path.exists(model):  # if model is a file, copy it
         shutil.copy2(model, os.path.join(client_user_path, 'get_model.py'))
     else:
         shutil.copy2('get_model.py', os.path.join(client_user_path, 'get_model.py'))
@@ -247,11 +257,11 @@ def create_fedml_config(args, malicious=False):
 
     if malicious:
         fedml_config_out = FEDML_BEN_CONFIG_OUT
-        # maybe throw an exception, what if 'attack_spec' is not defined?
+        # maybe throw an exception, what if 'client_attack_spec' is not defined?
         # TODO: user has to be alerted
-        if hasattr(args, 'attack_spec'):
+        if hasattr(args, 'client_attack_spec'):
             config['attack_args'] = {}
-            config['attack_args']['attack_spec'] = args.attack_spec
+            config['attack_args']['client_attack_spec'] = args.client_attack_spec
     else:
         if hasattr(args, 'defense_spec'):
             config['defense_args'] = {}
@@ -285,7 +295,6 @@ def create_certs():
     #                ca_cert_file=os.path.join(certs_path, 'ca-cert.pem'))
     """ Certs are pre-generated to simplify multi node setups """
     copy_tree(CERTS_PATH, CERTS_OUT)
-
 
 
 def load_base_compose():
