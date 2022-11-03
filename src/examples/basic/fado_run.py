@@ -5,7 +5,7 @@ import sys
 import shutil
 
 from fado.arguments.arguments import AttackArguments
-from fado.constants import ALL_DATA_FOLDER, FADO_DIR, PARTITION_DATA_FOLDER
+from fado.constants import ALL_DATA_FOLDER, FADO_DIR, LOGS_DIRECTORY, PARTITION_DATA_FOLDER
 from fado.orchestrate import prepare_orchestrate
 from fado.data.downloader import leaf_executor
 from fado.data.data_splitter import split_data
@@ -32,7 +32,8 @@ def run():
     subprocess.run(['docker', 'compose', 'up'])  # stack?
 
 def clean():
-    shutil.rmtree(FADO_DIR)
+    shutil.rmtree(PARTITION_DATA_FOLDER)
+    shutil.rmtree(LOGS_DIRECTORY)
     
 def parse_args(args):
     parser = argparse.ArgumentParser()
@@ -45,6 +46,7 @@ def parse_args(args):
     mode_parser.add_parser('clean')
 
     build_parser.add_argument('-d', dest='dataset', type=str, choices=['femnist', 'shakespeare', 'sent140'], required=False)
+    build_parser.add_argument('-dr', dest='dataset_rate', help='Fraction of the dataset', default='0.05', type=str, choices=['femnist', 'shakespeare', 'sent140'], required=False)
     build_parser.add_argument('-nb', dest='number_benign', type=int, required=False)
     build_parser.add_argument('-nm', dest='number_malicious', type=int, required=False)
 
@@ -56,8 +58,6 @@ def parse_args(args):
     return parser.parse_args(args)
 
 if __name__ == '__main__':
-
-    os.umask(0)
 
     args = parse_args(sys.argv[1:])
 
