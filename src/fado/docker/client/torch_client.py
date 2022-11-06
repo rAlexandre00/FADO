@@ -11,6 +11,7 @@ from fado.logging.prints import HiddenPrints
 from fado.models import get_model
 
 from fado.security.utils import load_attack
+from fedml.ml.engine.ml_engine_adapter import get_torch_device
 
 from client_trainer import FadoClientTrainer
 
@@ -67,8 +68,7 @@ if __name__ == "__main__":
     fh = logging.FileHandler(os.path.join(f'logs/client_{args.rank}.log'))
     logger.addHandler(fh)
 
-    # init device
-    device = fedml.device.get_device(args)
+    device = get_torch_device(args, args.using_gpu, 0, "gpu")
 
     # Get the model
     model = get_model(args.dataset, args.model)
