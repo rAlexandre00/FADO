@@ -1,5 +1,6 @@
 import json
 import os
+import pathlib
 from distutils.dir_util import copy_tree
 from os.path import abspath
 from pathlib import Path
@@ -10,11 +11,10 @@ import shutil
 
 from fado.arguments import AttackArguments
 from fado.data import split_data
-from fado.crypto import generate_self_signed_certs, generate_certs
 from fado.constants import FEDML_CONFIG_FILE_PATH, LOGS_DIRECTORY, GRPC_CONFIG_OUT, FEDML_BEN_CONFIG_OUT, \
     FEDML_MAL_CONFIG_OUT, CERTS_OUT, ALL_DATA_FOLDER, PARTITION_DATA_FOLDER, DOCKER_COMPOSE_OUT, FEDML_IMAGE, \
     ROUTER_IMAGE, TENSORBOARD_DIRECTORY, CONFIG_HASH, FADO_DIR, ATTACK_DIRECTORY, DEFENSE_DIRECTORY, CERTS_PATH, \
-    FADO_CONFIG_OUT
+    FADO_CONFIG_OUT, ROUTER_PATH, CLIENT_PATH, DEV_PATH
 from fado.crypto.hash_verifier import file_changed, write_file_hash
 
 import logging
@@ -51,19 +51,18 @@ def prepare_orchestrate(config_path, args, dev=False):
     # if user omits args.model in fado_config.yaml we want it to be blank
     args.model = args.model if 'model' in args else ''
 
-    if config_changed or dev:
+    if config_changed:
         logger.info("Creating docker files")
         # Generate image files
-        generate_image_files(args.model, dev)
+        generate_image_files(args.model)
 
-    if config_changed:
         # Generate docker-compose file
         benign_ranks, malicious_ranks = generate_compose(args.dataset, args.benign_clients, args.malicious_clients,
                                                          DOCKER_COMPOSE_OUT)
 
         logger.info("Creating networking files")
         # Create script that will tell how the router should forward packets
-        generate_router_files(args, benign_ranks, malicious_ranks)
+        generate_router_files(args, benign_ranks, malicious_ranks, dev)
         # Create grpc_ipconfig file and fedml_config.yaml
         create_ipconfig(GRPC_CONFIG_OUT, args.benign_clients + args.malicious_clients)
         # Create fedml_config.yaml for server/benign client and for malicious client
@@ -87,11 +86,14 @@ def prepare_orchestrate(config_path, args, dev=False):
         logger.info("Creating logs directory")
         os.makedirs(LOGS_DIRECTORY, exist_ok=True)
 
+    if dev:
+        logger.info("Generating dev files")
+        generate_dev_files()
 
-def generate_router_files(args, benign_ranks, malicious_ranks):
+
+def generate_router_files(args, benign_ranks, malicious_ranks, dev=False):
     generate_router_nat(benign_ranks, malicious_ranks, ROUTER_IMAGE)
-    with open(FADO_CONFIG_OUT, 'w') as f:
-        yaml.dump(args, f)
+    generate_router_image(args, dev)
 
 
 def generate_router_nat(benign_ranks, malicious_ranks, router_user_path):
@@ -131,7 +133,14 @@ def generate_router_nat(benign_ranks, malicious_ranks, router_user_path):
         f.writelines(lines)
 
 
-def generate_image_files(model, dev=False):
+def generate_router_image(args, dev=False):
+    path = Path(FADO_CONFIG_OUT)
+    os.makedirs(path.parent.absolute(), exist_ok=True)
+    with open(FADO_CONFIG_OUT, 'w') as f:
+        yaml.dump(args.__dict__, f)
+
+
+def generate_image_files(model):
     """Creates the docker folder that has fedml and router docker files
 
         Parameters:
@@ -139,7 +148,6 @@ def generate_image_files(model, dev=False):
             dev: Identifies if development mode is enabled
     :return:
     """
-    from fado.constants import CLIENT_PATH, ROUTER_PATH, MAL_CLIENT_PATH
     client_user_path = FEDML_IMAGE
     router_user_path = ROUTER_IMAGE
 
@@ -152,19 +160,35 @@ def generate_image_files(model, dev=False):
     else:
         shutil.copy2('get_model.py', os.path.join(client_user_path, 'get_model.py'))
 
-    if dev:
-        import pathlib
-        import fado.docker.dev
-        fado_path = os.path.join(client_user_path, 'fado')
-        fado_folder = str(pathlib.Path(__file__).parents[1])
-        root_folder = str(pathlib.Path(__file__).parents[3])
-        copy_tree(fado_folder, os.path.join(fado_path, 'src', 'fado'))
-        shutil.copy2(os.path.join(root_folder, 'setup.py'),
-                     os.path.join(fado_path, 'setup.py'))
-        shutil.copy2(os.path.join(os.path.dirname(fado.docker.dev.__file__), 'Dockerfile'),
-                     os.path.join(client_user_path, 'Dockerfile'))
-        shutil.copy2(os.path.join(os.path.dirname(fado.docker.dev.__file__), 'requirements.txt'),
-                     os.path.join(client_user_path, 'requirements.txt'))
+
+def generate_dev_files():
+    # Copies docker files in fado library to user space
+    copy_tree(CLIENT_PATH, FEDML_IMAGE)
+    #copy_tree(ROUTER_PATH, ROUTER_IMAGE)
+
+    # Router dev files
+    requirements_base_path = os.path.join(ROUTER_PATH, 'dev_requirements.txt')
+    requirements_user_path = os.path.join(ROUTER_IMAGE, 'requirements.txt')
+    shutil.copy2(requirements_base_path, requirements_user_path)
+    fado_path = os.path.join(ROUTER_IMAGE, 'fado')
+    root_folder = str(pathlib.Path(__file__).parents[3])
+    fado_folder = str(pathlib.Path(__file__).parents[1])
+    copy_tree(fado_folder, os.path.join(fado_path, 'src', 'fado'))
+    shutil.copy2(os.path.join(root_folder, 'setup.py'),
+                 os.path.join(fado_path, 'setup.py'))
+
+    # Client dev files
+    client_user_path = FEDML_IMAGE
+    fado_path = os.path.join(client_user_path, 'fado')
+    fado_folder = str(pathlib.Path(__file__).parents[1])
+    root_folder = str(pathlib.Path(__file__).parents[3])
+    copy_tree(fado_folder, os.path.join(fado_path, 'src', 'fado'))
+    shutil.copy2(os.path.join(root_folder, 'setup.py'),
+                 os.path.join(fado_path, 'setup.py'))
+    shutil.copy2(os.path.join(DEV_PATH, 'Dockerfile'),
+                 os.path.join(client_user_path, 'Dockerfile'))
+    shutil.copy2(os.path.join(DEV_PATH, 'requirements.txt'),
+                 os.path.join(client_user_path, 'requirements.txt'))
 
 
 def create_ipconfig(ipconfig_out, num_clients):

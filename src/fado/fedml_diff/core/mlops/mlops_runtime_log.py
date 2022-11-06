@@ -6,7 +6,7 @@ from logging import handlers
 
 # class MLOpsRuntimeLog:
 
-def init_logs(self, show_stdout_log=True):
+def init_logs(self, show_stdout_log=False):
     log_file_path, program_prefix = build_log_file_path(self.args)
     logging.raiseExceptions = True
     self.logger = logging.getLogger(log_file_path)

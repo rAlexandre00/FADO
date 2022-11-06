@@ -21,16 +21,12 @@ class FadoAttacker:
         self.attacker = None
 
     def init(self, args, spec):
-        if hasattr(args, spec) and args.attack_spec:
-
-            if args.rank == 0:  # do not initialize attacker for server
-                return
-
+        if hasattr(args, spec):
             if isinstance(getattr(args, spec), str):
                 attack_pkg, attack_module, attack_class = args.attacker_class.split('.')
                 self.attacker = getattr(import_module(f'{attack_pkg}.{attack_module}'), f'{attack_class}')(args)
             else:
-                self.attacker = getattr(args, spec)
+                self.attacker = getattr(args, spec)(args)
 
             logger.info(f"Initializing attacker! {self.attacker}")
 
@@ -51,7 +47,7 @@ class FadoAttacker:
     def attack_network(self, packet):
         if self.attacker is None:
             raise Exception("attacker is not initialized!")
-        self.attacker.attack_network(packet)
+        return self.attacker.attack_network(packet)
 
     def attack_data(self, dataset):
         if self.attacker is None:

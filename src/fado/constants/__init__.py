@@ -12,6 +12,7 @@ GENERAL_COMPOSE_FILE_PATH = os.path.join(orchestrate_module_dir, 'base_files', '
 FEDML_CONFIG_FILE_PATH = os.path.join(orchestrate_module_dir, 'base_files', 'fedml_config.yaml')
 CLIENT_PATH = os.path.join(docker_module_dir, 'client')
 ROUTER_PATH = os.path.join(docker_module_dir, 'router')
+DEV_PATH = os.path.join(docker_module_dir, 'dev')
 MAL_CLIENT_PATH = os.path.join(docker_module_dir, 'malicious-client')
 CERTS_PATH = os.path.join(crypto_module_dir, 'certs')
 
