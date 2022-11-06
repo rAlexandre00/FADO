@@ -1,5 +1,6 @@
 import copy
 import logging
+from flask import Flask
 from typing import Dict, List, Tuple
 
 import torch
@@ -231,3 +232,4 @@ class FadoServerAggregator(ServerAggregator):
         if FadoDefender.get_instance().is_defense_enabled():
             aggregated_model_or_grad = FadoDefender.get_instance().defend_after_aggregation(aggregated_model_or_grad)
         return aggregated_model_or_grad
+

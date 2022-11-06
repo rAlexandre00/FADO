@@ -21,7 +21,7 @@ class FadoClientTrainer(ClientTrainer):
         """
         super().__init__(model, args)
         # Initialize attacker class
-        FadoAttacker.get_instance().init(args)
+        FadoAttacker.get_instance().init(args, "client_attack_spec")
 
     
     def on_before_local_training(self, train_data, device, args):

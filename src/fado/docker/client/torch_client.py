@@ -63,7 +63,7 @@ if __name__ == "__main__":
     with HiddenPrints():
         args = fedml.init()
 
-    load_attack(args)
+    load_attack(args, 'client_attack_spec')
 
     fh = logging.FileHandler(os.path.join(f'logs/client_{args.rank}.log'))
     logger.addHandler(fh)

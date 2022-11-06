@@ -1,16 +1,16 @@
+import json
 import os
-import yaml
 from datetime import datetime
+from threading import Thread
 
-from fado.docker.client.server_aggregator import FadoServerAggregator
+from flask import Flask
+
 from fado.logging.prints import HiddenPrints
 from fado.security.utils import load_defense
 from fado.models import get_model
 import fedml
-import torch
 import logging
 from fedml import FedMLRunner
-from fedml.core.mlops.mlops_runtime_log import MLOpsRuntimeLog
 from server_aggregator import FadoServerAggregator
 from fado.data.data_loader import load_partition_data
 from fedml.ml.engine.ml_engine_adapter import get_torch_device
@@ -18,6 +18,7 @@ from fedml.ml.engine.ml_engine_adapter import get_torch_device
 from torch.utils.tensorboard import SummaryWriter
 
 logger = logging.getLogger("fado")
+app = Flask(__name__)
 
 
 def load_data(args):
@@ -55,6 +56,18 @@ def load_data(args):
     return dataset, class_num
 
 
+def _start_http_server():
+    logging.getLogger('werkzeug').setLevel(logging.ERROR)
+    app.run(host="0.0.0.0", port=8889)
+    return
+
+
+@app.route('/global_model', methods=['GET'])
+def get_global_model():
+    global server_aggregator
+    return str(server_aggregator.get_model_params())
+
+
 if __name__ == "__main__":
     # init FedML framework
     #with HiddenPrints():
@@ -80,9 +93,15 @@ if __name__ == "__main__":
     os.makedirs(board_out, exist_ok=True)
     writer = SummaryWriter(board_out)
 
+    global server_aggregator
     server_aggregator = FadoServerAggregator(model, writer, args)
+
+    thread = Thread(target=_start_http_server)
+    thread.start()
 
     # start training
     logger.info("Starting training...")
     fedml_runner = FedMLRunner(args, device, dataset, model, server_aggregator=server_aggregator)
     fedml_runner.run()
+    thread.join()
+

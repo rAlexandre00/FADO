@@ -20,24 +20,20 @@ class FadoAttacker:
         self.attack_type = None
         self.attacker = None
 
-    def init(self, args):
-        if hasattr(args, "attack_spec") and args.attack_spec:
-
-            if args.rank == 0:  # do not initialize attacker for server
-                return
-
-            if isinstance(args.attack_spec, str):
+    def init(self, args, spec):
+        if hasattr(args, spec):
+            if isinstance(getattr(args, spec), str):
                 attack_pkg, attack_module, attack_class = args.attacker_class.split('.')
                 self.attacker = getattr(import_module(f'{attack_pkg}.{attack_module}'), f'{attack_class}')(args)
             else:
-                self.attacker = args.attack_spec(args)
+                self.attacker = getattr(args, spec)(args)
 
             logger.info(f"Initializing attacker! {self.attacker}")
 
     def is_model_attack(self):
         return self.attacker.is_model_attack() if self.attacker else False
 
-    def is_network_delay_attack(self):
+    def is_network_attack(self):
         return self.attacker.is_network_attack() if self.attacker else False
 
     def is_data_attack(self):
@@ -48,10 +44,10 @@ class FadoAttacker:
             raise Exception("attacker is not initialized!")
         return self.attacker.attack_model(raw_client_grad_list, extra_auxiliary_info)
 
-    def attack_network(self):
+    def attack_network(self, packet):
         if self.attacker is None:
             raise Exception("attacker is not initialized!")
-        self.attacker.delay_response()
+        return self.attacker.attack_network(packet)
 
     def attack_data(self, dataset):
         if self.attacker is None:
