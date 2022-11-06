@@ -5,6 +5,8 @@ ADD fado fado
 COPY requirements.txt requirements.txt
 RUN pip3 install -r requirements.txt
 
+RUN pip3 install tensorboard
+
 COPY run_client.sh run_client.sh
 COPY run_server.sh run_server.sh
 COPY run_malicious_client.sh run_malicious_client.sh

@@ -13,6 +13,7 @@ from fedml import FedMLRunner
 from fedml.core.mlops.mlops_runtime_log import MLOpsRuntimeLog
 from server_aggregator import FadoServerAggregator
 from fado.data.data_loader import load_partition_data
+from fedml.ml.engine.ml_engine_adapter import get_torch_device
 
 from torch.utils.tensorboard import SummaryWriter
 
@@ -56,16 +57,16 @@ def load_data(args):
 
 if __name__ == "__main__":
     # init FedML framework
-    with HiddenPrints():
-        args = fedml.init()
+    #with HiddenPrints():
+    #    args = fedml.init()
+    args = fedml.init()
 
     load_defense(args)
 
     fh = logging.FileHandler(os.path.join(f'logs/server.log'))
     logger.addHandler(fh)
 
-    # init device
-    device = fedml.device.get_device(args)
+    device = get_torch_device(args, args.using_gpu, 0, "gpu")
 
     # Get the model
     model = get_model(args.dataset, args.model)
