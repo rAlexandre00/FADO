@@ -14,10 +14,6 @@ cap_add:
 command: >-
   sh -c "/app/configure_ip.sh && /app/run_server.sh"
 deploy:
-  resources:
-    reservations:
-      devices:
-        - capabilities: [gpu]
   placement:
     constraints:
       - node.role == manager

@@ -49,7 +49,7 @@ def prepare_orchestrate(config_path, args, dev=False):
 
         # Generate docker-compose file
         benign_ranks, malicious_ranks = generate_compose(args.dataset, args.benign_clients, args.malicious_clients,
-                                                         DOCKER_COMPOSE_OUT)
+                                                         DOCKER_COMPOSE_OUT, args.using_gpu)
 
         logger.info("Creating networking files")
         # Create script that will tell how the router should forward packets
@@ -198,7 +198,7 @@ def create_ipconfig(ipconfig_out, num_clients):
             f.write(f'{rank},fado_router\n')
 
 
-def generate_compose(dataset, number_ben_clients, number_mal_clients, docker_compose_out):
+def generate_compose(dataset, number_ben_clients, number_mal_clients, docker_compose_out, using_gpu=False):
     """
     Loads a default compose file and generates 'number_clients' of client services
 
@@ -224,7 +224,7 @@ def generate_compose(dataset, number_ben_clients, number_mal_clients, docker_com
     logger.info(f'Malicious clients - {malicious_ranks}')
 
     # Load the default docker compose
-    docker_compose = load_base_compose()
+    docker_compose = load_base_compose(using_gpu)
 
     # Generate benign compose services
     base = docker_compose['services']['beg-client']
@@ -314,7 +314,7 @@ def create_certs():
     copy_tree(CERTS_PATH, CERTS_OUT)
 
 
-def load_base_compose():
+def load_base_compose(using_gpu=False):
     """
     Reads four files in order to create a default docker-compose
     The files are:
@@ -334,10 +334,26 @@ def load_base_compose():
     with open(GENERAL_COMPOSE_FILE_PATH, 'r') as file:
         docker_compose = yaml.load(file, Loader=yaml.FullLoader)
 
+    """
+    deploy:
+        resources:
+            reservations:
+            devices:
+            - driver: nvidia
+                capabilities: [gpu]
+    """
     # Put inside the docker compose file the client and server base files
     for service in ['server', 'beg-client', 'mal-client', 'router']:
         with open(dir_path + os.path.sep + docker_compose['services'][service]['compose-file'], 'r') as file:
             compose = yaml.load(file, Loader=yaml.FullLoader)
             docker_compose['services'][service].pop('compose-file')
-            docker_compose['services'][service] = compose
+            docker_compose['services'][service] = compose      
+
+    if using_gpu:
+        with open(dir_path + os.path.sep + 'gpu_compose.yaml', 'r') as file:
+            gpu_compose = yaml.load(file, Loader=yaml.FullLoader)
+            docker_compose['services']['beg-client']['deploy'] = gpu_compose['deploy']
+            docker_compose['services']['mal-client']['deploy'] = gpu_compose['deploy']
+            print(gpu_compose)
+            docker_compose['services']['server']['deploy']['resources'] = gpu_compose['deploy']['resources']
     return docker_compose

@@ -1,6 +1,6 @@
 malicious_clients: 0
-benign_clients: 30
-clients_per_round: 5
+benign_clients: 2
+clients_per_round: 2
 
 # Training Hyper Parameters
 rounds: 50
@@ -19,3 +19,7 @@ partition_data_folder: data/partitions
 #network_attack_spec: 'drop'
 
 random_seed: 0
+
+# Hardware
+
+using_gpu: false

@@ -19,12 +19,6 @@ cap_add:
   - NET_ADMIN # Authorize container to change network configurations
 command: >-
   sh -c "/app/configure_ip.sh && /wait && /app/run_malicious_client.sh"
-deploy:
-  resources:
-    reservations:
-      devices:
-      - driver: nvidia
-        capabilities: [gpu]
 networks:
   clients_network:
 depends_on:
