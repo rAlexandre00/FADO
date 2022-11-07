@@ -21,5 +21,10 @@ setup(
     install_requires=requirements,
     package_data={
         "": ["*.yaml"]
-    }
+    },
+    entry_points={
+        'console_scripts': [
+            'fado = fado.cli.fado_run:cli',
+        ],
+    },
 )

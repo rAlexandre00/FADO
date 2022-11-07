@@ -10,6 +10,8 @@ FADO_DIR = os.path.join(os.path.expanduser("~"), '.fado')
 
 GENERAL_COMPOSE_FILE_PATH = os.path.join(orchestrate_module_dir, 'base_files', 'general_compose.yaml')
 FEDML_CONFIG_FILE_PATH = os.path.join(orchestrate_module_dir, 'base_files', 'fedml_config.yaml')
+FADO_DEFAULT_CONFIG_FILE_PATH = os.path.join(orchestrate_module_dir, 'base_files', 'fado_config.yaml')
+FADO_DEFAULT_MODEL_PATH = os.path.join(orchestrate_module_dir, 'base_files', 'get_model.py')
 CLIENT_PATH = os.path.join(docker_module_dir, 'client')
 ROUTER_PATH = os.path.join(docker_module_dir, 'router')
 DEV_PATH = os.path.join(docker_module_dir, 'dev')
