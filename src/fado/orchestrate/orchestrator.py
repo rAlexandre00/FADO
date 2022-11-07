@@ -354,6 +354,5 @@ def load_base_compose(using_gpu=False):
             gpu_compose = yaml.load(file, Loader=yaml.FullLoader)
             docker_compose['services']['beg-client']['deploy'] = gpu_compose['deploy']
             docker_compose['services']['mal-client']['deploy'] = gpu_compose['deploy']
-            print(gpu_compose)
             docker_compose['services']['server']['deploy']['resources'] = gpu_compose['deploy']['resources']
     return docker_compose

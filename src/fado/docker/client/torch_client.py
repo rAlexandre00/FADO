@@ -71,6 +71,8 @@ if __name__ == "__main__":
 
     # load data
     dataset, output_dim = load_data(args)
+
+    logger.info("Data loaded...")
     # Initialize client trainer
     client_trainer = FadoClientTrainer(model, args)
 
