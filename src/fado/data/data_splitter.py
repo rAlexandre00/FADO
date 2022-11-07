@@ -20,6 +20,7 @@ def split_data(dataset, all_data_folder, partition_data_folder, num_users):
     """
     for t in ["train", 'test']:
         all_data = {}
+        server_data = {}
         data_files = os.listdir(os.path.join(all_data_folder, dataset, t))
         # Get all json files from all_data_folder
         data_files = [f for f in data_files if f.endswith(".json")]
@@ -38,7 +39,15 @@ def split_data(dataset, all_data_folder, partition_data_folder, num_users):
             user_data = {k: {} for k in users}
             # Set the corresponding user list
             user_data[user_id] = all_data[user_id]
+            server_data[user_id] = all_data[user_id]
             with open(os.path.join(partition_data_folder, dataset, f'user_{i}', t, 'data.json'), "w") as outfile:
                 json.dump({'user_data': user_data}, outfile)
 
-        # The server uses the all_data_folder
+        os.makedirs(os.path.dirname(os.path.join(partition_data_folder, dataset, 'server', t, '')), exist_ok=True)
+        # The server uses the train data of the clients training and all the test available
+        if t == 'train':
+            with open(os.path.join(partition_data_folder, dataset, 'server', t, 'data.json'), "w") as outfile:
+                json.dump({'user_data': server_data}, outfile)
+        else:
+            with open(os.path.join(partition_data_folder, dataset, 'server', t, 'data.json'), "w") as outfile:
+                json.dump({'user_data': all_data}, outfile)
