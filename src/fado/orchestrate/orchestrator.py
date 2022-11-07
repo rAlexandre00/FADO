@@ -150,7 +150,7 @@ def generate_image_files(model):
     if os.path.exists(model):  # if model is a file, copy it
         shutil.copy2(model, os.path.join(client_user_path, 'get_model.py'))
     else:
-        shutil.copy2('get_model.py', os.path.join(client_user_path, 'get_model.py'))
+        shutil.copy2(FADO_DEFAULT_MODEL_PATH, os.path.join(client_user_path, 'get_model.py'))
 
 
 def generate_dev_files():

@@ -1,7 +1,10 @@
+import logging
 from importlib import import_module
 import torch
 import os
 from fedml.model.model_hub import *
+
+logger = logging.getLogger("fado")
 
 def get_model(args):
 
