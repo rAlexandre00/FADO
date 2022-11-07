@@ -14,6 +14,7 @@ QUEUE_NUMBER = 2
 
 logger = logging.getLogger("fado")
 
+
 def process_packet(pkt):
     scapy_pkt = IP(pkt.get_payload())
     scapy_pkt = FadoAttacker.get_instance().attack_network(scapy_pkt)
@@ -33,7 +34,6 @@ if __name__ == "__main__":
 
         p = subprocess.call(['iptables', '-I', 'FORWARD', '-p', 'tcp', '--destination-port', '8890', '-j', 'NFQUEUE',
                              '--queue-num', f'{QUEUE_NUMBER}'])
-
 
         # Bind to the same queue number (here 2)
         nfqueue.bind(QUEUE_NUMBER, process_packet)

@@ -70,9 +70,8 @@ def get_global_model():
 
 if __name__ == "__main__":
     # init FedML framework
-    #with HiddenPrints():
-    #    args = fedml.init()
-    args = fedml.init()
+    with HiddenPrints():
+       args = fedml.init()
 
     load_defense(args)
 
