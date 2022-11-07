@@ -247,7 +247,7 @@ def generate_compose(dataset, number_ben_clients, number_mal_clients, docker_com
     docker_compose['services'].pop('mal-client')
 
     # Customize volume for data in server
-    docker_compose['services']['server']['volumes'] += [f'{ALL_DATA_FOLDER}/{dataset}:/app/data/']
+    docker_compose['services']['server']['volumes'] += [f'{PARTITION_DATA_FOLDER}/{dataset}/server:/app/data/']
 
     with open(docker_compose_out, 'w') as f:
         yaml.dump(docker_compose, f, sort_keys=False)
