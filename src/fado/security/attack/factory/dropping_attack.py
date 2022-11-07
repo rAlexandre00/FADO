@@ -5,7 +5,6 @@ from threading import Thread
 
 import requests
 import torch
-from sklearn.metrics import mean_squared_error
 
 from fado.security.attack.attack_base import NetworkAttack
 

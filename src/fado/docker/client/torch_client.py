@@ -64,10 +64,10 @@ if __name__ == "__main__":
     fh = logging.FileHandler(os.path.join(f'logs/client_{args.rank}.log'))
     logger.addHandler(fh)
 
-    device = get_torch_device(args, args.using_gpu, 0, "gpu")
+    device = get_torch_device(args, args.using_gpu, args.rank % 2, "gpu")
 
     # Get the model
-    model = get_model(args.dataset, args.model)
+    model = get_model(args)
 
     # load data
     dataset, output_dim = load_data(args)

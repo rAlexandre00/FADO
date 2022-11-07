@@ -10,6 +10,8 @@ cwd = os.getcwd()
 
 __all__ = ['load_partition_data']
 
+logger = logging.getLogger('fado')
+
 def convert_numpy_to_tensor(args, batched_x, batched_y):
     import torch
     import numpy as np
@@ -135,6 +137,9 @@ def load_partition_data(
         client_idx += 1
     client_num = client_idx
     class_num = 62
+
+    del train_data
+    del test_data
 
     return (
         client_num,

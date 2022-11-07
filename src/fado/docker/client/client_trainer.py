@@ -112,6 +112,8 @@ class FadoClientTrainer(ClientTrainer):
             else:
                 epoch_loss.append(sum(batch_loss) / len(batch_loss))
 
+        torch.cuda.empty_cache()
+
     def test(self, test_data, device, args):
         model = self.model
 

@@ -30,6 +30,7 @@ def compose(args, config, dev=True):
 
 def run():
     os.chdir(FADO_DIR)
+    subprocess.run(['docker', 'compose', 'down'])
     subprocess.run(['docker', 'compose', 'build'])
     subprocess.run(['docker', 'compose', 'up'])  # up/stack ?
 

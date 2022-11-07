@@ -80,7 +80,7 @@ if __name__ == "__main__":
     device = get_torch_device(args, args.using_gpu, 0, "gpu")
 
     # Get the model
-    model = get_model(args.dataset, args.model)
+    model = get_model(args)
 
     # load data
     logger.info("Loading data...")
