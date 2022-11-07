@@ -1,9 +1,9 @@
 malicious_clients: 0
-benign_clients: 2
-clients_per_round: 2
+benign_clients: 15
+clients_per_round: 5
 
 # Training Hyper Parameters
-rounds: 50
+rounds: 20
 epochs: 10
 batch_size: 64
 client_optimizer: adam
@@ -22,4 +22,4 @@ random_seed: 0
 
 # Hardware
 
-using_gpu: false
+using_gpu: true

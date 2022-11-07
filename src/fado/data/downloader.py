@@ -44,7 +44,7 @@ def leaf_executor(args):
     leaf_path = os.path.dirname(leaf.__file__)
 
     # Copying LEAF's utils folder to temp directory
-    shutil.copytree(os.path.join(leaf_path, 'utils'), os.path.join(temp_dir, 'utils'))
+    shutil.copytree(os.path.join(leaf_path, 'utils'), os.path.join(temp_dir, 'utils'), dirs_exist_ok=True)
     # Copying LEAF's dataset folder to temp directory
     shutil.copytree(os.path.join(leaf_path, dataset), os.path.join(temp_dir, dataset), dirs_exist_ok=True)
 

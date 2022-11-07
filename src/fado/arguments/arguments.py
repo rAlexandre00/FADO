@@ -31,5 +31,8 @@ class AttackArguments:
         for key, value in key_pairs.items():
             setattr(self, key, value)
 
+    def set_argument(self, key, value):
+        setattr(self, key, value)
+
     def __contains__(self, key):
         return hasattr(self, key)
