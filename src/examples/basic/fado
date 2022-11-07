@@ -1,9 +1,8 @@
 #!/bin/bash
-
 # estas cenas é só para nós testarmos...
 
 # alias path_to_fado_experiment=$(pwd) -> while on the experiment folder
 # sudo chmod +x fado
 # export PATH=$PATH:$(pwd)
 cd /mnt/SSD/filipedfr/warriorsfl/FADO/src/examples/basic
-python fado_run.py  "$@"
+python fado_run.py "$@"

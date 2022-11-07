@@ -24,7 +24,6 @@ def leaf_executor(args):
     to provide agility in experimenting with different datasets without having to download
     and process them over and over again.
 
-    TODO ability to change dataset size (--sf parameter)
     """
 
     dataset = args.dataset
@@ -34,7 +33,7 @@ def leaf_executor(args):
 
     temp_dir = os.path.join(FADO_DIR, 'temp_leaf')
     data_fado = os.path.join(ALL_DATA_FOLDER, dataset)
-
+    
     if not os.path.exists(data_fado):
         os.makedirs(data_fado, exist_ok=True)
     else:
@@ -53,7 +52,7 @@ def leaf_executor(args):
     os.chdir(os.path.join(temp_dir, dataset)) # changing current directory
 
     # Calling LEAF script
-    subprocess.call(['./preprocess.sh', f'-s niid', f'--sf 0.05', f'-k 0', f'-t sample'])
+    subprocess.call(['./preprocess.sh', f'-s niid', f'--sf {args.dataset_rate}', f'-k 0', f'-t sample'])
 
     # Remove unnecessary folders
     data_path = os.path.join(temp_dir, dataset, 'data')

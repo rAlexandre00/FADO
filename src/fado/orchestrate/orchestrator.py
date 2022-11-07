@@ -310,7 +310,7 @@ def create_certs():
     #                ca_key_file=os.path.join(certs_path, 'ca-key.pem'),
     #                ca_cert_file=os.path.join(certs_path, 'ca-cert.pem'))
     """ Certs are pre-generated to simplify multi node setups """
-
+    
     copy_tree(CERTS_PATH, CERTS_OUT)
 
 
