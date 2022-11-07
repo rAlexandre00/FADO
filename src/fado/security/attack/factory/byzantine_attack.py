@@ -9,6 +9,7 @@ from typing import List, Tuple, Dict, Any
 
 logger = logging.getLogger("fado")
 
+
 class ByzantineAttack(ModelAttack):
     def __init__(self, args):
         super().__init__()
@@ -16,8 +17,8 @@ class ByzantineAttack(ModelAttack):
         self.device = fedml.device.get_device(args)
 
     def attack_model(self, raw_client_grad: Tuple[float, Dict],
-        extra_auxiliary_info: Any = None):
-        
+                     extra_auxiliary_info: Any = None):
+
         if self.attack_mode == "zero":
             byzantine_local_w = self._attack_zero_mode(raw_client_grad)
         elif self.attack_mode == "random":
@@ -28,7 +29,7 @@ class ByzantineAttack(ModelAttack):
         return byzantine_local_w
 
     def _attack_zero_mode(self, model_params):
-        
+
         for k in model_params.keys():
             if is_weight_param(k):
                 model_params[k] = torch.from_numpy(np.zeros(model_params[k].size())).float().to(self.device)
@@ -38,5 +39,6 @@ class ByzantineAttack(ModelAttack):
 
         for k in model_params.keys():
             if is_weight_param(k):
-                model_params[k] = torch.from_numpy(np.random.random_sample(size=model_params[k].size())).float().to(self.device)
+                model_params[k] = torch.from_numpy(np.random.random_sample(size=model_params[k].size())).float().to(
+                    self.device)
         return model_params

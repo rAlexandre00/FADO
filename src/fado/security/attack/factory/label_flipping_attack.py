@@ -3,9 +3,7 @@ from torch.utils.data import DataLoader
 from torch.utils.data import TensorDataset
 
 from fedml.core.security.common.utils import (
-    get_malicious_client_id_list,
     replace_original_class_with_target_class,
-    log_client_data_statistics,
 )
 
 from fado.security.attack import DataAttack
@@ -40,4 +38,4 @@ class LabelFlippingAttack(DataAttack):
         dataset = TensorDataset(tmp_local_dataset_X, tmp_Y)
         data_loader = DataLoader(dataset, batch_size=self.batch_size)
         return data_loader
-        #log_client_data_statistics(self.poisoned_client_list, poisoned_dataset)
+        # log_client_data_statistics(self.poisoned_client_list, poisoned_dataset)

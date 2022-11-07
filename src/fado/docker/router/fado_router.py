@@ -5,8 +5,6 @@ from scapy.all import *
 from scapy.layers.inet import IP
 
 from fado.arguments import AttackArguments
-from fado.constants import FADO_CONFIG_OUT
-from fado.logging.prints import HiddenPrints
 from fado.security.attack import FadoAttacker
 from fado.security.utils import load_attack
 

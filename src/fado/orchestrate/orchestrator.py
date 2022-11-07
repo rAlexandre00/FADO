@@ -1,26 +1,15 @@
-import json
-import os
 import pathlib
 from distutils.dir_util import copy_tree
-from os.path import abspath
 from pathlib import Path
-from typing import List
 
 import yaml
 import shutil
 
 from fado.arguments import AttackArguments
-from fado.data import split_data
-from fado.constants import FEDML_CONFIG_FILE_PATH, LOGS_DIRECTORY, GRPC_CONFIG_OUT, FEDML_BEN_CONFIG_OUT, \
-    FEDML_MAL_CONFIG_OUT, CERTS_OUT, ALL_DATA_FOLDER, PARTITION_DATA_FOLDER, DOCKER_COMPOSE_OUT, FEDML_IMAGE, \
-    ROUTER_IMAGE, TENSORBOARD_DIRECTORY, CONFIG_HASH, FADO_DIR, ATTACK_DIRECTORY, DEFENSE_DIRECTORY, CERTS_PATH, \
-    FADO_CONFIG_OUT, ROUTER_PATH, CLIENT_PATH, DEV_PATH
+from fado.constants import *
 from fado.crypto.hash_verifier import file_changed, write_file_hash
 
 import logging
-import random
-
-from fado.security.utils import load_attack
 
 logger = logging.getLogger("fado")
 

@@ -1,36 +1,6 @@
 from importlib import import_module
 import logging
 from typing import List, Tuple, Dict, Any, Callable
-from fedml.core.security.defense.RFA_defense import RFADefense
-from fedml.core.security.defense.coordinate_wise_trimmed_mean_defense import CoordinateWiseTrimmedMeanDefense
-from fedml.core.security.defense.crfl_defense import CRFLDefense
-from fedml.core.security.defense.three_sigma_defense import ThreeSigmaDefense
-from fedml.core.security.defense.three_sigma_geomedian_defense import ThreeSigmaGeoMedianDefense
-from fedml.core.common.ml_engine_backend import MLEngineBackend
-from fedml.core.security.defense.cclip_defense import CClipDefense
-from fedml.core.security.defense.foolsgold_defense import FoolsGoldDefense
-from fedml.core.security.defense.geometric_median_defense import GeometricMedianDefense
-from .factory.krum import KrumDefense
-from fedml.core.security.defense.robust_learning_rate_defense import RobustLearningRateDefense
-from fedml.core.security.defense.slsgd_defense import SLSGDDefense
-from fedml.core.security.defense.weak_dp_defense import WeakDPDefense
-from fedml.core.security.defense.norm_diff_clipping_defense import NormDiffClippingDefense
-from fedml.core.security.constants import (
-    DEFENSE_NORM_DIFF_CLIPPING,
-    DEFENSE_ROBUST_LEARNING_RATE,
-    DEFENSE_KRUM,
-    DEFENSE_SLSGD,
-    DEFENSE_GEO_MEDIAN,
-    DEFENSE_CCLIP,
-    DEFENSE_WEAK_DP,
-    DEFENSE_RFA,
-    DEFENSE_FOOLSGOLD,
-    DEFENSE_THREESIGMA,
-    DEFENSE_CRFL,
-    DEFENSE_MULTIKRUM,
-    DEFENSE_TRIMMED_MEAN,
-    DEFENSE_THREESIGMA_GEOMEDIAN,
-)
 
 logger = logging.getLogger("fado")
 

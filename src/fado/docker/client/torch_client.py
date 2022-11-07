@@ -1,11 +1,7 @@
 import os
-import sys
-from importlib import import_module
-import torch
 import logging
 import fedml
 from fedml import FedMLRunner
-from fedml.core.mlops.mlops_runtime_log import MLOpsRuntimeLog
 from fado.data.data_loader import load_partition_data
 from fado.logging.prints import HiddenPrints
 from fado.models import get_model

@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from typing import List, Tuple, Dict, Any
-from time import sleep
 
 from fado.security.constants import (
     ATTACK_TYPE_DATA,

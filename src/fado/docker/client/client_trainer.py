@@ -1,4 +1,3 @@
-from typing import List
 from fedml.core.dp.fedml_differential_privacy import FedMLDifferentialPrivacy
 import torch
 from torch import nn
@@ -9,6 +8,7 @@ import logging
 from fado.security.attack import FadoAttacker
 
 logger = logging.getLogger("fado")
+
 
 class FadoClientTrainer(ClientTrainer):
 
@@ -23,7 +23,6 @@ class FadoClientTrainer(ClientTrainer):
         # Initialize attacker class
         FadoAttacker.get_instance().init(args, "client_attack_spec")
 
-    
     def on_before_local_training(self, train_data, device, args):
         """Method called before the main training process
 
@@ -55,9 +54,10 @@ class FadoClientTrainer(ClientTrainer):
             self.set_model_params(FadoAttacker.get_instance().attack_model(self.get_model_params()))
 
         if FedMLDifferentialPrivacy.get_instance().is_local_dp_enabled():
-            model_params_with_dp_noise = FedMLDifferentialPrivacy.get_instance().add_local_noise(self.get_model_params())
+            model_params_with_dp_noise = FedMLDifferentialPrivacy.get_instance().add_local_noise(
+                self.get_model_params())
             self.set_model_params(model_params_with_dp_noise)
-        
+
     def get_model_params(self):
         return self.model.cpu().state_dict()
 
