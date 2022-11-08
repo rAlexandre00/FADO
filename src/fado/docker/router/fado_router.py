@@ -1,5 +1,7 @@
 import logging
 
+from warnings import filterwarnings
+filterwarnings("ignore")
 from netfilterqueue import NetfilterQueue
 from scapy.all import *
 from scapy.layers.inet import IP
