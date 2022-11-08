@@ -1,6 +1,6 @@
 malicious_clients: 0
-benign_clients: 2
-clients_per_round: 2
+benign_clients: 10
+clients_per_round: 3
 
 # Training Hyper Parameters
 rounds: 50
@@ -8,7 +8,6 @@ epochs: 10
 batch_size: 64
 client_optimizer: adam
 learning_rate: 0.001
-model: 'get_model.py'
 
 encrypt_comm: true
 

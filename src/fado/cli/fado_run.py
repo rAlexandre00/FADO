@@ -5,17 +5,19 @@ import sys
 import shutil
 
 from fado.arguments.arguments import AttackArguments
-from fado.constants import ALL_DATA_FOLDER, FADO_DIR, PARTITION_DATA_FOLDER, FADO_DEFAULT_CONFIG_FILE_PATH
+from fado.constants import ALL_DATA_FOLDER, FADO_DIR, LOGS_DIRECTORY, PARTITION_DATA_FOLDER, FADO_DEFAULT_CONFIG_FILE_PATH
 from fado.orchestrate import prepare_orchestrate
 from fado.data.downloader import leaf_executor
 from fado.data.data_splitter import split_data
 
 
 def data(args):
+    print("Executing LEAF...")
     leaf_executor(args)
 
 
 def partitions(args):
+    print("Splitting data...")
     split_data(
         args.dataset,
         ALL_DATA_FOLDER,
@@ -29,6 +31,7 @@ def compose(args, config, dev=True):
 
 
 def run():
+    print("Deploying...")
     os.chdir(FADO_DIR)
     subprocess.run(['docker', 'compose', 'down'])
     subprocess.run(['docker', 'compose', 'build'])
@@ -36,9 +39,10 @@ def run():
 
 
 def clean():
-    shutil.rmtree(FADO_DIR)
-
-
+    print("Cleaning...")
+    shutil.rmtree(PARTITION_DATA_FOLDER)
+    shutil.rmtree(LOGS_DIRECTORY)
+    
 def parse_args(args):
     parser = argparse.ArgumentParser()
 
@@ -50,10 +54,10 @@ def parse_args(args):
     mode_parser.add_parser('run')
     mode_parser.add_parser('clean')
 
-    build_parser.add_argument('-d', dest='dataset', type=str, choices=['femnist', 'shakespeare', 'sent140'],
-                              required=False)
-    build_parser.add_argument('-nb', dest='number_benign', type=int, required=False)
-    build_parser.add_argument('-nm', dest='number_malicious', type=int, required=False)
+    parser.add_argument('-d', dest='dataset', type=str, choices=['femnist', 'shakespeare', 'sent140'], required=False)
+    parser.add_argument('-dr', dest='dataset_rate', help='Fraction of the dataset', default='0.05', type=float, required=False)
+    parser.add_argument('-nb', dest='number_benign', type=int, required=False)
+    parser.add_argument('-nm', dest='number_malicious', type=int, required=False)
 
     build_mode_parser = build_parser.add_subparsers(dest="build_mode")
     build_mode_parser.add_parser('data')
@@ -72,15 +76,17 @@ def cli():
 
     fado_arguments = AttackArguments(config_file)
 
+    if args.number_benign:
+        fado_arguments.set_argument('number_benign', args.number_benign)
+    if args.number_malicious:
+        fado_arguments.set_argument('malicious_clients', args.number_malicious)
+    if args.dataset:
+        fado_arguments.set_argument('dataset', args.dataset)
+    if args.dataset_rate:
+        fado_arguments.set_argument('dataset_rate', args.dataset_rate)
+
     if args.mode == 'build':
         build_mode = args.build_mode
-
-        if args.number_benign:
-            fado_arguments['benign_clients'] = args.number_benign
-        if args.number_malicious:
-            fado_arguments['malicious_clients'] = args.number_malicious
-        if args.dataset:
-            fado_arguments['dataset'] = args.dataset
 
         if build_mode == 'data':
             data(fado_arguments)
