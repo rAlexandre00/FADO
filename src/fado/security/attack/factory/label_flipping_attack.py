@@ -1,3 +1,4 @@
+import logging
 import torch
 from torch.utils.data import DataLoader
 from torch.utils.data import TensorDataset
@@ -13,6 +14,7 @@ ref: Tolpegin, Vale, Truex,  "Data Poisoning Attacks Against Federated Learning 
 attack @client, added by Yuhui, 07/08/2022
 """
 
+logger = logging.getLogger('fado')
 
 class LabelFlippingAttack(DataAttack):
     def __init__(

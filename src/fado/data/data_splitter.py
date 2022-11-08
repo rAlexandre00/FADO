@@ -2,11 +2,16 @@ import json
 import logging
 import os
 
+from fado.constants import CONFIG_HASH
+from fado.crypto.hash_verifier import file_changed, write_file_hash
+
 
 __all__ = ['split_data']
 
+logger = logging.getLogger('fado')
 
-def split_data(dataset, all_data_folder, partition_data_folder, num_users):
+
+def split_data(dataset, all_data_folder, partition_data_folder, num_users, config_path):
     """Takes a folder with data json files and created 'num_users' folder each with specific client data
 
         Assumes:
@@ -18,6 +23,14 @@ def split_data(dataset, all_data_folder, partition_data_folder, num_users):
             num_users: number of users to generate partitions for
 
     """
+
+    config_changed = file_changed(config_path, CONFIG_HASH)
+    if not config_changed:
+        logger.warning('Attack config has not changed. Will not split the data...')
+        return
+    else:
+        write_file_hash(config_path, CONFIG_HASH)
+        
     for t in ["train", 'test']:
         all_data = {}
         server_data = {}

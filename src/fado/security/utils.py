@@ -3,7 +3,7 @@ import pkgutil
 import fado.security.attack.factory as attack_factory
 import fado.security.defense.factory as defense_factory
 from fado.security.attack.factory.dropping_attack import DroppingAttack
-from fado.security.constants import ATTACK_BYZANTINE, DEFENSE_KRUM, ATTACK_DROP
+from fado.security.constants import ATTACK_BYZANTINE, DEFENSE_KRUM, ATTACK_DROP, ATTACK_LABEL_FLIPPING
 from fado.security.attack.factory import *
 from fado.security.defense.factory import *
 
@@ -47,6 +47,12 @@ def _load_attack_class(args, spec):
         for arg_key, arg_val in configuration.items():
             setattr(args, arg_key, arg_val)
         return ByzantineAttack
+    elif getattr(args, spec) == ATTACK_LABEL_FLIPPING:
+        stream = pkgutil.get_data(attack_factory.__name__, 'label_flipping_attack_config.yaml')
+        configuration = _load_yaml_config_stream(stream)
+        for arg_key, arg_val in configuration.items():
+            setattr(args, arg_key, arg_val)
+        return LabelFlippingAttack
     elif getattr(args, spec) == ATTACK_DROP:
         return DroppingAttack
     else:

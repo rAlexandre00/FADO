@@ -52,5 +52,4 @@ class FadoAttacker:
     def attack_data(self, dataset):
         if self.attacker is None:
             raise Exception("attacker is not initialized!")
-        print("attacking data")
         return self.attacker.attack_data(dataset)

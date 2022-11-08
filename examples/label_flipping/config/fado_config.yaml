@@ -1,0 +1,26 @@
+malicious_clients: 5
+benign_clients: 0
+clients_per_round: 5
+
+# Training Hyper Parameters
+rounds: 20
+epochs: 10
+batch_size: 64
+client_optimizer: adam
+learning_rate: 0.001
+
+encrypt_comm: true
+
+dataset: femnist
+
+all_data_folder: data/all
+partition_data_folder: data/partitions
+
+client_attack_spec: 'label_flipping'
+
+
+random_seed: 0
+
+# Hardware
+
+using_gpu: true

@@ -32,7 +32,6 @@ def prepare_orchestrate(config_path, args, dev=False):
     """
     os.makedirs(FADO_DIR, exist_ok=True)
     config_changed = file_changed(config_path, CONFIG_HASH)
-    # pedreiro
     config_changed = True
     if not config_changed:
         logger.warning('Attack config has not changed. Data and configuration files will not change')
@@ -242,7 +241,7 @@ def generate_compose(dataset, number_ben_clients, number_mal_clients, docker_com
         client_compose = copy.deepcopy(base)
         client_compose['container_name'] += f'-{client_rank}'
         client_compose['environment'] += [f'FEDML_RANK={client_rank}']
-        client_compose['volumes'] += f'{PARTITION_DATA_FOLDER}/{dataset}/user_{client_rank}:/app/data/'
+        client_compose['volumes'] += [f'{PARTITION_DATA_FOLDER}/{dataset}/user_{client_rank}:/app/data/']
         docker_compose['services'][f'mal-client-{client_rank}'] = client_compose
     docker_compose['services'].pop('mal-client')
 
@@ -272,7 +271,7 @@ def create_fedml_config(args, malicious=False):
     client_num = args.benign_clients + args.malicious_clients
 
     if malicious:
-        fedml_config_out = FEDML_BEN_CONFIG_OUT
+        fedml_config_out = FEDML_MAL_CONFIG_OUT
         # maybe throw an exception, what if 'client_attack_spec' is not defined?
         # TODO: user has to be alerted
         if hasattr(args, 'client_attack_spec'):
@@ -282,7 +281,7 @@ def create_fedml_config(args, malicious=False):
         if hasattr(args, 'defense_spec'):
             config['defense_args'] = {}
             config['defense_args']['defense_spec'] = args.defense_spec
-        fedml_config_out = FEDML_MAL_CONFIG_OUT
+        fedml_config_out = FEDML_BEN_CONFIG_OUT
 
     config['common_args']['random_seed'] = args.random_seed
     config['train_args']['client_num_in_total'] = client_num
