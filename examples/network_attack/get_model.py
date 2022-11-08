@@ -12,4 +12,4 @@ class LogisticRegression(torch.nn.Module):
 
 
 def get_model():
-    return LogisticRegression(28 * 28, 10)
+    return LogisticRegression(28 * 28, 62)
