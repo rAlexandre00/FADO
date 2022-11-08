@@ -1,8 +1,11 @@
 import os
+import threading
 from datetime import datetime
 from threading import Thread
 
-from flask import Flask
+import flask
+from flask import Flask, request
+from werkzeug.serving import make_server
 
 from fado.logging.prints import HiddenPrints
 from fado.security.utils import load_defense
@@ -55,10 +58,31 @@ def load_data(args):
     return dataset, class_num
 
 
-def _start_http_server():
-    logging.getLogger('werkzeug').setLevel(logging.ERROR)
-    app.run(host="0.0.0.0", port=8889)
-    return
+class ServerThread(threading.Thread):
+
+    def __init__(self):
+        threading.Thread.__init__(self)
+        self.server = make_server('0.0.0.0', 8889, app)
+        self.ctx = app.app_context()
+        self.ctx.push()
+
+    def run(self):
+        self.server.serve_forever()
+
+    def shutdown(self):
+        self.server.shutdown()
+
+
+def start_server():
+    global server
+    # App routes defined here
+    server = ServerThread()
+    server.start()
+
+
+def stop_server():
+    global server
+    server.shutdown()
 
 
 @app.route('/global_model', methods=['GET'])
@@ -70,7 +94,7 @@ def get_global_model():
 if __name__ == "__main__":
     # init FedML framework
     with HiddenPrints():
-       args = fedml.init()
+        args = fedml.init()
 
     load_defense(args)
 
@@ -94,12 +118,13 @@ if __name__ == "__main__":
     global server_aggregator
     server_aggregator = FadoServerAggregator(model, writer, args)
 
-    thread = Thread(target=_start_http_server)
-    thread.start()
+    logging.getLogger('werkzeug').setLevel(logging.ERROR)
+    start_server()
 
     # start training
-    logger.info("Starting training...")
-    fedml_runner = FedMLRunner(args, device, dataset, model, server_aggregator=server_aggregator)
-    fedml_runner.run()
-    thread.join()
-
+    try:
+        logger.info("Starting training...")
+        fedml_runner = FedMLRunner(args, device, dataset, model, server_aggregator=server_aggregator)
+        fedml_runner.run()
+    finally:
+        stop_server()
