@@ -17,14 +17,17 @@ def data(args):
     leaf_executor(args)
 
 
-def partitions(args, config_path):
+def partitions(args):
     print("Splitting data...")
+    target_class = None
+    if 'target_class' in args:
+        target_class = args.target_class
     split_data(
         args.dataset,
         ALL_DATA_FOLDER,
         PARTITION_DATA_FOLDER,
         args.benign_clients + args.malicious_clients,
-        config_path
+        target_class=target_class
     )
 
 
@@ -95,13 +98,13 @@ def cli():
         if build_mode == 'data':
             data(fado_arguments)
         elif build_mode == 'partitions':
-            partitions(fado_arguments, config_file)
+            partitions(fado_arguments)
         elif build_mode == 'compose':
             # generate_compose on orchestrator.py
             compose(fado_arguments, config_file, True)
         else:
             data(fado_arguments)
-            partitions(fado_arguments, config_file)
+            partitions(fado_arguments)
             compose(fado_arguments, config_file, True)
 
     elif args.mode == 'run':
@@ -110,7 +113,7 @@ def cli():
         clean()
     else:
         data(fado_arguments)
-        partitions(fado_arguments, config_file)
+        partitions(fado_arguments)
         compose(fado_arguments, config_file, True)
         run()
 

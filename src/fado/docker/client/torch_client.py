@@ -26,6 +26,7 @@ def load_data(args):
         test_data_num,
         train_data_global,
         test_data_global,
+        target_test_data,
         train_data_local_num_dict,
         train_data_local_dict,
         test_data_local_dict,

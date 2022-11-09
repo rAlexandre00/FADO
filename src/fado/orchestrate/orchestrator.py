@@ -274,13 +274,16 @@ def create_fedml_config(args, malicious=False):
         fedml_config_out = FEDML_MAL_CONFIG_OUT
         # maybe throw an exception, what if 'client_attack_spec' is not defined?
         # TODO: user has to be alerted
-        if hasattr(args, 'client_attack_spec'):
+        if 'client_attack_spec' in args:
             config['attack_args'] = {}
             config['attack_args']['client_attack_spec'] = args.client_attack_spec
     else:
-        if hasattr(args, 'defense_spec'):
+        if 'defense_spec' in args:
             config['defense_args'] = {}
             config['defense_args']['defense_spec'] = args.defense_spec
+        if 'target_class' in args:
+            config['monitor'] = {}
+            config['monitor']['target_class'] = args.target_class
         fedml_config_out = FEDML_BEN_CONFIG_OUT
 
     config['common_args']['random_seed'] = args.random_seed
