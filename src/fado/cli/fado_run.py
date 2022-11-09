@@ -1,5 +1,6 @@
 import argparse
 import os
+import signal
 import subprocess
 import sys
 import shutil
@@ -40,7 +41,15 @@ def run():
     os.chdir(FADO_DIR)
     subprocess.run(['docker', 'compose', 'down'])
     subprocess.run(['docker', 'compose', 'build'])
-    subprocess.run(['docker', 'compose', 'up', '--remove-orphans'])  # up/stack ?
+    try:
+        p = subprocess.Popen(['docker', 'compose', 'up', '--remove-orphans'])
+        p.wait()
+    except KeyboardInterrupt:
+        try:
+            p.send_signal(signal.SIGINT)
+            p.wait()
+        except:
+            pass
 
 
 def clean():
