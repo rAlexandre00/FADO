@@ -5,7 +5,8 @@ requirements = [
     "grpcio",
     "fedml",
     "PyYAML",
-    "pyOpenSSL"
+    "pyOpenSSL",
+    "flask",
 ]
 
 setup(

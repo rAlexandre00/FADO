@@ -15,7 +15,7 @@ logger = logging.getLogger("fado")
 
 
 class FadoServerAggregator(ServerAggregator):
-    def __init__(self, model, writer: SummaryWriter, args):
+    def __init__(self, model, writer: SummaryWriter, args, target_test_data):
         """Initializes class
 
         Args:
@@ -29,6 +29,7 @@ class FadoServerAggregator(ServerAggregator):
         # Initialize defend class
         FadoDefender.get_instance().init(args)
         self.cpu_transfer = False if not hasattr(self.args, "cpu_transfer") else self.args.cpu_transfer
+        self.target_test_data = target_test_data
 
     def get_model_params(self):
         if self.cpu_transfer:
@@ -97,13 +98,13 @@ class FadoServerAggregator(ServerAggregator):
                     metrics["test_total"] += target.size(0) * target.size(1)
         return metrics
 
-    def test(self, test_data, device, args):
+    def calculate_metrics(self, data, device, args):
         # test data
         test_num_samples = []
         test_tot_corrects = []
         test_losses = []
 
-        metrics = self._test(test_data, device, args)
+        metrics = self._test(data, device, args)
 
         test_tot_correct, test_num_sample, test_loss = (
             metrics["test_correct"],
@@ -118,8 +119,19 @@ class FadoServerAggregator(ServerAggregator):
         test_acc = sum(test_tot_corrects) / sum(test_num_samples)
         test_loss = sum(test_losses) / sum(test_num_samples)
 
+        return test_acc, test_loss
+
+    def test(self, test_data, device, args):
+        test_acc, test_loss = self.calculate_metrics(test_data, device, args)
+
         logger.info(f'test_acc = {test_acc} , round = {args.round_idx}')
         logger.info(f'test_loss = {test_loss} , round = {args.round_idx}')
+
+        if self.target_test_data:
+            test_acc_target, test_loss_target = self.calculate_metrics(self.target_test_data, device, args)
+            logger.info(f'test_acc_target = {test_acc_target} , round = {args.round_idx}')
+            logger.info(f'test_loss_target = {test_loss_target} , round = {args.round_idx}')
+
         # Write to tensorboard
         self.tensorboard_writer.add_scalar('test_acc', test_acc, args.round_idx)
         self.tensorboard_writer.add_scalar('test_loss', test_loss, args.round_idx)

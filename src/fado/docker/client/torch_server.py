@@ -24,12 +24,16 @@ app = Flask(__name__)
 
 
 def load_data(args):
+    target_test_path = None
+    if hasattr(args, 'target_class'):
+        target_test_path = args.data_cache_dir + "/target_test"
     (
         client_num,
         train_data_num,
         test_data_num,
         train_data_global,
         test_data_global,
+        target_test_data,
         train_data_local_num_dict,
         train_data_local_dict,
         test_data_local_dict,
@@ -39,6 +43,7 @@ def load_data(args):
         args.batch_size,
         train_path=args.data_cache_dir + "/train",
         test_path=args.data_cache_dir + "/test",
+        target_test_path=target_test_path
     )
     """
     For shallow NN or linear models, 
@@ -55,7 +60,7 @@ def load_data(args):
         test_data_local_dict,
         class_num,
     ]
-    return dataset, class_num
+    return dataset, class_num, target_test_data
 
 
 class ServerThread(threading.Thread):
@@ -108,7 +113,7 @@ if __name__ == "__main__":
 
     # load data
     logger.info("Loading data...")
-    dataset, output_dim = load_data(args)
+    dataset, output_dim, target_test_data = load_data(args)
 
     simulation_datetime = datetime.now()
     board_out = f'runs/{simulation_datetime.strftime("%d.%m.%Y_%H:%M:%S")}'
@@ -116,7 +121,7 @@ if __name__ == "__main__":
     writer = SummaryWriter(board_out)
 
     global server_aggregator
-    server_aggregator = FadoServerAggregator(model, writer, args)
+    server_aggregator = FadoServerAggregator(model, writer, args, target_test_data)
 
     logging.getLogger('werkzeug').setLevel(logging.ERROR)
     start_server()

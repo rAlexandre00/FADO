@@ -3,7 +3,6 @@ import os
 import json
 import logging
 import numpy as np
-from fedml.ml.engine import ml_engine_adapter
 from fado.data.language_utils import word_to_indices, letter_to_vec
 
 cwd = os.getcwd()
@@ -12,9 +11,9 @@ __all__ = ['load_partition_data']
 
 logger = logging.getLogger('fado')
 
+
 def convert_numpy_to_tensor(args, batched_x, batched_y):
     import torch
-    import numpy as np
 
     if args.dataset == "femnist" and args.model == "cnn":
         batched_x = torch.from_numpy(np.asarray(batched_x)).float().reshape(-1, 28, 28)
@@ -32,7 +31,8 @@ def convert_numpy_to_tensor(args, batched_x, batched_y):
 
     return batched_x, batched_y
 
-def read_data(train_data_dir, test_data_dir):
+
+def read_data(train_data_dir, test_data_dir, target_test_data_dir=None):
     """parses data in given train and test data directories
 
     assumes:
@@ -47,8 +47,11 @@ def read_data(train_data_dir, test_data_dir):
     """
     train_data = {}
     test_data = {}
-
-    for data_dir, data_dict in zip([train_data_dir, test_data_dir], [train_data, test_data]):
+    target_test_data = {}
+    for data_dir, data_dict in zip([train_data_dir, test_data_dir, target_test_data_dir],
+                                   [train_data, test_data, target_test_data]):
+        if data_dir is None:  # target_test_data_dir is optional
+            continue
         data_files = os.listdir(data_dir)
         data_files = [f for f in data_files if f.endswith(".json")]
         for f in data_files:
@@ -57,7 +60,7 @@ def read_data(train_data_dir, test_data_dir):
                 cdata = json.load(inf)
             data_dict.update(cdata["user_data"])
 
-    return train_data, test_data
+    return train_data, test_data, target_test_data
 
 
 def batch_data(args, data, batch_size):
@@ -87,7 +90,8 @@ def batch_data(args, data, batch_size):
 
 def load_partition_data(
         args, batch_size, train_path=os.path.join(os.getcwd(), "data", "train"),
-        test_path=os.path.join(os.getcwd(), "data", "test")
+        test_path=os.path.join(os.getcwd(), "data", "test"),
+        target_test_path=None
 ):
     """Creates the parameters needed for a dataset out of a group of train and test files
 
@@ -100,6 +104,7 @@ def load_partition_data(
             batch_size (int): size of the batches for the train and test data
             train_path (str): folder with the train data in the form of json files
             test_path (str): folder with the test data in the form of json files
+            target_test_path (str): Optional
 
         Returns:
             Properties that form a dataset
@@ -107,7 +112,7 @@ def load_partition_data(
             train_data_local_dict, test_data_local_dict, class_num)
 
     """
-    train_data, test_data = read_data(train_path, test_path)
+    train_data, test_data, target_test_data = read_data(train_path, test_path, target_test_path)
 
     train_data_num = 0
     test_data_num = 0
@@ -116,6 +121,7 @@ def load_partition_data(
     train_data_local_num_dict = dict()
     train_data_global = list()
     test_data_global = list()
+    target_test_global = list()
     client_idx = 0
     for user in train_data.keys():
         if train_data[user]:
@@ -135,11 +141,19 @@ def load_partition_data(
             train_data_global += train_batch
             test_data_global += test_batch
         client_idx += 1
+
+    for user in target_test_data.keys():
+        if target_test_data[user]:
+            target_test_batch = batch_data(args, target_test_data[user], batch_size)
+            target_test_global += target_test_batch
+
     client_num = client_idx
+    # Must be read from args
     class_num = 62
 
     del train_data
     del test_data
+    del target_test_data
 
     return (
         client_num,
@@ -147,6 +161,7 @@ def load_partition_data(
         test_data_num,
         train_data_global,
         test_data_global,
+        target_test_global,
         train_data_local_num_dict,
         train_data_local_dict,
         test_data_local_dict,
