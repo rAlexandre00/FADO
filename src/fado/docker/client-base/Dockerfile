@@ -1,0 +1,26 @@
+FROM ralexandre00/fado-requirements:latest
+WORKDIR /app
+
+COPY requirements.txt requirements.txt
+RUN pip3 install -r requirements.txt
+
+COPY run_client.sh run_client.sh
+COPY run_server.sh run_server.sh
+COPY run_malicious_client.sh run_malicious_client.sh
+COPY torch_client.py torch_client.py
+COPY torch_server.py torch_server.py
+COPY server_aggregator.py server_aggregator.py
+COPY client_trainer.py client_trainer.py
+
+RUN chmod +x run_client.sh
+RUN chmod +x run_server.sh
+RUN chmod +x run_malicious_client.sh
+
+## Add the wait script to the image
+ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.9.0/wait /wait
+RUN chmod +x /wait
+
+COPY configure_ip.sh configure_ip.sh
+RUN chmod +x configure_ip.sh
+
+ENTRYPOINT [ ]

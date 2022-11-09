@@ -16,7 +16,7 @@ dataset: femnist
 
 all_data_folder: data/all
 partition_data_folder: data/partitions
-#target_class: 1
+target_class: 1
 
 #network_attack_spec: 'drop'
 
