@@ -1,5 +1,8 @@
 
 from setuptools import setup, find_packages
+# from distutils.extension import Extension
+# from Cython.Build import cythonize
+
 
 requirements = [
     "grpcio",
@@ -7,7 +10,14 @@ requirements = [
     "PyYAML",
     "pyOpenSSL",
     "flask",
+    "Cython"
 ]
+
+# ext_modules = Extension('fado.fedml_diff.core.distributed.communication.grpc.binder',
+#                         sources=['src/fado/fedml_diff/core/distributed/communication/grpc/binder.pyx'],
+#                         extra_compile_args=['-std=c++11'],
+#                         language='c++',
+#                         )
 
 setup(
     name='FAaDO',
@@ -28,4 +38,5 @@ setup(
             'fado = fado.cli.fado_run:cli',
         ],
     },
+    # ext_modules=cythonize(ext_modules, language_level = "3"),
 )

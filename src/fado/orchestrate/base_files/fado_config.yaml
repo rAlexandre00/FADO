@@ -1,5 +1,5 @@
-malicious_clients: 0
-benign_clients: 10
+malicious_clients: 1
+benign_clients: 2
 clients_per_round: 3
 
 # Training Hyper Parameters

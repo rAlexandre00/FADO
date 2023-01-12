@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 
-echo "Applying NAT"
-/bin/bash apply_nat.sh
-
 # Sleep while server is starting
 while true
 do

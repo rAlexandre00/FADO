@@ -6,5 +6,7 @@ RUN pip3 install -r requirements.txt
 
 WORKDIR /app
 
-COPY apply_nat.sh apply_nat.sh
-RUN chmod +x apply_nat.sh
+COPY create_interfaces.sh create_interfaces.sh
+RUN chmod +x create_interfaces.sh
+COPY run_router.sh run_router.sh
+RUN chmod +x run_router.sh

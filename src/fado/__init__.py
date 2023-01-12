@@ -1,4 +1,5 @@
 import logging
+import os
 
 from .orchestrate import prepare_orchestrate
 
@@ -24,10 +25,14 @@ fedml.cross_silo.server.fedml_server_manager.FedMLServerManager = FedMLServerMan
 
 # Initialize logger
 logger = logging.getLogger("fado")
-format_str = logging.Formatter(fmt="[%(asctime)s] [%(levelname)s] "
+rank = os.getenv('FEDML_RANK')
+rank_str = ""
+if rank:
+    rank_str = f" [Rank:{rank}]"
+format_str = logging.Formatter(fmt=f"[%(asctime)s] [%(levelname)s]{rank_str} "
                                    "[%(filename)s:%(lineno)d:%(funcName)s] %("
                                    "message)s",
-                               datefmt="%a, %d %b %Y %H:%M:%S")
+                               datefmt="%Y-%m-%d %H:%M:%S")
 stdout_handle = logging.StreamHandler()
 stdout_handle.setFormatter(format_str)
 logger.setLevel(logging.INFO)

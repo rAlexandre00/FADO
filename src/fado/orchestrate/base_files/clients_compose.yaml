@@ -1,4 +1,4 @@
-container_name: fado_mal-client # For each client it will be container_name + client_rank
+container_name: fado_clients
 image: fedml-client
 build: ./docker/client
 volumes:
@@ -7,19 +7,17 @@ volumes:
   - '~/.fado/attack/:/app/attack/:rw'
   - '~/.fado/defense/:/app/defense/:rw'
   - '~/.fado/logs/:/app/logs:rw'
-  # - '~/.fado/data:/app/data' Data will be different for each client
+  # - '~/.fado/data/clients:/app/data/' # Depends on dataset
 environment:
-  # - FEDML_RANK=<set after hand> Each client will have a unique rank
-  - WAIT_HOSTS=fado_router:8890
+  - WAIT_HOSTS=10.2.1.0:8890
   - WAIT_HOST_CONNECT_TIMEOUT=360
   - WAIT_SLEEP_INTERVAL=5
   - WAIT_LOGGER_LEVEL=error
+  - WAIT_TIMEOUT=60
 restart: on-failure
 cap_add:
   - NET_ADMIN # Authorize container to change network configurations
 command: >-
-  sh -c "/app/configure_ip.sh && /wait && /app/run_malicious_client.sh"
-networks:
-  clients_network:
+  sh -c "/app/config_interfaces.sh 1 2 && /wait && /app/run_clients.sh"
 depends_on:
   - "server"

@@ -54,14 +54,14 @@ def split_data(dataset, all_data_folder, partition_data_folder, num_users, targe
         users = users[:num_users]
 
         for i, user_id in enumerate(users, start=1):
-            os.makedirs(os.path.dirname(os.path.join(partition_data_folder, dataset, f'user_{i}', t, '')),
+            os.makedirs(os.path.dirname(os.path.join(partition_data_folder, dataset, 'clients', f'user_{i}', t, '')),
                         exist_ok=True)
             # Create a dictionary with user ids and empty lists
             user_data = {k: {} for k in users}
             # Set the corresponding user list
             user_data[user_id] = all_data[user_id]
             server_data[user_id] = all_data[user_id]
-            with open(os.path.join(partition_data_folder, dataset, f'user_{i}', t, 'data.json'), "w") as outfile:
+            with open(os.path.join(partition_data_folder, dataset, 'clients', f'user_{i}', t, 'data.json'), "w") as outfile:
                 json.dump({'user_data': user_data}, outfile)
 
         os.makedirs(os.path.dirname(os.path.join(partition_data_folder, dataset, 'server', t, '')), exist_ok=True)

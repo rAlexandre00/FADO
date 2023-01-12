@@ -1,4 +1,6 @@
+import ipaddress
 import pathlib
+import random
 from distutils.dir_util import copy_tree
 from pathlib import Path
 
@@ -14,6 +16,7 @@ import logging
 logger = logging.getLogger("fado")
 
 __all__ = ['prepare_orchestrate']
+
 
 
 def prepare_orchestrate(config_path, args, dev=False):
@@ -46,9 +49,10 @@ def prepare_orchestrate(config_path, args, dev=False):
         # Generate image files
         generate_image_files(args.model)
 
+        benign_ranks, malicious_ranks = generate_client_ranks(args.benign_clients, args.malicious_clients)
+
         # Generate docker-compose file
-        benign_ranks, malicious_ranks = generate_compose(args.dataset, args.benign_clients, args.malicious_clients,
-                                                         DOCKER_COMPOSE_OUT, args.using_gpu)
+        generate_compose(args.dataset, DOCKER_COMPOSE_OUT, args.benign_clients + args.malicious_clients, args.using_gpu)
 
         logger.info("Creating networking files")
         # Create script that will tell how the router should forward packets
@@ -56,8 +60,11 @@ def prepare_orchestrate(config_path, args, dev=False):
         # Create grpc_ipconfig file and fedml_config.yaml
         create_ipconfig(GRPC_CONFIG_OUT, args.benign_clients + args.malicious_clients)
         # Create fedml_config.yaml for server/benign client and for malicious client
-        create_fedml_config(args)
-        create_fedml_config(args, True)
+        create_fedml_config(args, 0)
+        for rank in benign_ranks:
+            create_fedml_config(args, rank)
+        for rank in malicious_ranks:
+            create_fedml_config(args, rank, True)
 
         if "encrypt_comm" in args and args.encrypt_comm:
             logger.info("Creating TLS certificates")
@@ -82,46 +89,25 @@ def prepare_orchestrate(config_path, args, dev=False):
         generate_dev_files()
 
 
+def generate_client_ranks(benign_clients, malicious_clients):
+    client_ranks = list(range(1, benign_clients + malicious_clients + 1))
+    # Shuffle clients randomly (a seed can be set)
+    random.shuffle(client_ranks)
+    benign_ranks = client_ranks[:benign_clients]
+    malicious_ranks = client_ranks[benign_clients:]
+    logger.info(f'Benign clients - {benign_ranks}')
+    logger.info(f'Malicious clients - {malicious_ranks}')
+    with open(os.path.join(BENIGN_CONFIG_OUT), "w") as f:
+        for rank in benign_ranks:
+            f.write(f'{rank},')
+    with open(os.path.join(MAL_CONFIG_OUT), "w") as f:
+        for rank in malicious_ranks:
+            f.write(f'{rank},')
+    return benign_ranks, malicious_ranks
+
+
 def generate_router_files(args, benign_ranks, malicious_ranks, dev=False):
-    generate_router_nat(benign_ranks, malicious_ranks, ROUTER_IMAGE)
     generate_router_image(args, dev)
-
-
-def generate_router_nat(benign_ranks, malicious_ranks, router_user_path):
-    """Creates a script in the router that will create port forwarding rules and enable NAT
-       This enables the communication between nodes in different overlay networks
-
-        Parameters:
-            benign_ranks: Ranks of benign clients
-            malicious_ranks: Ranks of malicious clients
-            client_user_path: Path of the docker image to be generated
-
-    """
-    lines: list[str] = []
-    # Wait for the resolution of all nodes names
-    lines.append('while [ -z "$fado_server" ]; '
-                 'do fado_server=$(dig +short fado_server A); '
-                 'done' + "\n")
-    for rank in benign_ranks:
-        lines.append(f'while [ -z "$fado_client_{rank}" ]; '
-                     f'do fado_client_{rank}=$(dig +short fado_beg-client-{rank} A); '
-                     f'done' + "\n")
-    for rank in malicious_ranks:
-        lines.append(f'while [ -z "$fado_client_{rank}" ]; '
-                     f'do fado_client_{rank}=$(dig +short fado_mal-client-{rank} A); '
-                     f'done' + "\n")
-    # Create port forwarding for each node
-    lines.append(
-        'iptables -t nat -A PREROUTING -p tcp --dport 8890 -j DNAT --to-destination "$fado_server":8890' + "\n")
-    for rank in benign_ranks + malicious_ranks:
-        lines.append(f'iptables -t nat -A PREROUTING -p tcp --dport {8890 + rank} -j DNAT '
-                     f'--to-destination "$fado_client_{rank}":{8890 + rank}' + "\n")
-    # Enables NAT for eth0 and eth1
-    lines.append(f'iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE' + "\n")
-    lines.append(f'iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE')
-
-    with open(os.path.join(router_user_path, "apply_nat.sh"), "w") as f:
-        f.writelines(lines)
 
 
 def generate_router_image(args, dev=False):
@@ -193,72 +179,48 @@ def create_ipconfig(ipconfig_out, num_clients):
     os.makedirs(path.parent.absolute(), exist_ok=True)
     with open(ipconfig_out, 'w') as f:
         f.write('receiver_id,ip\n')
-        for rank in range(num_clients + 1):
-            f.write(f'{rank},fado_router\n')
+        f.write('0,10.2.1.0\n')
+        base_client_ip = ipaddress.IPv4Address('10.1.1.0')
+        for rank in range(1, num_clients + 1):
+            f.write(f'{rank},{base_client_ip}\n')
+            base_client_ip += 1
 
 
-def generate_compose(dataset, number_ben_clients, number_mal_clients, docker_compose_out, using_gpu=False):
+def generate_compose(dataset, docker_compose_out, n_clients, using_gpu=False):
     """
     Loads a default compose file and generates 'number_clients' of client services
 
         Parameters:
-            number_ben_clients (int): Number of benign clients
-            number_mal_clients (int): Number of malicious clients
             docker_compose_out (str): Path of the output for the docker compose
 
         Returns:
             Two lists of integers representing the benign_ranks and malicious_ranks
     """
-    import random
     import copy
-    from ipaddress import IPv4Address
-
-    client_ranks = list(range(1, number_ben_clients + number_mal_clients + 1))
-    # Shuffle clients randomly (a seed can be set)
-    random.shuffle(client_ranks)
-
-    benign_ranks = client_ranks[:number_ben_clients]
-    malicious_ranks = client_ranks[number_ben_clients:]
-    logger.info(f'Benign clients - {benign_ranks}')
-    logger.info(f'Malicious clients - {malicious_ranks}')
 
     # Load the default docker compose
     docker_compose = load_base_compose(using_gpu)
 
     # Generate benign compose services
-    base = docker_compose['services']['beg-client']
-    for client_rank in benign_ranks:
-        client_compose = copy.deepcopy(base)
-        client_compose['container_name'] += f'-{client_rank}'
-        client_compose['environment'] += [f'FEDML_RANK={client_rank}']
-        client_compose['volumes'] += [f'{PARTITION_DATA_FOLDER}/{dataset}/user_{client_rank}:/app/data/']
-        docker_compose['services'][f'beg-client-{client_rank}'] = client_compose
-    docker_compose['services'].pop('beg-client')
-
-    # Generate malicious compose services
-    base = docker_compose['services']['mal-client']
-    for client_rank in malicious_ranks:
-        client_compose = copy.deepcopy(base)
-        client_compose['container_name'] += f'-{client_rank}'
-        client_compose['environment'] += [f'FEDML_RANK={client_rank}']
-        client_compose['volumes'] += [f'{PARTITION_DATA_FOLDER}/{dataset}/user_{client_rank}:/app/data/']
-        docker_compose['services'][f'mal-client-{client_rank}'] = client_compose
-    docker_compose['services'].pop('mal-client')
+    base = docker_compose['services']['clients']
+    client_compose = copy.deepcopy(base)
+    client_compose['volumes'] += [f'{PARTITION_DATA_FOLDER}/{dataset}/clients:/app/data/']
+    client_compose['environment'] += [f'N_INTERFACES={n_clients}']
+    docker_compose['services'][f'clients'] = client_compose
 
     # Customize volume for data in server
-    docker_compose['services']['server']['volumes'] += [f'{PARTITION_DATA_FOLDER}/{dataset}/server:/app/data/']
+    docker_compose['services']['server']['volumes'] += [f'{PARTITION_DATA_FOLDER}/{dataset}/server:/app/data/user_0']
 
     with open(docker_compose_out, 'w') as f:
         yaml.dump(docker_compose, f, sort_keys=False)
 
-    return benign_ranks, malicious_ranks
 
-
-def create_fedml_config(args, malicious=False):
+def create_fedml_config(args, rank, malicious=False):
     """ Generates fedml_config files for FedML nodes
 
     Parameters:
         args: Arguments of FADO
+        rank: client rank
         malicious: if this fedml_config is malicious
 
     """
@@ -269,9 +231,11 @@ def create_fedml_config(args, malicious=False):
         config = yaml.load(file, Loader=yaml.FullLoader)
 
     client_num = args.benign_clients + args.malicious_clients
+    config['data_args']['data_cache_dir'] = f'./data/user_{rank}'
+    fedml_config_out = os.path.join(CONFIG_OUT, f'user_{rank}')
+    os.makedirs(fedml_config_out, exist_ok=True)
 
     if malicious:
-        fedml_config_out = FEDML_MAL_CONFIG_OUT
         # maybe throw an exception, what if 'client_attack_spec' is not defined?
         # TODO: user has to be alerted
         if 'client_attack_spec' in args:
@@ -284,7 +248,6 @@ def create_fedml_config(args, malicious=False):
         if 'target_class' in args:
             config['monitor'] = {}
             config['monitor']['target_class'] = args.target_class
-        fedml_config_out = FEDML_BEN_CONFIG_OUT
 
     config['common_args']['random_seed'] = args.random_seed
     config['train_args']['client_num_in_total'] = client_num
@@ -292,12 +255,13 @@ def create_fedml_config(args, malicious=False):
     config['train_args']['comm_round'] = args.rounds
     config['train_args']['epochs'] = args.epochs
     config['train_args']['batch_size'] = args.batch_size
+    config['train_args']['client_optimizer'] = args.client_optimizer
     config['device_args']['worker_num'] = client_num
     config['data_args']['dataset'] = args.dataset
     config['model_args']['model'] = args.model
     if "encrypt_comm" in args:
         config['comm_args']['encrypt'] = args.encrypt_comm
-    with open(fedml_config_out, 'w') as f:
+    with open(os.path.join(fedml_config_out, 'fedml_config.yaml'), 'w') as f:
         yaml.dump(config, f, sort_keys=False)
 
 
@@ -345,7 +309,7 @@ def load_base_compose(using_gpu=False):
                 capabilities: [gpu]
     """
     # Put inside the docker compose file the client and server base files
-    for service in ['server', 'beg-client', 'mal-client', 'router']:
+    for service in ['server', 'clients', 'router']:
         with open(dir_path + os.path.sep + docker_compose['services'][service]['compose-file'], 'r') as file:
             compose = yaml.load(file, Loader=yaml.FullLoader)
             docker_compose['services'][service].pop('compose-file')
@@ -354,7 +318,6 @@ def load_base_compose(using_gpu=False):
     if using_gpu:
         with open(dir_path + os.path.sep + 'gpu_compose.yaml', 'r') as file:
             gpu_compose = yaml.load(file, Loader=yaml.FullLoader)
-            docker_compose['services']['beg-client']['deploy'] = gpu_compose['deploy']
-            docker_compose['services']['mal-client']['deploy'] = gpu_compose['deploy']
+            docker_compose['services']['clients']['deploy'] = gpu_compose['deploy']
             docker_compose['services']['server']['deploy']['resources'] = gpu_compose['deploy']['resources']
     return docker_compose
