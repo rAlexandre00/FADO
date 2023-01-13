@@ -1,4 +1,5 @@
 import ipaddress
+import os
 import pathlib
 import random
 from distutils.dir_util import copy_tree
@@ -98,6 +99,7 @@ def generate_client_ranks(benign_clients, malicious_clients):
     malicious_ranks = client_ranks[benign_clients:]
     logger.info(f'Benign clients - {benign_ranks}')
     logger.info(f'Malicious clients - {malicious_ranks}')
+    os.makedirs(CONFIG_OUT, exist_ok=True)
     with open(os.path.join(BENIGN_CONFIG_OUT), "w") as f:
         for rank in benign_ranks:
             f.write(f'{rank},')
