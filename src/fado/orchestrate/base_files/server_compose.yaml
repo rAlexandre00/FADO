@@ -9,11 +9,11 @@ volumes:
   #- '~/.fado/data/all:/app/data'
   - '~/.fado/runs/:/app/runs:rw'
   - '~/.fado/logs/:/app/logs:rw'
-environment:
-  - N_INTERFACES=1
 cap_add:
   - NET_ADMIN # Authorize container to change network configurations
 command: >-
-  sh -c "/app/config_interfaces.sh 2 1 && /app/run_server.sh"
+  sh -c "/app/config_interfaces_server.sh && /app/run_server.sh"
 depends_on:
   - "router"
+networks:
+  - "server_net"

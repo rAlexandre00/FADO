@@ -10,12 +10,14 @@ COPY torch_client.py torch_client.py
 COPY torch_server.py torch_server.py
 COPY server_aggregator.py server_aggregator.py
 COPY client_trainer.py client_trainer.py
-COPY config_interfaces.sh config_interfaces.sh
+COPY config_interfaces_clients.sh config_interfaces_clients.sh
+COPY config_interfaces_server.sh config_interfaces_server.sh
 COPY run_clients.sh run_clients.sh
 
 RUN chmod +x run_client.sh
 RUN chmod +x run_server.sh
-RUN chmod +x config_interfaces.sh
+RUN chmod +x config_interfaces_clients.sh
+RUN chmod +x config_interfaces_server.sh
 RUN chmod +x run_clients.sh
 
 ## Add the wait script to the image

@@ -1,10 +1,5 @@
 #!/usr/bin/env bash
 
-create_interface() {
-	ip link add link eth0 name $1 type ipvlan mode l2
-	ip addr add dev $1 $1/16
-}
-
 # Create route for clients network
 while [ -z "$clients" ]
 do
@@ -18,8 +13,11 @@ do
 done
 
 # Create interfaces
-create_interface 10.1.0.1
-create_interface 10.2.0.1
+ip link add link eth0 name 10.1.0.1 type ipvlan mode l2
+ip addr add dev 10.1.0.1 10.1.0.1/16
+
+ip link add link eth1 name 10.2.0.1 type ipvlan mode l2
+ip addr add dev 10.2.0.1 10.2.0.1/16
 
 # Add route to networks
 ip route add 10.1.0.0/16 via "$clients"

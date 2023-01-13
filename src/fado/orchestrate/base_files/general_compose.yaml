@@ -6,3 +6,6 @@ services:
     compose-file: clients_compose.yaml
   router:
     compose-file: router_compose.yaml
+networks:
+  server_net:
+  clients_net:

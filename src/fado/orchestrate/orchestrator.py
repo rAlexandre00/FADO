@@ -58,7 +58,8 @@ def prepare_orchestrate(config_path, args, dev=False):
         # Create script that will tell how the router should forward packets
         generate_router_files(args, benign_ranks, malicious_ranks, dev)
         # Create grpc_ipconfig file and fedml_config.yaml
-        create_ipconfig(GRPC_CONFIG_OUT, args.benign_clients + args.malicious_clients)
+        for rank in [0]+benign_ranks+malicious_ranks:
+            create_ipconfig(CONFIG_OUT, rank, args.benign_clients + args.malicious_clients)
         # Create fedml_config.yaml for server/benign client and for malicious client
         create_fedml_config(args, 0)
         for rank in benign_ranks:
@@ -168,19 +169,20 @@ def generate_dev_files():
                  os.path.join(client_user_path, 'requirements.txt'))
 
 
-def create_ipconfig(ipconfig_out, num_clients):
+def create_ipconfig(ipconfig_out, rank, num_clients):
     """ Creates ipconfig file that tells FedML the IP of each node
 
         Parameters:
             ipconfig_out(str): Path for writing the ipconfig file
-            num_clients: Number of clients
+            rank: Rank of client
     """
-    path = Path(ipconfig_out)
+    path = Path(os.path.join(ipconfig_out, f'user_{rank}', 'grpc_ipconfig.csv'))
     os.makedirs(path.parent.absolute(), exist_ok=True)
-    with open(ipconfig_out, 'w') as f:
-        f.write('receiver_id,ip\n')
-        f.write('0,10.2.1.0\n')
+    with open(path, 'w') as f:
+        base_server_ip = ipaddress.IPv4Address('10.2.1.0')
         base_client_ip = ipaddress.IPv4Address('10.1.1.0')
+        f.write('receiver_id,ip\n')
+        f.write(f'0,{base_server_ip+rank - 1}\n')
         for rank in range(1, num_clients + 1):
             f.write(f'{rank},{base_client_ip}\n')
             base_client_ip += 1
@@ -210,6 +212,8 @@ def generate_compose(dataset, docker_compose_out, n_clients, using_gpu=False):
 
     # Customize volume for data in server
     docker_compose['services']['server']['volumes'] += [f'{PARTITION_DATA_FOLDER}/{dataset}/server:/app/data/user_0']
+    docker_compose['services']['server']['environment'] = []
+    docker_compose['services']['server']['environment'] += [f'N_INTERFACES={n_clients}']
 
     with open(docker_compose_out, 'w') as f:
         yaml.dump(docker_compose, f, sort_keys=False)
@@ -231,7 +235,6 @@ def create_fedml_config(args, rank, malicious=False):
         config = yaml.load(file, Loader=yaml.FullLoader)
 
     client_num = args.benign_clients + args.malicious_clients
-    config['data_args']['data_cache_dir'] = f'./data/user_{rank}'
     fedml_config_out = os.path.join(CONFIG_OUT, f'user_{rank}')
     os.makedirs(fedml_config_out, exist_ok=True)
 
@@ -249,6 +252,8 @@ def create_fedml_config(args, rank, malicious=False):
             config['monitor'] = {}
             config['monitor']['target_class'] = args.target_class
 
+    config['data_args']['data_cache_dir'] = f'./data/user_{rank}'
+    config['comm_args']['grpc_ipconfig_path'] = f'./config/user_{rank}/grpc_ipconfig.csv'
     config['common_args']['random_seed'] = args.random_seed
     config['train_args']['client_num_in_total'] = client_num
     config['train_args']['client_num_per_round'] = args.clients_per_round
