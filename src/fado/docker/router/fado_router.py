@@ -17,6 +17,7 @@ logger = logging.getLogger("fado")
 
 def process_packet(pkt):
     scapy_pkt = IP(pkt.get_payload())
+    print(scapy_pkt)
     scapy_pkt = FadoAttacker.get_instance().attack_network(scapy_pkt)
     pkt.set_payload(raw(scapy_pkt))
     pkt.accept()

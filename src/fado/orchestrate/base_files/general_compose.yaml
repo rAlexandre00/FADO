@@ -2,22 +2,10 @@ version: '3.9'
 services:
   server:
     compose-file: server_compose.yaml
-  beg-client:
-    compose-file: benign_compose.yaml
-  mal-client:
-    compose-file: malicious_compose.yaml
+  clients:
+    compose-file: clients_compose.yaml
   router:
     compose-file: router_compose.yaml
 networks:
-  clients_network:
-    driver: overlay
-    attachable: true
-    ipam:
-      config:
-      - subnet: 172.10.0.0/16
-  server_network:
-    driver: overlay
-    attachable: true
-    ipam:
-      config:
-      - subnet: 172.20.0.0/16
+  server_net:
+  clients_net:

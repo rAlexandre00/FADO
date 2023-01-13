@@ -12,12 +12,8 @@ volumes:
 cap_add:
   - NET_ADMIN # Authorize container to change network configurations
 command: >-
-  sh -c "/app/configure_ip.sh && /app/run_server.sh"
-deploy:
-  placement:
-    constraints:
-      - node.role == manager
-networks:
-  server_network:
+  sh -c "/app/config_interfaces_server.sh && /app/run_server.sh"
 depends_on:
   - "router"
+networks:
+  - "server_net"
