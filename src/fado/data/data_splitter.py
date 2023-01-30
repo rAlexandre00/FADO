@@ -38,6 +38,7 @@ def split_data(args, target_class=None):
     """
 
     dataset = args.dataset
+    dataset_rate = args.dataset_rate
     num_users = args.benign_clients + args.malicious_clients
     data_distribution = args.data_distribution
 
@@ -52,11 +53,11 @@ def split_data(args, target_class=None):
     for t in ["train", 'test']:
         all_data = {}
         server_data = {}
-        data_files = os.listdir(os.path.join(ALL_DATA_FOLDER, dataset, data_distribution, t))
+        data_files = os.listdir(os.path.join(ALL_DATA_FOLDER, dataset, data_distribution, f"frac_{str(dataset_rate)[2:]}", t))
         # Get all json files from all_data_folder
         data_files = [f for f in data_files if f.endswith(".json")]
         for f in data_files:
-            with open(os.path.join(ALL_DATA_FOLDER, dataset, data_distribution, t, f), 'r') as file:
+            with open(os.path.join(ALL_DATA_FOLDER, dataset, data_distribution, f"frac_{str(dataset_rate)[2:]}", t, f), 'r') as file:
                 j = json.load(file)
             all_data.update(j['user_data'])
 
