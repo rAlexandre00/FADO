@@ -7,15 +7,27 @@ import shutil
 
 from fado.arguments.arguments import AttackArguments
 from fado.constants import ALL_DATA_FOLDER, FADO_DIR, LOGS_DIRECTORY, PARTITION_DATA_FOLDER, \
-    FADO_DEFAULT_CONFIG_FILE_PATH
+    FADO_DEFAULT_CONFIG_FILE_PATH, DATASETS, LEAF_DATASETS
 from fado.orchestrate import prepare_orchestrate
-from fado.data.downloader import leaf_executor
+from fado.data.downloader import leaf_downloader, torchvision_downloader
 from fado.data.data_splitter import split_data
 
 
 def data(args):
-    print("Executing LEAF...")
-    leaf_executor(args)
+
+    dataset = args.dataset
+
+    if dataset not in DATASETS:
+        raise Exception(f"Dataset {dataset} not supported! Choose one of the following: {DATASETS}")
+
+    if dataset in LEAF_DATASETS:
+        print("Executing LEAF...")
+        leaf_downloader(args)
+    else:
+        print("Executing Torch vision Downloader...")
+        torchvision_downloader(args)
+
+    partitions(args)
 
 
 def partitions(args):
@@ -24,10 +36,7 @@ def partitions(args):
     if 'target_class' in args:
         target_class = args.target_class
     split_data(
-        args.dataset,
-        ALL_DATA_FOLDER,
-        PARTITION_DATA_FOLDER,
-        args.benign_clients + args.malicious_clients,
+        args,
         target_class=target_class
     )
 
@@ -69,9 +78,11 @@ def parse_args(args):
     mode_parser.add_parser('run')
     mode_parser.add_parser('clean')
 
-    parser.add_argument('-d', dest='dataset', type=str, choices=['femnist', 'shakespeare', 'sent140'], required=False)
+    parser.add_argument('-d', dest='dataset', type=str, choices=DATASETS, required=False)
     parser.add_argument('-dr', dest='dataset_rate', help='Fraction of the dataset', default='0.05', type=float,
                         required=False)
+    parser.add_argument('-dd', dest='data_distribution', help='Data distribution', default='niid', type=str,
+    required=False)
     parser.add_argument('-nb', dest='number_benign', type=int, required=False)
     parser.add_argument('-nm', dest='number_malicious', type=int, required=False)
 
@@ -100,6 +111,8 @@ def cli():
         fado_arguments.set_argument('dataset', args.dataset)
     if args.dataset_rate:
         fado_arguments.set_argument('dataset_rate', args.dataset_rate)
+    if args.data_distribution:
+        fado_arguments.set_argument('data_distribution', args.data_distribution)
 
     if args.mode == 'build':
         build_mode = args.build_mode
@@ -113,7 +126,6 @@ def cli():
             compose(fado_arguments, config_file, True)
         else:
             data(fado_arguments)
-            partitions(fado_arguments)
             compose(fado_arguments, config_file, True)
 
     elif args.mode == 'run':
@@ -122,7 +134,6 @@ def cli():
         clean()
     else:
         data(fado_arguments)
-        partitions(fado_arguments)
         compose(fado_arguments, config_file, True)
         run()
 
