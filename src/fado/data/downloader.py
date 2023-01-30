@@ -36,12 +36,12 @@ def leaf_downloader(args):
     dataset_rate = args.dataset_rate
     data_distribution = args.data_distribution
 
-    data_fado = os.path.join(
+    all_data_fado = os.path.join(
         ALL_DATA_FOLDER, dataset, data_distribution, f"frac_{str(dataset_rate)[2:]}"
     )
 
-    if not os.path.exists(data_fado):
-        os.makedirs(data_fado, exist_ok=True)
+    if not os.path.exists(all_data_fado):
+        os.makedirs(all_data_fado, exist_ok=True)
 
     # Getting LEAF's module path
     leaf_path = os.path.dirname(leaf.__file__)
@@ -87,8 +87,8 @@ def leaf_downloader(args):
     # Copying train and test folder to the .{all_data_folder}/{dataset} folder
     train_dir = os.path.join(data_path, "train")
     test_dir = os.path.join(data_path, "test")
-    shutil.copytree(train_dir, os.path.join(data_fado, "train"), dirs_exist_ok=True)
-    shutil.copytree(test_dir, os.path.join(data_fado, "test"), dirs_exist_ok=True)
+    shutil.copytree(train_dir, os.path.join(all_data_fado, "train"), dirs_exist_ok=True)
+    shutil.copytree(test_dir, os.path.join(all_data_fado, "test"), dirs_exist_ok=True)
 
     shutil.rmtree(os.path.join(TEMP_DIRECTORY, dataset, "meta"))
     shutil.rmtree(os.path.join(TEMP_DIRECTORY, dataset, "data", "train"))
