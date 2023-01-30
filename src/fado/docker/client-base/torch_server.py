@@ -14,54 +14,13 @@ import fedml
 import logging
 from fedml import FedMLRunner
 from server_aggregator import FadoServerAggregator
-from fado.data.data_loader import load_partition_data
+from fado.data.data_loader import DataLoader
 from fedml.ml.engine.ml_engine_adapter import get_torch_device
 
 from torch.utils.tensorboard import SummaryWriter
 
 logger = logging.getLogger("fado")
 app = Flask(__name__)
-
-
-def load_data(args):
-    target_test_path = None
-    if hasattr(args, 'target_class'):
-        target_test_path = args.data_cache_dir + "/target_test"
-    (
-        client_num,
-        train_data_num,
-        test_data_num,
-        train_data_global,
-        test_data_global,
-        target_test_data,
-        train_data_local_num_dict,
-        train_data_local_dict,
-        test_data_local_dict,
-        class_num,
-    ) = load_partition_data(
-        args,
-        args.batch_size,
-        train_path=args.data_cache_dir + "/train",
-        test_path=args.data_cache_dir + "/test",
-        target_test_path=target_test_path
-    )
-    """
-    For shallow NN or linear models, 
-    we uniformly sample a fraction of clients each round (as the original FedAvg paper)
-    """
-    args.client_num_in_total = client_num
-    dataset = [
-        train_data_num,
-        test_data_num,
-        train_data_global,
-        test_data_global,
-        train_data_local_num_dict,
-        train_data_local_dict,
-        test_data_local_dict,
-        class_num,
-    ]
-    return dataset, class_num, target_test_data
-
 
 class ServerThread(threading.Thread):
 
@@ -111,9 +70,11 @@ if __name__ == "__main__":
     # Get the model
     model = get_model(args)
 
-    # load data
-    logger.info("Loading data...")
-    dataset, output_dim, target_test_data = load_data(args)
+     # load data
+    data_loader = DataLoader(args)
+    dataset = data_loader.dataset
+
+    logger.info("Data loaded...")
 
     simulation_datetime = datetime.now()
     board_out = f'runs/{simulation_datetime.strftime("%d.%m.%Y_%H:%M:%S")}'
@@ -121,7 +82,7 @@ if __name__ == "__main__":
     writer = SummaryWriter(board_out)
 
     global server_aggregator
-    server_aggregator = FadoServerAggregator(model, writer, args, target_test_data)
+    server_aggregator = FadoServerAggregator(model, writer, args, data_loader.target_test_data)
 
     logging.getLogger('werkzeug').setLevel(logging.ERROR)
     start_server()

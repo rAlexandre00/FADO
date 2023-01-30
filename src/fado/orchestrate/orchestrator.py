@@ -326,5 +326,6 @@ def load_base_compose(using_gpu=False):
         with open(dir_path + os.path.sep + 'gpu_compose.yaml', 'r') as file:
             gpu_compose = yaml.load(file, Loader=yaml.FullLoader)
             docker_compose['services']['clients']['deploy'] = gpu_compose['deploy']
+            docker_compose['services']['server']['deploy'] = {}
             docker_compose['services']['server']['deploy']['resources'] = gpu_compose['deploy']['resources']
     return docker_compose

@@ -15,7 +15,7 @@ __all__ = ['DataLoader']
 
 logger = logging.getLogger('fado')
 
-class DataLoader(ABC):
+class DataLoader:
 
     def __init__(self, args) -> None:
         self.args = args
@@ -23,11 +23,17 @@ class DataLoader(ABC):
 
         if self.args is None:
             raise Exception("args is not defined!")
+        
+        if hasattr(args, 'target_class'):
+            target_test_path = args.data_cache_dir + "/target_test"
+        else:
+            target_test_path = None
 
         # read data
-        train_data, test_data, target_test_data = self.read_data(
+        train_data, test_data, self.target_test_data = self.read_data(
             self.args.data_cache_dir + "/train",
-            test_path=self.args.data_cache_dir + "/test",
+            self.args.data_cache_dir + "/test",
+            target_test_data_dir=target_test_path
         )
 
         # process data
@@ -43,7 +49,7 @@ class DataLoader(ABC):
             train_data_local_dict,
             test_data_local_dict,
             class_num,
-        ) = self.process_data(train_data, test_data, target_test_data)
+        ) = self.process_data(train_data, test_data, self.target_test_data)
 
         # build dataset from data
 
@@ -59,7 +65,7 @@ class DataLoader(ABC):
             class_num
         ]
 
-    def process_data(self, train_data, test_data, target_test_data, batch_size):
+    def process_data(self, train_data, test_data, target_test_data):
         """Creates the parameters needed for a dataset out of a group of train and test files
 
             Assumes:
@@ -68,7 +74,6 @@ class DataLoader(ABC):
 
             Parameters:
                 args: FedML arguments
-                batch_size (int): size of the batches for the train and test data
                 train_path (str): folder with the train data in the form of json files
                 test_path (str): folder with the test data in the form of json files
                 target_test_path (str): Optional
@@ -99,8 +104,8 @@ class DataLoader(ABC):
                 train_data_local_num_dict[client_idx] = user_train_data_num
 
                 # transform to batches
-                train_batch = self.batch_data(train_data[user], batch_size)
-                test_batch = self.batch_data(test_data[user], batch_size)
+                train_batch = self.batch_data(train_data[user], self.args.batch_size)
+                test_batch = self.batch_data(test_data[user], self.args.batch_size)
 
                 # index using client index
                 train_data_local_dict[client_idx] = train_batch
@@ -111,7 +116,7 @@ class DataLoader(ABC):
 
         for user in target_test_data.keys():
             if target_test_data[user]:
-                target_test_batch = self.batch_data(target_test_data[user], batch_size)
+                target_test_batch = self.batch_data(target_test_data[user], self.args.batch_size)
                 target_test_global += target_test_batch
 
         client_num = client_idx
@@ -135,8 +140,6 @@ class DataLoader(ABC):
             class_num,
         )
 
-    @classmethod
-    @abstractmethod
     def read_data(self, train_data_dir, test_data_dir, target_test_data_dir=None):
         """parses data in given train and test data directories
 
@@ -167,8 +170,6 @@ class DataLoader(ABC):
 
         return train_data, test_data, target_test_data
 
-    @classmethod
-    @abstractmethod
     def batch_data(self, data, batch_size):
         """
         data is a dict := {'x': [numpy array], 'y': [numpy array]} (on one client)
@@ -193,10 +194,9 @@ class DataLoader(ABC):
             batch_data.append((batched_x, batched_y))
         return batch_data
 
-    @classmethod
-    @abstractmethod
     def convert_to_tensor(self, batched_x, batched_y):
         batched_x = torch.from_numpy(np.asarray(batched_x)).float().reshape(-1, 28, 28)
         batched_y = torch.from_numpy(np.asarray(batched_y)).long()
 
         return batched_x, batched_y
+    
