@@ -6,7 +6,7 @@ orchestrate_module_dir = os.path.dirname(orchestrate.__file__)
 docker_module_dir = os.path.dirname(docker.__file__)
 crypto_module_dir = os.path.dirname(crypto.__file__)
 
-FADO_DIR = os.path.join(os.path.expanduser("~"), '.fado')
+FADO_DIR = os.path.join(os.getenv('FADO_HOME_FOLDER', os.path.expanduser("~")), '.fado')
 
 GENERAL_COMPOSE_FILE_PATH = os.path.join(orchestrate_module_dir, 'base_files', 'general_compose.yaml')
 FEDML_CONFIG_FILE_PATH = os.path.join(orchestrate_module_dir, 'base_files', 'fedml_config.yaml')
