@@ -11,14 +11,12 @@ learning_rate: 0.001
 
 encrypt_comm: true
 
-dataset: femnist
-data_dist: iid
+dataset: cifar10
+
+data_loader: 
 
 all_data_folder: data/all
 partition_data_folder: data/partitions
-
-#network_attack_spec: 'drop'
-
 random_seed: 0
 
 # Hardware

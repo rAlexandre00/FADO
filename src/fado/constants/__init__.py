@@ -29,6 +29,7 @@ BENIGN_CONFIG_OUT = os.path.join(CONFIG_OUT, 'benign_ranks.csv')
 MAL_CONFIG_OUT = os.path.join(CONFIG_OUT, 'malicious_ranks.csv')
 CERTS_OUT = os.path.join(FADO_DIR, 'certs')
 DOCKER_COMPOSE_OUT = os.path.join(FADO_DIR, 'docker-compose.yml')
+TEMP_DIRECTORY = os.path.join(FADO_DIR, 'temp')
 
 ALL_DATA_FOLDER = os.path.join(FADO_DIR, 'data', 'all')
 PARTITION_DATA_FOLDER = os.path.join(FADO_DIR, 'data', 'partitions')
@@ -36,3 +37,6 @@ PARTITION_DATA_FOLDER = os.path.join(FADO_DIR, 'data', 'partitions')
 IMAGES_PATH = os.path.join(FADO_DIR, 'docker')
 FEDML_IMAGE = os.path.join(IMAGES_PATH, 'client')
 ROUTER_IMAGE = os.path.join(IMAGES_PATH, 'router')
+
+DATASETS = ['femnist', 'emnist', 'shakespeare', 'cifar10', 'cifar100', 'mnist', 'sent140']
+LEAF_DATASETS = ['femnist', 'emnist', 'shakespeare', 'sent140']
