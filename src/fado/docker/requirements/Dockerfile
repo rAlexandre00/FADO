@@ -5,6 +5,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y python3.8 python3-pip
 
 COPY requirements.txt requirements.txt
+COPY fedml-0.7.343-py2.py3-none-any.whl fedml-0.7.343-py2.py3-none-any.whl
 RUN pip3 install -r requirements.txt
 
 RUN apt-get update \

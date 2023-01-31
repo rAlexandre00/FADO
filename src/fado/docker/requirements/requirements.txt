@@ -1,4 +1,4 @@
 grpcio==1.49.1
-fedml
+./fedml-0.7.343-py2.py3-none-any.whl
 flask
 tensorboard
