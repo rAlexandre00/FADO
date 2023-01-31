@@ -6,8 +6,7 @@ import sys
 import shutil
 
 from fado.arguments.arguments import AttackArguments
-from fado.constants import ALL_DATA_FOLDER, FADO_DIR, LOGS_DIRECTORY, PARTITION_DATA_FOLDER, \
-    FADO_DEFAULT_CONFIG_FILE_PATH, DATASETS, LEAF_DATASETS
+from fado.constants import *
 from fado.orchestrate import prepare_orchestrate
 from fado.data.downloader import leaf_downloader, torchvision_downloader
 from fado.data.data_splitter import split_data
@@ -63,8 +62,16 @@ def run():
 
 def clean():
     print("Cleaning...")
-    shutil.rmtree(PARTITION_DATA_FOLDER)
-    shutil.rmtree(LOGS_DIRECTORY)
+    shutil.rmtree(PARTITION_DATA_FOLDER, ignore_errors=True)
+    shutil.rmtree(ATTACK_DIRECTORY, ignore_errors=True)
+    shutil.rmtree(DEFENSE_DIRECTORY, ignore_errors=True)
+    shutil.rmtree(CONFIG_OUT, ignore_errors=True)
+    shutil.rmtree(CERTS_OUT, ignore_errors=True)
+    shutil.rmtree(IMAGES_PATH, ignore_errors=True)
+    shutil.rmtree(TENSORBOARD_DIRECTORY, ignore_errors=True)
+    shutil.rmtree(LOGS_DIRECTORY, ignore_errors=True)
+    os.remove(CONFIG_HASH)
+    os.remove(DOCKER_COMPOSE_OUT)
 
 
 def parse_args(args):
