@@ -22,4 +22,4 @@ random_seed: 0
 
 # Hardware
 
-using_gpu: true
+using_gpu: false
