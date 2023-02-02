@@ -4,6 +4,7 @@ import signal
 import subprocess
 import sys
 import shutil
+import errno
 
 from fado.arguments.arguments import AttackArguments
 from fado.constants import *
@@ -47,10 +48,10 @@ def compose(args, config, dev=True):
 def run():
     print("Deploying...")
     os.chdir(FADO_DIR)
-    subprocess.run(['docker', 'compose', 'down'])
-    subprocess.run(['docker', 'compose', 'build'])
+    subprocess.run(['docker-compose', 'down'])
+    subprocess.run(['docker-compose', 'build'])
     try:
-        p = subprocess.Popen(['docker', 'compose', 'up', '--remove-orphans'])
+        p = subprocess.Popen(['docker-compose', 'up', '--remove-orphans'])
         p.wait()
     except KeyboardInterrupt:
         try:
@@ -70,8 +71,13 @@ def clean():
     shutil.rmtree(IMAGES_PATH, ignore_errors=True)
     shutil.rmtree(TENSORBOARD_DIRECTORY, ignore_errors=True)
     shutil.rmtree(LOGS_DIRECTORY, ignore_errors=True)
-    os.remove(CONFIG_HASH)
-    os.remove(DOCKER_COMPOSE_OUT)
+    try:
+        os.remove(CONFIG_HASH)
+        os.remove(DOCKER_COMPOSE_OUT)  
+    except OSError as e:
+        if e.errno != errno.ENOENT: # errno.ENOENT = no such file or directory
+            raise # re-raise exception if a different error occurred
+    
 
 
 def parse_args(args):

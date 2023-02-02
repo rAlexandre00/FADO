@@ -1,8 +1,6 @@
 container_name: fado_router
 image: fado-router
 build: ./docker/router
-volumes:
-  - '~/.fado/config/:/app/config/'
 cap_add:
   - NET_ADMIN # Authorize container to change network configurations
 command: >-
