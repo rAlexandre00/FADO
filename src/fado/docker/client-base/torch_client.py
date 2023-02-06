@@ -2,7 +2,7 @@ import os
 import logging
 import fedml
 from fedml import FedMLRunner
-from fado.data.data_loader import DataLoader
+from fado.data.data_loader import get_data_loader
 from fado.logging.prints import HiddenPrints
 from fado.models import get_model
 
@@ -24,13 +24,13 @@ if __name__ == "__main__":
     fh = logging.FileHandler(os.path.join(f'logs/client_{args.rank}.log'))
     logger.addHandler(fh)
 
-    device = get_torch_device(args, args.using_gpu, args.rank % 2, "gpu")
+    device = get_torch_device(args, args.using_gpu, 0, "gpu")
 
     # Get the model
     model = get_model(args)
 
     # load data
-    data_loader = DataLoader(args)
+    data_loader = get_data_loader(args)
     dataset = data_loader.dataset
 
     logger.info("Data loaded...")
