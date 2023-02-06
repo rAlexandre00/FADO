@@ -1,5 +1,6 @@
-from abc import ABC
-from abc import abstractmethod
+from abc import ABC, abstractmethod
+from importlib import import_module
+import inspect
 import os
 
 import json
@@ -11,11 +12,11 @@ import torch
 
 cwd = os.getcwd()
 
-__all__ = ['DataLoader']
+__all__ = ['get_data_loader', 'DataLoader']
 
 logger = logging.getLogger('fado')
 
-class DataLoader:
+class DataLoader(ABC):
 
     def __init__(self, args) -> None:
         self.args = args
@@ -194,9 +195,37 @@ class DataLoader:
             batch_data.append((batched_x, batched_y))
         return batch_data
 
+    @abstractmethod
+    def convert_to_tensor(self, batched_x, batched_y):
+        pass
+    
+
+class MNISTDataLoader(DataLoader):
+
+    def __init__(self, args) -> None:
+        super().__init__(args)
+
     def convert_to_tensor(self, batched_x, batched_y):
         batched_x = torch.from_numpy(np.asarray(batched_x)).float().reshape(-1, 28, 28)
         batched_y = torch.from_numpy(np.asarray(batched_y)).long()
 
         return batched_x, batched_y
+    
+
+def get_data_loader(args):
+    # TODO: implement dataloaders for more datasets...
+
+    # import class from a custom module
+
+    data_loader = args.data_loader_file
+    if os.path.exists(data_loader): # is file
+        # load file -> user has to implemented the get_data_loader() method!!!!!
+        data_loader = data_loader.split('.py')[0]            
+        data_loader = getattr(import_module('.', data_loader), 'get_data_loader')()
+        return data_loader(args)
+
+    if args.dataset in ['mnist', 'emnist', 'femnist']:
+        return MNISTDataLoader(args)
+    
+
     

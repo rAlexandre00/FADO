@@ -14,6 +14,8 @@ encrypt_comm: true
 dataset: femnist
 data_dist: niid
 
+data_loader_file: 'data_loader.py'
+
 all_data_folder: data/all
 partition_data_folder: data/partitions
 

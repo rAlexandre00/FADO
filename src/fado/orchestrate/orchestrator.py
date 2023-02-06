@@ -47,7 +47,7 @@ def prepare_orchestrate(config_path, args, dev=False):
     if config_changed:
         logger.info("Creating docker files")
         # Generate image files
-        generate_image_files(args.model)
+        generate_image_files(args, config_path)
 
         benign_ranks, malicious_ranks = generate_client_ranks(args.benign_clients, args.malicious_clients)
 
@@ -114,7 +114,7 @@ def generate_router_image(args, dev=False):
         yaml.dump(args.__dict__, f)
 
 
-def generate_image_files(model):
+def generate_image_files(args, config_path):
     """Creates the docker folder that has fedml and router docker files
 
         Parameters:
@@ -122,6 +122,9 @@ def generate_image_files(model):
             dev: Identifies if development mode is enabled
     :return:
     """
+
+    config_path = os.path.dirname(os.path.dirname(config_path))
+
     client_user_path = FEDML_IMAGE
     router_user_path = ROUTER_IMAGE
 
@@ -129,11 +132,13 @@ def generate_image_files(model):
     copy_tree(CLIENT_PATH, client_user_path)
     copy_tree(ROUTER_PATH, router_user_path)
 
-    if os.path.exists(model):  # if model is a file, copy it
-        shutil.copy2(model, os.path.join(client_user_path, 'get_model.py'))
+    if os.path.exists(args.model):  # if model is a file, copy it
+        shutil.copy2(args.model, os.path.join(client_user_path, 'get_model.py'))
     else:
         shutil.copy2(FADO_DEFAULT_MODEL_PATH, os.path.join(client_user_path, 'get_model.py'))
 
+    if os.path.exists(os.path.join(config_path, args.data_loader_file)):
+        shutil.copy2(os.path.join(config_path, args.data_loader_file), os.path.join(client_user_path, 'data_loader.py'))
 
 def generate_dev_files():
     # Copies docker files in fado library to user space
@@ -269,7 +274,8 @@ def create_fedml_config(args, rank, malicious=False):
         if 'target_class' in args:
             config['monitor'] = {}
             config['monitor']['target_class'] = args.target_class
-
+        
+    config['data_args']['data_loader_file'] = args.data_loader_file    
     config['data_args']['data_cache_dir'] = f'./data/user_{rank}'
     config['comm_args']['grpc_ipconfig_path'] = f'./config/user_{rank}/grpc_ipconfig.csv'
     config['common_args']['random_seed'] = args.random_seed

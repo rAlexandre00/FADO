@@ -48,10 +48,10 @@ def compose(args, config, dev=True):
 def run():
     print("Deploying...")
     os.chdir(FADO_DIR)
-    subprocess.run(['docker', 'compose', 'down'])
-    subprocess.run(['docker', 'compose', 'build'])
+    subprocess.run(['docker-compose', 'down'])
+    subprocess.run(['docker-compose', 'build'])
     try:
-        p = subprocess.Popen(['docker', 'compose', 'up', '--remove-orphans'])
+        p = subprocess.Popen(['docker-compose', 'up', '--remove-orphans'])
         p.wait()
     except KeyboardInterrupt:
         try:
@@ -112,7 +112,11 @@ def cli():
 
     args = parse_args(sys.argv[1:])
 
-    config_file = args.yaml_file if args.yaml_file else FADO_DEFAULT_CONFIG_FILE_PATH
+    if args.yaml_file:
+        config_file = args.yaml_file
+    else:
+        fado_config_env = os.getenv('FADO_CONFIG')
+        config_file = fado_config_env if fado_config_env else FADO_DEFAULT_CONFIG_FILE_PATH
 
     fado_arguments = AttackArguments(config_file)
 

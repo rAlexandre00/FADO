@@ -14,7 +14,7 @@ import fedml
 import logging
 from fedml import FedMLRunner
 from server_aggregator import FadoServerAggregator
-from fado.data.data_loader import DataLoader
+from fado.data.data_loader import get_data_loader
 from fedml.ml.engine.ml_engine_adapter import get_torch_device
 
 from torch.utils.tensorboard import SummaryWriter
@@ -71,7 +71,7 @@ if __name__ == "__main__":
     model = get_model(args)
 
      # load data
-    data_loader = DataLoader(args)
+    data_loader = get_data_loader(args)
     dataset = data_loader.dataset
 
     logger.info("Data loaded...")
