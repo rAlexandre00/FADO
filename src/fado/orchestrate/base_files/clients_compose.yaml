@@ -1,13 +1,6 @@
 container_name: fado_clients
 image: fedml-client
 build: ./docker/client
-volumes:
-  - '~/.fado/certs/:/app/certs/'
-  - '~/.fado/config/:/app/config/'
-  - '~/.fado/attack/:/app/attack/:rw'
-  - '~/.fado/defense/:/app/defense/:rw'
-  - '~/.fado/logs/:/app/logs:rw'
-  # - '~/.fado/data/clients:/app/data/' # Depends on dataset
 environment:
   - WAIT_HOSTS=10.2.1.0:8890
   - WAIT_HOST_CONNECT_TIMEOUT=360
@@ -17,6 +10,7 @@ environment:
 restart: on-failure
 cap_add:
   - NET_ADMIN # Authorize container to change network configurations
+privileged: true
 command: >-
   sh -c "/app/config_interfaces_clients.sh && /wait && /app/run_clients.sh"
 depends_on:

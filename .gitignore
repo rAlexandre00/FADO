@@ -164,7 +164,7 @@ src/examples/*/certs
 src/examples/*/config/fedml_config*.yaml
 src/examples/*/config/grpc_ipconfig.csv
 src/examples/*/data/
-src/examples/*/temp_leaf/
+src/examples/*/temp/
 src/examples/*/docker-compose.yml
 src/examples/*/docker
 src/examples/*/runs

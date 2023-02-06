@@ -26,7 +26,6 @@ def prepare_orchestrate(config_path, args, dev=False):
         2 - Generate docker-compose file
         3 - Create grpc_ipconfig file and fedml_config.yaml
         4 - Generate tls certificates
-        5 - Split data for each client for train and test
 
         Parameters:
             config_path(str): Path for the yaml configuration file
@@ -72,11 +71,6 @@ def prepare_orchestrate(config_path, args, dev=False):
             logger.info("Creating TLS certificates")
             # Generate tls certificates (if defined in attacks args)
             create_certs()
-
-        # Commenting this section as will not be part of the compose part
-        #logger.info("Creating partitions for server and clients")
-        # Split data for each client for train and test
-        #split_data(args.dataset, ALL_DATA_FOLDER, PARTITION_DATA_FOLDER, args.benign_clients + args.malicious_clients)
 
         logger.info("Creating needed folders")
         os.makedirs(TENSORBOARD_DIRECTORY, exist_ok=True)
@@ -184,7 +178,7 @@ def create_ipconfig(ipconfig_out, rank, num_clients):
         base_server_ip = ipaddress.IPv4Address('10.2.1.0')
         base_client_ip = ipaddress.IPv4Address('10.1.1.0')
         f.write('receiver_id,ip\n')
-        f.write(f'0,{base_server_ip+rank - 1}\n')
+        f.write(f'0,{base_server_ip}\n')
         for rank in range(1, num_clients + 1):
             f.write(f'{rank},{base_client_ip}\n')
             base_client_ip += 1
@@ -208,14 +202,36 @@ def generate_compose(dataset, docker_compose_out, n_clients, using_gpu=False):
     # Generate benign compose services
     base = docker_compose['services']['clients']
     client_compose = copy.deepcopy(base)
-    client_compose['volumes'] += [f'{PARTITION_DATA_FOLDER}/{dataset}/clients:/app/data/']
+
+    # Add all volumes manually to give possibility to customize FADO home folder...
+    client_compose['volumes'] = list()
+    client_compose['volumes'] += [f'{PARTITION_DATA_FOLDER}/{dataset}/clients:/app/data']
+    client_compose['volumes'] += [f'{CONFIG_OUT}:/app/config']
+    client_compose['volumes'] += [f'{CERTS_OUT}:/app/certs']
+    client_compose['volumes'] += [f'{ATTACK_DIRECTORY}:/app/attack:rw']
+    client_compose['volumes'] += [f'{DEFENSE_DIRECTORY}:/app/defense:rw']
+    client_compose['volumes'] += [f'{LOGS_DIRECTORY}:/app/logs:rw']
+
+
     client_compose['environment'] += [f'N_INTERFACES={n_clients}']
     docker_compose['services'][f'clients'] = client_compose
 
     # Customize volume for data in server
+    # Add all volumes to give possibility to customize FADO home folder
+    docker_compose['services']['server']['volumes'] = list()
     docker_compose['services']['server']['volumes'] += [f'{PARTITION_DATA_FOLDER}/{dataset}/server:/app/data/user_0']
+    docker_compose['services']['server']['volumes'] += [f'{CONFIG_OUT}:/app/config']
+    docker_compose['services']['server']['volumes'] += [f'{CERTS_OUT}:/app/certs']
+    docker_compose['services']['server']['volumes'] += [f'{ATTACK_DIRECTORY}:/app/attack:rw']
+    docker_compose['services']['server']['volumes'] += [f'{DEFENSE_DIRECTORY}:/app/defense:rw']
+    docker_compose['services']['server']['volumes'] += [f'{LOGS_DIRECTORY}:/app/logs:rw']
     docker_compose['services']['server']['environment'] = []
     docker_compose['services']['server']['environment'] += [f'N_INTERFACES={n_clients}']
+
+    # Same as above but for the router...
+    docker_compose['services']['router']['volumes'] = list()
+    docker_compose['services']['router']['volumes'] += [f'{CONFIG_OUT}:/app/config']
+
 
     with open(docker_compose_out, 'w') as f:
         yaml.dump(docker_compose, f, sort_keys=False)
@@ -307,14 +323,6 @@ def load_base_compose(using_gpu=False):
     with open(GENERAL_COMPOSE_FILE_PATH, 'r') as file:
         docker_compose = yaml.load(file, Loader=yaml.FullLoader)
 
-    """
-    deploy:
-        resources:
-            reservations:
-            devices:
-            - driver: nvidia
-                capabilities: [gpu]
-    """
     # Put inside the docker compose file the client and server base files
     for service in ['server', 'clients', 'router']:
         with open(dir_path + os.path.sep + docker_compose['services'][service]['compose-file'], 'r') as file:
@@ -326,5 +334,6 @@ def load_base_compose(using_gpu=False):
         with open(dir_path + os.path.sep + 'gpu_compose.yaml', 'r') as file:
             gpu_compose = yaml.load(file, Loader=yaml.FullLoader)
             docker_compose['services']['clients']['deploy'] = gpu_compose['deploy']
+            docker_compose['services']['server']['deploy'] = {}
             docker_compose['services']['server']['deploy']['resources'] = gpu_compose['deploy']['resources']
     return docker_compose

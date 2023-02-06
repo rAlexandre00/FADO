@@ -1,5 +1,5 @@
 malicious_clients: 0
-benign_clients: 10
+benign_clients: 50
 clients_per_round: 5
 
 # Training Hyper Parameters
@@ -12,6 +12,7 @@ learning_rate: 0.001
 encrypt_comm: true
 
 dataset: femnist
+data_dist: niid
 
 all_data_folder: data/all
 partition_data_folder: data/partitions

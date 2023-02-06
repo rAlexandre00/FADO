@@ -4,7 +4,7 @@ import fedml
 from fedml.cli.edge_deployment.client_diagnosis import ClientDiagnosis
 
 
-def collect_env():
+def collect_env(args):
     print("\n======== FedML (https://fedml.ai) ========")
     print("FedML version: " + str(fedml.__version__))
     print("Execution path:" + str(os.path.abspath(fedml.__file__)))

@@ -1,5 +1,5 @@
-malicious_clients: 5
-benign_clients: 0
+malicious_clients: 0
+benign_clients: 10
 clients_per_round: 5
 
 # Training Hyper Parameters
@@ -11,14 +11,12 @@ learning_rate: 0.001
 
 encrypt_comm: true
 
-dataset: femnist
+dataset: cifar10
+
+data_loader: 
 
 all_data_folder: data/all
 partition_data_folder: data/partitions
-
-client_attack_spec: 'label_flipping'
-
-
 random_seed: 0
 
 # Hardware
