@@ -1,5 +1,4 @@
-from abc import ABC
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 import os
 
 import json
@@ -15,7 +14,7 @@ __all__ = ['DataLoader']
 
 logger = logging.getLogger('fado')
 
-class DataLoader:
+class DataLoader(ABC):
 
     def __init__(self, args) -> None:
         self.args = args
@@ -194,9 +193,26 @@ class DataLoader:
             batch_data.append((batched_x, batched_y))
         return batch_data
 
+    @abstractmethod
+    def convert_to_tensor(self, batched_x, batched_y):
+        pass
+    
+
+class MNISTDataLoader(DataLoader):
+
+    def __init__(self, args) -> None:
+        super().__init__(args)
+
     def convert_to_tensor(self, batched_x, batched_y):
         batched_x = torch.from_numpy(np.asarray(batched_x)).float().reshape(-1, 28, 28)
         batched_y = torch.from_numpy(np.asarray(batched_y)).long()
 
         return batched_x, batched_y
+    
+
+def get_data_loader(args):
+    if args.dataset in ['mnist', 'emnist', 'femnist']:
+        return MNISTDataLoader(args)
+    
+
     
