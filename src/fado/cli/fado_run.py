@@ -48,10 +48,10 @@ def compose(args, config, dev=True):
 def run():
     print("Deploying...")
     os.chdir(FADO_DIR)
-    subprocess.run(['docker-compose', 'down'])
-    subprocess.run(['docker-compose', 'build'])
+    subprocess.run(['docker', 'compose', 'down'])
+    subprocess.run(['docker', 'compose', 'build'])
     try:
-        p = subprocess.Popen(['docker-compose', 'up', '--remove-orphans'])
+        p = subprocess.Popen(['docker', 'compose', 'up', '--remove-orphans'])
         p.wait()
     except KeyboardInterrupt:
         try:

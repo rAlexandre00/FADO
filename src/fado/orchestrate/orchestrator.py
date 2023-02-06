@@ -178,7 +178,7 @@ def create_ipconfig(ipconfig_out, rank, num_clients):
         base_server_ip = ipaddress.IPv4Address('10.2.1.0')
         base_client_ip = ipaddress.IPv4Address('10.1.1.0')
         f.write('receiver_id,ip\n')
-        f.write(f'0,{base_server_ip+rank - 1}\n')
+        f.write(f'0,{base_server_ip}\n')
         for rank in range(1, num_clients + 1):
             f.write(f'{rank},{base_client_ip}\n')
             base_client_ip += 1

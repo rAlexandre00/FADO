@@ -4,6 +4,7 @@ build: ./docker/client
 volumes:
 cap_add:
   - NET_ADMIN # Authorize container to change network configurations
+privileged: true
 command: >-
   sh -c "/app/config_interfaces_server.sh && /app/run_server.sh"
 depends_on:
