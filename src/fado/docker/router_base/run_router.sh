@@ -3,10 +3,8 @@
 # Sleep while server is starting
 while true
 do
-echo 'trying to reach the server...'
 ping -c1 -W1 -q fado_server &>/dev/null && break || sleep 1
 done
-echo 'reached the server...'
 
 python3 fado_router.py &
 

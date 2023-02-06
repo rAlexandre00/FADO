@@ -26,7 +26,6 @@ def prepare_orchestrate(config_path, args, dev=False):
         2 - Generate docker-compose file
         3 - Create grpc_ipconfig file and fedml_config.yaml
         4 - Generate tls certificates
-        5 - Split data for each client for train and test
 
         Parameters:
             config_path(str): Path for the yaml configuration file
@@ -72,11 +71,6 @@ def prepare_orchestrate(config_path, args, dev=False):
             logger.info("Creating TLS certificates")
             # Generate tls certificates (if defined in attacks args)
             create_certs()
-
-        # Commenting this section as will not be part of the compose part
-        #logger.info("Creating partitions for server and clients")
-        # Split data for each client for train and test
-        #split_data(args.dataset, ALL_DATA_FOLDER, PARTITION_DATA_FOLDER, args.benign_clients + args.malicious_clients)
 
         logger.info("Creating needed folders")
         os.makedirs(TENSORBOARD_DIRECTORY, exist_ok=True)
