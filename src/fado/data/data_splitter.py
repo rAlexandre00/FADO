@@ -86,6 +86,7 @@ def split_data(args, target_class=None):
                 json.dump({'user_data': all_data}, outfile)
 
     # Create a test dataset to test for backdoor attacks
+    found = 0
     if target_class is not None:
         test_target = {}
         for user, data in all_data.items():
@@ -93,6 +94,10 @@ def split_data(args, target_class=None):
             result = list(filter(lambda d: d[1] == target_class, zip(data['x'], data['y'])))
             test_target[user] = {}
             any(gather_test_target(test_target[user], d) for d in result)
+            found += len(result)
         os.makedirs(os.path.join(PARTITION_DATA_FOLDER, dataset, 'server', 'target_test'), exist_ok=True)
+        if found == 0:
+            logger.error("Target class has no examples")
+            exit(-1)
         with open(os.path.join(PARTITION_DATA_FOLDER, dataset, 'server', 'target_test', 'data.json'), "w") as outfile:
             json.dump({'user_data': test_target}, outfile)

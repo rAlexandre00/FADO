@@ -127,6 +127,7 @@ class FadoServerAggregator(ServerAggregator):
         logger.info(f'test_acc = {test_acc} , round = {args.round_idx}')
         logger.info(f'test_loss = {test_loss} , round = {args.round_idx}')
 
+
         if self.target_test_data:
             test_acc_target, test_loss_target = self.calculate_metrics(self.target_test_data, device, args)
             logger.info(f'test_acc_target = {test_acc_target} , round = {args.round_idx}')

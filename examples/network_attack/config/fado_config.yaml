@@ -19,7 +19,7 @@ data_loader_file: 'data_loader.py'
 
 all_data_folder: data/all
 partition_data_folder: data/partitions
-#target_class: 1
+target_class: 2
 
 #network_attack_spec: 'drop'
 

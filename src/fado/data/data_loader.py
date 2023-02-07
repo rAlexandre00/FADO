@@ -37,8 +37,7 @@ class DataLoader(ABC):
             target_test_data_dir=target_test_path
         )
 
-        # process data
-
+        # process data - Transform into batches
         (
             client_num,
             train_data_num,
@@ -51,6 +50,8 @@ class DataLoader(ABC):
             test_data_local_dict,
             class_num,
         ) = self.process_data(train_data, test_data, self.target_test_data)
+
+        self.target_test_data = target_test_data
 
         # build dataset from data
 
@@ -123,7 +124,6 @@ class DataLoader(ABC):
                 train_data_local_dict[client_idx] = train_batch
                 train_data_global += train_batch
             client_idx += 1
-
 
         for user in target_test_data.keys():
             if target_test_data[user]:
