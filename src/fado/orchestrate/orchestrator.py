@@ -271,7 +271,7 @@ def create_fedml_config(args, rank, malicious=False):
         if 'defense_spec' in args:
             config['defense_args'] = {}
             config['defense_args']['defense_spec'] = args.defense_spec
-        if 'target_class' in args:
+        if rank is 0 and 'target_class' in args:
             config['monitor'] = {}
             config['monitor']['target_class'] = args.target_class
         

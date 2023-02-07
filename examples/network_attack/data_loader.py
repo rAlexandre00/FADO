@@ -10,7 +10,7 @@ class HelloDataLoader(DataLoader):
         super().__init__(args)
 
     def convert_to_tensor(self, batched_x, batched_y):
-        batched_x = torch.from_numpy(np.asarray(batched_x)).float().reshape(-1, 28, 28)
+        batched_x = torch.from_numpy(np.asarray(batched_x)).float()
         batched_y = torch.from_numpy(np.asarray(batched_y)).long()
 
         return batched_x, batched_y

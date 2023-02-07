@@ -19,13 +19,11 @@ done
 
 for rank in "${benign_ranks[@]}"
 do
-  echo starting client with rank "$rank" and ip 10.1."${ips[rank-1]}"
   env FEDML_RANK="$rank" ip netns exec ns10.1."${ips[rank-1]}" /app/run_client.sh &
 done
 
 for rank in "${malicious_ranks[@]}"
 do
-  echo starting client with rank "$rank" and ip 10.1."${ips[rank-1]}"
   env FEDML_RANK="$rank" ip netns exec ns10.1."${ips[rank-1]}" /app/run_client.sh &
 done
 

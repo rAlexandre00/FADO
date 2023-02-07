@@ -45,13 +45,26 @@ def compose(args, config, dev=True):
     prepare_orchestrate(config, args, dev)
 
 
+def is_tool(name):
+    """Check whether `name` is on PATH and marked as executable."""
+    from shutil import which
+
+    return which(name) is not None
+
+
 def run():
     print("Deploying...")
+
+    # Verify is docker-compose exists. If not use docker compose
+    command = ['bash', 'docker-compose']
+    if not is_tool('docker-compose'):
+        command = ['docker', 'compose']
+
     os.chdir(FADO_DIR)
-    subprocess.run(['docker-compose', 'down'])
-    subprocess.run(['docker-compose', 'build'])
+    subprocess.run(command + ['down'])
+    subprocess.run(command + ['build'])
     try:
-        p = subprocess.Popen(['docker-compose', 'up', '--remove-orphans'])
+        p = subprocess.Popen(command + [ 'up', '--remove-orphans'])
         p.wait()
     except KeyboardInterrupt:
         try:
