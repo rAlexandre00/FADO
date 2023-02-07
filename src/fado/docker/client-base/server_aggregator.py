@@ -151,7 +151,7 @@ class FadoServerAggregator(ServerAggregator):
         train_num_samples = []
         train_tot_corrects = []
         train_losses = []
-        for client_idx in range(self.args.client_num_in_total):
+        for client_idx in train_data_local_dict.keys():
             # train data
             metrics = self._test(train_data_local_dict[client_idx], device, args)
             train_tot_correct, train_num_sample, train_loss = (

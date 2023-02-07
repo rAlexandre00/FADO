@@ -94,31 +94,47 @@ class DataLoader(ABC):
         train_data_global = list()
         test_data_global = list()
         target_test_global = list()
-        client_idx = 0
 
+        client_idx = 0
+        for user in test_data.keys():
+            if test_data[user]:
+                user_test_data_num = len(test_data[user]["x"])
+                test_data_num += user_test_data_num
+
+                # transform to batches
+                test_batch = self.batch_data(test_data[user], self.args.batch_size)
+
+                # index using client index
+                test_data_local_dict[client_idx] = test_batch
+                test_data_global += test_batch
+            client_idx += 1
+
+        client_idx = 0
         for user in train_data.keys():
             if train_data[user]:
                 user_train_data_num = len(train_data[user]["x"])
-                user_test_data_num = len(test_data[user]["x"])
                 train_data_num += user_train_data_num
-                test_data_num += user_test_data_num
                 train_data_local_num_dict[client_idx] = user_train_data_num
 
                 # transform to batches
                 train_batch = self.batch_data(train_data[user], self.args.batch_size)
-                test_batch = self.batch_data(test_data[user], self.args.batch_size)
 
                 # index using client index
                 train_data_local_dict[client_idx] = train_batch
-                test_data_local_dict[client_idx] = test_batch
                 train_data_global += train_batch
-                test_data_global += test_batch
             client_idx += 1
 
+
+        logger.info(f'LEN - {test_data.keys()}')
+        logger.info(f'LEN - {target_test_data.keys()}')
+
+        logger.info('BATCHING TARGET TEST DATA')
         for user in target_test_data.keys():
             if target_test_data[user]:
                 target_test_batch = self.batch_data(target_test_data[user], self.args.batch_size)
                 target_test_global += target_test_batch
+
+        logger.info(f'LEN - {len(target_test_global)}')
 
         client_num = client_idx
         # Must be read from args (!!!)
