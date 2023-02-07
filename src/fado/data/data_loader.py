@@ -125,16 +125,10 @@ class DataLoader(ABC):
             client_idx += 1
 
 
-        logger.info(f'LEN - {test_data.keys()}')
-        logger.info(f'LEN - {target_test_data.keys()}')
-
-        logger.info('BATCHING TARGET TEST DATA')
         for user in target_test_data.keys():
             if target_test_data[user]:
                 target_test_batch = self.batch_data(target_test_data[user], self.args.batch_size)
                 target_test_global += target_test_batch
-
-        logger.info(f'LEN - {len(target_test_global)}')
 
         client_num = client_idx
         # Must be read from args (!!!)
