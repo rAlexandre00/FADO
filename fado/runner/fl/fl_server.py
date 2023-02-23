@@ -111,7 +111,6 @@ class FLServer(Observer):
                 model_message = self.com_manager.receive_message(client_id)
             else:
                 return
-        logger.info(f"Received local model from client {client_id}")
 
         # Add the model to the models to be aggregated if the server does not have already enough models
         model = model_message.get(Message.MSG_ARG_KEY_MODEL_PARAMS)
