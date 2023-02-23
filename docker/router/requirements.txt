@@ -1,0 +1,2 @@
+scapy==2.5.0
+NetfilterQueue==1.0.0

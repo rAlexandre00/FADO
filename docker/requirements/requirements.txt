@@ -1,0 +1,5 @@
+torch==1.13.1
+tensorflow==2.11.0
+PyYAML==6.0
+numpy==1.24.2
+py7zr==0.20.4
