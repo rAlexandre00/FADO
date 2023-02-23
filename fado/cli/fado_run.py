@@ -1,5 +1,6 @@
 import argparse
 import logging
+import shutil
 import subprocess
 import sys
 import time
@@ -107,6 +108,8 @@ def run_server(fado_args, dev_mode, local, add_flags):
         # TODO: Set FADO_DATA_PATH and FADO_CONFIG_PATH and start training without docker
         pass
 
+    #docker pull ralexandre00/fado-node-requirements
+
     # Start server container
     subprocess.run(['docker', 'run', '-d', '-w', '/app', '--name', 'fado-server', '--cap-add=NET_ADMIN'] + add_flags +
                     ['ralexandre00/fado-node', 'bash', '-c', 'tail -f /dev/null'])
@@ -197,6 +200,8 @@ def cli():
         config_file = fado_config_env if fado_config_env else FADO_DEFAULT_CONFIG_FILE_PATH
 
     fado_arguments = FADOArguments(config_file)
+    os.makedirs(CONFIG_OUT, exist_ok=True)
+    shutil.copyfile(config_file, FADO_CONFIG_OUT)
 
     if args.mode == 'build':
         build_mode = args.build_mode
