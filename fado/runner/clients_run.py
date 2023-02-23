@@ -2,12 +2,11 @@ import logging
 import os
 import random
 import socket
+import sys
 import time
 from threading import Thread
 
 import numpy as np
-# import tensorflow as tf
-import torch
 
 from fado.runner.data.load.client_data_loader import ClientDataLoader
 from fado.cli.arguments.arguments import FADOArguments
@@ -47,15 +46,20 @@ if __name__ == '__main__':
 
     # Set the seed for PRNGs to be equal to the trial index
     seed = args.random_seed
+    if args.engine == 'pytorch':
+        import torch
+        torch.manual_seed(seed)
+        torch.backends.cudnn.benchmark = False
+        torch.use_deterministic_algorithms(True, warn_only=True)
+    elif args.engine == 'pytorch':
+        import tensorflow as tf
+        tf.random.set_seed(seed)
+    seed = args.random_seed
     np.random.seed(seed)
     random.seed(seed)
-    # tf.random.set_seed(seed)
-    torch.manual_seed(seed)
-    torch.backends.cudnn.benchmark = False
-    torch.use_deterministic_algorithms(True, warn_only=True)
 
-    while not isOpen(SERVER_IP, SERVER_PORT):
-        logging.info("Waiting for server to start")
+    while not isOpen(os.getenv('SERVER_IP'), SERVER_PORT):
+        logger.info("Waiting for server to start")
         time.sleep(1)
 
     for client_id in range(1, args.number_clients+1):

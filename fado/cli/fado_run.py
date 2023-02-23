@@ -5,9 +5,7 @@ import subprocess
 import sys
 import time
 from threading import Thread
-from typing import Optional
 
-import docker
 from fado.constants import *
 from fado.cli.arguments.arguments import FADOArguments
 
@@ -33,7 +31,7 @@ def parse_args(args):
     parser.add_argument('-nb', dest='number_benign', type=int, required=False)
     parser.add_argument('-nm', dest='number_malicious', type=int, required=False)
     parser.add_argument('--dev', dest='development', action=argparse.BooleanOptionalAction, required=False)
-    parser.add_argument('--local', dest='local', action=argparse.BooleanOptionalAction, required=False)
+    parser.add_argument('--no-docker', dest='docker', action='store_false', default=True)
 
     build_mode_parser = build_parser.add_subparsers(dest="build_mode")
     build_mode_parser.add_parser('download')
@@ -76,10 +74,13 @@ def shape_data(fado_arguments):
         # TODO: TorchVisionShaper.shape()
 
 
-def run_client(fado_args, dev_mode, local, add_flags):
-    if local:
-        # TODO: Set FADO_DATA_PATH and FADO_CONFIG_PATH and start training without docker
-        pass
+def run_clients(fado_args, dev_mode, docker, add_flags):
+    if not docker:
+        subprocess.run(f"FADO_DATA_PATH={os.path.join(ALL_DATA_FOLDER, fado_args.dataset)} "
+                       f"FADO_CONFIG_PATH={FADO_CONFIG_OUT} "
+                       f"SERVER_IP=localhost "
+                       f"python3 -m fado.runner.clients_run", shell=True)
+        return
 
     # Start clients container
     subprocess.run(['docker', 'run', '-d', '-w', '/app', '--name', 'fado-clients', '--cap-add=NET_ADMIN'] + add_flags +
@@ -98,17 +99,18 @@ def run_client(fado_args, dev_mode, local, add_flags):
     # Start clients
     subprocess.run(['docker', 'exec', 'fado-clients', '/bin/bash', '-c',
                     'export FADO_CONFIG_PATH=/app/config/fado_config.yaml && '
-                    'export FADO_DATA_PATH=/app/data'])
+                    'export FADO_DATA_PATH=/app/data && '
+                    f'export SERVER_IP={SERVER_IP}'])
     subprocess.run(['docker', 'exec', 'fado-clients', '/bin/bash', '-c', 'python3 -m fado.runner.communication.config.config_clients_network'])
     subprocess.run(['docker', 'exec', 'fado-clients', '/bin/bash', '-c', 'python3 -m fado.runner.clients_run'])
 
 
-def run_server(fado_args, dev_mode, local, add_flags):
-    if local:
-        # TODO: Set FADO_DATA_PATH and FADO_CONFIG_PATH and start training without docker
-        pass
-
-    #docker pull ralexandre00/fado-node-requirements
+def run_server(fado_args, dev_mode, docker, add_flags):
+    if not docker:
+        subprocess.run(f"FADO_DATA_PATH={os.path.join(ALL_DATA_FOLDER, fado_args.dataset)} "
+                       f"FADO_CONFIG_PATH={FADO_CONFIG_OUT} "
+                       f"python3 -m fado.runner.server_run", shell=True)
+        return
 
     # Start server container
     subprocess.run(['docker', 'run', '-d', '-w', '/app', '--name', 'fado-server', '--cap-add=NET_ADMIN'] + add_flags +
@@ -128,15 +130,15 @@ def run_server(fado_args, dev_mode, local, add_flags):
 
     # Start clients
     subprocess.run(['docker', 'exec', 'fado-server', '/bin/bash', '-c',
-                    'export FADO_CONFIG_PATH=/app/config/fado_config.yaml && '
-                    'export FADO_DATA_PATH=/app/data'])
+                    f'export FADO_CONFIG_PATH=/app/config/fado_config.yaml && '
+                    f'export FADO_DATA_PATH=/app/data'])
     subprocess.run(['docker', 'exec', 'fado-server', '/bin/bash', '-c', 'python3 -m fado.runner.communication.config.config_server_network'])
     subprocess.run(['docker', 'exec', 'fado-server', '/bin/bash', '-c', 'python3 -m fado.runner.server_run'])
     return
 
 
-def run_router(dev_mode, local):
-    if local:
+def run_router(dev_mode, docker):
+    if not docker:
         # Do nothing
         return
 
@@ -173,25 +175,30 @@ def stop_router():
     subprocess.run(['docker', 'rm', 'fado-router'], stdout=subprocess.DEVNULL)
 
 
-def run(fado_args, dev_mode=False, local=False):
+def run(fado_args, dev_mode=False, docker=True):
     container_flags = []
     if fado_args.use_gpu:
         container_flags = ['--gpus', 'all']
     try:
-        Thread(target=run_server, args=(fado_args, dev_mode, local, container_flags,), daemon=True).start()
-        Thread(target=run_router, args=(dev_mode, local,), daemon=True).start()
-        Thread(target=run_client, args=(fado_args, dev_mode, local, container_flags), daemon=True).start()
+        Thread(target=run_server, args=(fado_args, dev_mode, docker, container_flags,), daemon=True).start()
+        Thread(target=run_router, args=(dev_mode, docker,), daemon=True).start()
+        Thread(target=run_clients, args=(fado_args, dev_mode, docker, container_flags), daemon=True).start()
         while True:
             time.sleep(100)
     except KeyboardInterrupt:
-        stop_server()
-        stop_router()
-        stop_clients()
+        if docker:
+            stop_server()
+            stop_router()
+            stop_clients()
+
+
+def move_files_to_fado_home(config_file):
+    os.makedirs(CONFIG_OUT, exist_ok=True)
+    shutil.copyfile(config_file, FADO_CONFIG_OUT)
 
 
 def cli():
     args = parse_args(sys.argv[1:])
-    print(args.mode)
 
     if args.yaml_file:
         config_file = args.yaml_file
@@ -200,8 +207,10 @@ def cli():
         config_file = fado_config_env if fado_config_env else FADO_DEFAULT_CONFIG_FILE_PATH
 
     fado_arguments = FADOArguments(config_file)
-    os.makedirs(CONFIG_OUT, exist_ok=True)
-    shutil.copyfile(config_file, FADO_CONFIG_OUT)
+
+    move_files_to_fado_home(config_file)
+
+    # docker pull ralexandre00/fado-node-requirements
 
     if args.mode == 'build':
         build_mode = args.build_mode
@@ -215,34 +224,10 @@ def cli():
             shape_data(fado_arguments)
 
     elif args.mode == 'run':
-        run(fado_arguments, args.development, args.local)
+        run(fado_arguments, args.development, args.docker)
     elif args.mode == 'clean':
         clean()
     else:
-        data(fado_arguments)
-        compose(fado_arguments, config_file, True)
-        run()
-
-
-def is_container_running(container_name: str) -> Optional[bool]:
-    """Verify the status of a container by it's name
-
-    :param container_name: the name of the container
-    :return: boolean or None
-    """
-    RUNNING = "running"
-    # Connect to Docker using the default socket or the configuration
-    # in your environment
-    docker_client = docker.from_env()
-    # Or give configuration
-    # docker_socket = "unix://var/run/docker.sock"
-    # docker_client = docker.DockerClient(docker_socket)
-
-    try:
-        container = docker_client.containers.get(container_name)
-    except docker.errors.NotFound as exc:
-        pass
-    else:
-        container_state = container.attrs["State"]
-        return container_state["Status"] == RUNNING
-
+        download_data(fado_arguments)
+        shape_data(fado_arguments)
+        run(fado_arguments, args.development, args.docker)

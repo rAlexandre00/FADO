@@ -13,6 +13,7 @@ fl_training_process:
     participant_selector: random
 
 client_training_process:
+    engine: pytorch
     model: nlafl_emnist
     batch_size: 64
     epochs: 10
@@ -29,7 +30,6 @@ dataset_spec:
     dataset_rate: 0.05
     data_distribution: niid
     num_classes: 10
-    data_loader_file: data_loader.py
  
 communication:
     encrypt_comm: true

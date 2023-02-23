@@ -1,4 +1,5 @@
 import logging
+import os
 import pickle
 import socket
 import struct
@@ -26,7 +27,7 @@ class ClientSocketCommunicationManager(BaseCommunicationManager):
 
         # This is client -> Connect to server
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((SERVER_IP, SERVER_PORT))
+        s.connect((os.getenv('SERVER_IP'), SERVER_PORT))
         self.connections[0] = s
 
         # Store connection
