@@ -26,6 +26,7 @@ class FLServer(Observer):
 
     def __init__(self, dataset):
         self.global_model = ModelManager.get_model()
+        self.global_model = ModelManager.get_model()
         self.dataset = dataset
         self.is_running = False
         self.current_round = 0

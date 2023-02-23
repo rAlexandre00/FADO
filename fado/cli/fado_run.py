@@ -75,14 +75,14 @@ def shape_data(fado_arguments):
         # TODO: TorchVisionShaper.shape()
 
 
-def run_client(fado_args, dev_mode, local):
+def run_client(fado_args, dev_mode, local, add_flags):
     if local:
         # TODO: Set FADO_DATA_PATH and FADO_CONFIG_PATH and start training without docker
         pass
 
     # Start clients container
-    subprocess.run(['docker', 'run', '-d', '-w', '/app', '--name', 'fado-clients', '--cap-add=NET_ADMIN',
-                    'ralexandre00/fado-node', 'bash', '-c', 'tail -f /dev/null'])
+    subprocess.run(['docker', 'run', '-d', '-w', '/app', '--name', 'fado-clients', '--cap-add=NET_ADMIN'] + add_flags +
+                    ['ralexandre00/fado-node', 'bash', '-c', 'tail -f /dev/null'])
 
     # Send fado_config and data to container
     subprocess.run(['docker', 'cp', f'{FADO_CONFIG_OUT}', 'fado-clients:/app/config/fado_config.yaml'])
@@ -102,14 +102,14 @@ def run_client(fado_args, dev_mode, local):
     subprocess.run(['docker', 'exec', 'fado-clients', '/bin/bash', '-c', 'python3 -m fado.runner.clients_run'])
 
 
-def run_server(fado_args, dev_mode, local):
+def run_server(fado_args, dev_mode, local, add_flags):
     if local:
         # TODO: Set FADO_DATA_PATH and FADO_CONFIG_PATH and start training without docker
         pass
 
     # Start server container
-    subprocess.run(['docker', 'run', '-d', '-w', '/app', '--name', 'fado-server', '--cap-add=NET_ADMIN',
-                    'ralexandre00/fado-node', 'bash', '-c', 'tail -f /dev/null'])
+    subprocess.run(['docker', 'run', '-d', '-w', '/app', '--name', 'fado-server', '--cap-add=NET_ADMIN'] + add_flags +
+                    ['ralexandre00/fado-node', 'bash', '-c', 'tail -f /dev/null'])
 
     # Send fado_config and data to container
     subprocess.run(['docker', 'cp', f'{FADO_CONFIG_OUT}', 'fado-server:/app/config/fado_config.yaml'])
@@ -171,10 +171,13 @@ def stop_router():
 
 
 def run(fado_args, dev_mode=False, local=False):
+    container_flags = []
+    if fado_args.use_gpu:
+        container_flags = ['--gpus', 'all']
     try:
-        Thread(target=run_server, args=(fado_args, dev_mode, local,), daemon=True).start()
+        Thread(target=run_server, args=(fado_args, dev_mode, local, container_flags,), daemon=True).start()
         Thread(target=run_router, args=(dev_mode, local,), daemon=True).start()
-        Thread(target=run_client, args=(fado_args, dev_mode, local), daemon=True).start()
+        Thread(target=run_client, args=(fado_args, dev_mode, local, container_flags), daemon=True).start()
         while True:
             time.sleep(100)
     except KeyboardInterrupt:
