@@ -13,24 +13,38 @@ fl_training_process:
     participant_selector: random
 
 client_training_process:
-    engine: pytorch
-    model: nlafl_emnist
+    engine: tensorflow
+    model: nlafl_emnist_tf
     batch_size: 64
-    epochs: 10
+    epochs: 2
     learning_rate: 0.1
 
 attack_args:
     malicious_clients: 0
-    poison_count: 0
-    num_pop_clients: 15
     target_class: 0
+    network:
+        remove_pop_clients: 0
+        drop_count: 0
+    data:
+        poison_count: 0
+        boost_factor: 0
+
+defense_args:
+    strategy: clip
+    upsample_epoch: 0
+    upsample_count: 0
 
 dataset_spec:
     dataset: nlafl_emnist
     dataset_rate: 0.05
     data_distribution: niid
     num_classes: 10
+    num_pop_clients: 15
  
 communication:
     encrypt_comm: true
     wait_for_clients_timeout: 200
+
+results:
+    results_file_name: results_{model}_{target_class}_{num_pop_clients}_{remove_pop_clients}_{drop_count}_{poison_count}_
+            {random_seed}_{strategy}_{boost_factor}_{upsample_epoch}_{upsample_count}

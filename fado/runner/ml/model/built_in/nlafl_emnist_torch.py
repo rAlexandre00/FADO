@@ -14,7 +14,7 @@ print(f'Using device - {device}')
 fado_args = FADOArguments()
 
 
-class NlaflEmnist(FADOModule):
+class NlaflEmnistTorch(FADOModule):
 
     def __init__(self):
         self.model = NeuralNet()

@@ -24,12 +24,13 @@ class FLServer(Observer):
     """ Class representing a server in the federated learning protocol
     """
 
-    def __init__(self, dataset):
+    def __init__(self, dataset, results):
         self.global_model = ModelManager.get_model()
         self.global_model = ModelManager.get_model()
         self.dataset = dataset
+        self.results = results
         self.is_running = False
-        self.current_round = 0
+        self.current_round = 1
         self.com_manager = ServerSocketCommunicationManager(id=0)
         # Add FLServer to observers in order to receive notification of new clients
         self.com_manager.add_observer(self)
@@ -37,7 +38,7 @@ class FLServer(Observer):
         self.aggregator = AggregatorManager.get_aggregator(self.global_model)
 
     def start(self):
-        for self.current_round in range(fado_args.rounds):
+        for self.current_round in range(fado_args.rounds + 1):
             successful = False
             while not successful:
                 # Wait for enough clients
@@ -95,9 +96,9 @@ class FLServer(Observer):
         self.global_model.set_parameters(new_model_parameters)
 
         # 6. Test new model
-        loss, accuracy = self.global_model.model.evaluate(self.dataset.test_data['x'], self.dataset.test_data['y'])
+        loss, accuracy = self.global_model.model.evaluate(self.dataset.test_data['x'], self.dataset.test_data['y'], verbose=0)
         logger.info(f'Round loss, accuracy on test data: {loss}, {accuracy}')
-        loss, accuracy = self.global_model.model.evaluate(self.dataset.target_test_data['x'], self.dataset.target_test_data['y'])
+        loss, accuracy = self.global_model.model.evaluate(self.dataset.target_test_data['x'], self.dataset.target_test_data['y'], verbose=0)
         logger.info(f'Round loss, accuracy on target test data: {loss}, {accuracy}')
 
         return True

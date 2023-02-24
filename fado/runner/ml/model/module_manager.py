@@ -1,5 +1,4 @@
 from fado.cli.arguments.arguments import FADOArguments
-from fado.runner.ml.model.built_in.nlafl_emnist import NlaflEmnist
 
 
 class ModelManager:
@@ -7,8 +6,12 @@ class ModelManager:
     @classmethod
     def get_model(cls):
         args = FADOArguments()
-        if args.model in ['nlafl_emnist']:
-            if args.model == 'nlafl_emnist':
-                return NlaflEmnist()
+        if args.model in ['nlafl_emnist_torch', 'nlafl_emnist_tf']:
+            if args.model == 'nlafl_emnist_torch':
+                from fado.runner.ml.model.built_in.nlafl_emnist_torch import NlaflEmnistTorch
+                return NlaflEmnistTorch()
+            elif args.model == 'nlafl_emnist_tf':
+                from fado.runner.ml.model.built_in.nlafl_emnist_tf import NlaflEmnistTf
+                return NlaflEmnistTf()
         else:
             raise Exception(f"Model {args.model} not found")

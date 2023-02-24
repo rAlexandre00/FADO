@@ -36,8 +36,7 @@ class FADOArguments:
         """
         for section_name, section in key_pairs.items():
             if type(section) == dict:
-                for argument, value in section.items():
-                    setattr(self, argument, value)
+                self._set_arguments(section)
             else:
                 setattr(self, section_name, section)
 

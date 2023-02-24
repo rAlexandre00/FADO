@@ -9,6 +9,7 @@ from fado.runner.data.load.server_data_loader import ServerDataLoader
 from fado.cli.arguments.arguments import FADOArguments
 from fado.constants import ALL_DATA_FOLDER, FADO_CONFIG_OUT
 from fado.runner.fl.fl_server import FLServer
+from fado.runner.results.results import Results
 
 
 def start_server():
@@ -16,7 +17,8 @@ def start_server():
     data_loader = ServerDataLoader(data_path)
 
     dataset = data_loader.read_data()
-    server = FLServer(dataset=dataset)
+    results = Results()
+    server = FLServer(dataset=dataset, results=results)
     try:
         server.start()
     finally:
