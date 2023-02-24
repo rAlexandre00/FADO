@@ -45,6 +45,9 @@ communication:
     encrypt_comm: true
     wait_for_clients_timeout: 200
 
-results:
-    results_file_name: results_{model}_{target_class}_{num_pop_clients}_{remove_pop_clients}_{drop_count}_{poison_count}_
-            {random_seed}_{strategy}_{boost_factor}_{upsample_epoch}_{upsample_count}
+output:
+    logs_file_name: "logs_{model}_{target_class}_{num_pop_clients}_{remove_pop_clients}_{drop_count}_{poison_count}_\
+    {random_seed}_{strategy}_{boost_factor}_{upsample_epoch}_{upsample_count}"
+    results_file_name: "results_{model}_{target_class}_{num_pop_clients}_{remove_pop_clients}_{drop_count}_{poison_count}_\
+    {random_seed}_{strategy}_{boost_factor}_{upsample_epoch}_{upsample_count}"
+

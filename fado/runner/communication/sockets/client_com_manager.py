@@ -14,7 +14,6 @@ from fado.runner.communication.message import Message
 from fado.runner.communication.observer import Observer
 from fado.runner.communication.sockets.utils import recvall
 
-logger = logging.getLogger("fado")
 new_client_lock = threading.Lock()
 
 
@@ -24,6 +23,7 @@ class ClientSocketCommunicationManager(BaseCommunicationManager):
         self.client_id = client_id
         self.connections = {}
         self._observers: List[Observer] = []
+        self.logger = logging.LoggerAdapter(logging.getLogger("fado"), extra={'node_id': client_id})
 
         # This is client -> Connect to server
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

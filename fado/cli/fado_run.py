@@ -109,6 +109,7 @@ def run_server(fado_args, dev_mode, docker, add_flags):
     if not docker:
         subprocess.run(f"FADO_DATA_PATH={os.path.join(ALL_DATA_FOLDER, fado_args.dataset)} "
                        f"FADO_CONFIG_PATH={FADO_CONFIG_OUT} "
+                       f"LOG_FILE_PATH={LOGS_DIRECTORY} "
                        f"python3 -m fado.runner.server_run", shell=True)
         return
 
@@ -131,7 +132,8 @@ def run_server(fado_args, dev_mode, docker, add_flags):
     # Start clients
     subprocess.run(['docker', 'exec', 'fado-server', '/bin/bash', '-c',
                     f'export FADO_CONFIG_PATH=/app/config/fado_config.yaml && '
-                    f'export FADO_DATA_PATH=/app/data'])
+                    f'export FADO_DATA_PATH=/app/data && '
+                    f'export LOG_FILE_PATH=/app/logs'])
     subprocess.run(['docker', 'exec', 'fado-server', '/bin/bash', '-c', 'python3 -m fado.runner.communication.config.config_server_network'])
     subprocess.run(['docker', 'exec', 'fado-server', '/bin/bash', '-c', 'python3 -m fado.runner.server_run'])
     return
@@ -194,6 +196,7 @@ def run(fado_args, dev_mode=False, docker=True):
 
 def move_files_to_fado_home(config_file):
     os.makedirs(CONFIG_OUT, exist_ok=True)
+    os.makedirs(LOGS_DIRECTORY, exist_ok=True)
     shutil.copyfile(config_file, FADO_CONFIG_OUT)
 
 

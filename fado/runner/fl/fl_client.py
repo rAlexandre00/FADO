@@ -5,8 +5,6 @@ from fado.runner.communication.observer import Observer
 from fado.runner.communication.sockets.client_com_manager import ClientSocketCommunicationManager
 from fado.runner.ml.model.module_manager import ModelManager
 
-logger = logging.getLogger("fado")
-
 
 class FLClient(Observer):
     """ Class representing a server in the federated learning protocol

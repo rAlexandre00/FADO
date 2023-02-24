@@ -30,6 +30,11 @@ if __name__ == "__main__":
     time.sleep(100000)
     args = FADOArguments('/app/config/fado_config.yaml')
 
+    # Set the seed for PRNGs to be equal to the trial index
+    seed = args.random_seed
+    np.random.seed(seed)
+    random.seed(seed)
+
     # load_attack(args, 'network_attack_spec')
     # FadoAttacker.get_instance().init(args, 'network_attack_spec')
 

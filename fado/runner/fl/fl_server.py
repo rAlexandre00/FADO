@@ -12,9 +12,7 @@ from fado.runner.fl.aggregate.aggregator_manager import AggregatorManager
 from fado.runner.fl.select.participant_selector_manager import ParticipantSelectorManager
 from fado.runner.ml.model.module_manager import ModelManager
 
-logger = logging.getLogger("fado")
-extra = {'node_id': 'server'}
-logger = logging.LoggerAdapter(logger, extra)
+logger = logging.LoggerAdapter(logging.getLogger("fado"), extra={'node_id': 'server'})
 
 fado_args = FADOArguments()
 clients_models_dict_lock = threading.Lock()
