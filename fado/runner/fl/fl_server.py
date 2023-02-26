@@ -24,7 +24,6 @@ class FLServer(Observer):
 
     def __init__(self, dataset, results):
         self.global_model = ModelManager.get_model()
-        self.global_model = ModelManager.get_model()
         self.dataset = dataset
         self.results = results
         self.is_running = False
@@ -56,8 +55,7 @@ class FLServer(Observer):
 
     def _train_round(self):
         # 1. Select clients 'num_clients_select' clients (bigger than 'clients_per_round')
-        clients_available = self.com_manager.get_available_clients()
-        round_clients = self.participant_selector.get_participants(clients_available, fado_args.num_clients_select)
+        round_clients = self.participant_selector.get_participants(list(range(1, fado_args.number_clients)), fado_args.num_clients_select)
         logger.info(f"Starting round {self.current_round} with clients {round_clients}")
 
         # 2. Send model to clients
@@ -124,11 +122,8 @@ class FLServer(Observer):
         :param message: Message
         :return:
         """
-        num_clients_available = len(self.com_manager.get_available_clients())
+        num_clients_available = self.com_manager.get_available_clients()
         logger.info(f"Clients online - {num_clients_available}")
-        if not self.is_running and num_clients_available >= fado_args.num_clients_select:
+        if not self.is_running and num_clients_available == fado_args.number_clients:
             logger.info("Server has enough clients to start")
             self.is_running = True
-        elif self.is_running and num_clients_available < fado_args.num_clients_select:
-            logger.info("Server does not have enough clients to start")
-            self.is_running = False

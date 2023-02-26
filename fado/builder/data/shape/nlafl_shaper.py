@@ -35,11 +35,12 @@ class NLAFLShaper(Shaper):
 def shape_emnist():
     logger.info('Generating nlafl emnist dataset')
     trn_x, trn_y, tst_x, tst_y = load_emnist()
-    partitioned = partition_by_class(trn_x, trn_y)
+    partitioned_trn = partition_by_class(trn_x, trn_y)
+    partitioned_tst = partition_by_class(tst_x, tst_y)
     # Sample data from the original dataset according to a Dirichlet distribution.
     # Returns list of tuples, (data, labels)) for each client
-    client_data = sample_data(partitioned)
-    target_x = partitioned[fado_args.target_class]
+    client_data = sample_data(partitioned_trn)
+    test_target_x = partitioned_tst[fado_args.target_class]
 
     os.makedirs(os.path.join(DATA_FOLDER, 'train'), exist_ok=True)
     os.makedirs(os.path.join(DATA_FOLDER, 'test'), exist_ok=True)
@@ -47,8 +48,8 @@ def shape_emnist():
     np.savez_compressed(os.path.join(DATA_FOLDER, 'train', 'all_data'), **client_data)
     np.savez_compressed(os.path.join(DATA_FOLDER, 'test', 'all_data'), x=tst_x, y=tst_y)
     np.savez_compressed(os.path.join(DATA_FOLDER, 'target_test', 'all_data'),
-                        x=target_x,
-                        y=len(target_x)*[fado_args.target_class])
+                        x=test_target_x,
+                        y=len(test_target_x)*[fado_args.target_class])
 
 
 def load_emnist():

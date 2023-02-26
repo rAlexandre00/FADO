@@ -1,6 +1,6 @@
 general:
     random_seed: 0
-    use_gpu: true
+    use_gpu: false
 
 fl_training_process:
     rounds: 100
@@ -15,7 +15,7 @@ fl_training_process:
 client_training_process:
     engine: tensorflow
     model: nlafl_emnist_tf
-    batch_size: 64
+    batch_size: 32
     epochs: 2
     learning_rate: 0.1
 

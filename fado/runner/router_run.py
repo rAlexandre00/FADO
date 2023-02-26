@@ -4,6 +4,8 @@ import time
 
 from warnings import filterwarnings
 
+import numpy as np
+
 from fado.cli.arguments.arguments import FADOArguments
 from fado.constants import SERVER_PORT
 

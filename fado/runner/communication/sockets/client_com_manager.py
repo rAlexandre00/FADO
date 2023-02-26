@@ -1,3 +1,4 @@
+import ipaddress
 import logging
 import os
 import pickle
@@ -8,7 +9,7 @@ from _thread import start_new_thread
 from time import sleep
 from typing import List
 
-from fado.constants import SERVER_IP, SERVER_PORT
+from fado.constants import SERVER_PORT
 from fado.runner.communication.base_com_manager import BaseCommunicationManager
 from fado.runner.communication.message import Message
 from fado.runner.communication.observer import Observer
@@ -27,6 +28,8 @@ class ClientSocketCommunicationManager(BaseCommunicationManager):
 
         # This is client -> Connect to server
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        base_ip = ipaddress.ip_address('10.128.0.2')
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(base_ip + client_id - 1).encode())
         s.connect((os.getenv('SERVER_IP'), SERVER_PORT))
         self.connections[0] = s
 

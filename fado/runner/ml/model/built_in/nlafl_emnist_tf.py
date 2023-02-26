@@ -84,9 +84,9 @@ def build_model(momentum=0.0, dropouts=False):
     model.add(Dense(10, activation='softmax'))
 
     if momentum:
-        sgd = SGD(learning_rate=0.1, momentum=momentum)
+        sgd = SGD(learning_rate=fado_args.learning_rate, momentum=momentum)
     else:
-        sgd = SGD(learning_rate=0.1)
+        sgd = SGD(learning_rate=fado_args.learning_rate)
 
     model.compile(loss=tf.keras.losses.SparseCategoricalCrossentropy(),
                   optimizer=sgd, metrics=['accuracy'])

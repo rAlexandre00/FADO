@@ -1,5 +1,5 @@
 import logging
-import os.path
+import os
 import random
 
 import numpy as np
@@ -29,7 +29,8 @@ if __name__ == '__main__':
     # Read arguments to singleton
     args = FADOArguments(os.getenv("FADO_CONFIG_PATH", default="/app/config/fado_config.yaml"))
     if 'logs_file_name' in args:
-        fh = logging.FileHandler(os.path.join(os.getenv('LOG_FILE_PATH'), args.logs_file_name.format(**args.__dict__)))
+        log_file_path = os.path.join(os.getenv("LOG_FILE_PATH"), args.logs_file_name.format(**args.__dict__))
+        fh = logging.FileHandler(log_file_path)
         logger.addHandler(fh)
 
     # Set the seed for PRNGs to be equal to the trial index
