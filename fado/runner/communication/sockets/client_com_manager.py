@@ -2,19 +2,21 @@ import ipaddress
 import logging
 import os
 import pickle
+import select
 import socket
 import struct
 import threading
-from _thread import start_new_thread
-from time import sleep
+
 from typing import List
 
+from fado.cli.arguments.arguments import FADOArguments
 from fado.constants import SERVER_PORT
 from fado.runner.communication.base_com_manager import BaseCommunicationManager
 from fado.runner.communication.message import Message
 from fado.runner.communication.observer import Observer
 from fado.runner.communication.sockets.utils import recvall
 
+fado_args = FADOArguments()
 new_client_lock = threading.Lock()
 
 
@@ -43,8 +45,13 @@ class ClientSocketCommunicationManager(BaseCommunicationManager):
         receiver_id = message.get_receiver_id()
         connection = self.connections[receiver_id]
         message_encoded = pickle.dumps(message)
-        connection.sendall(struct.pack('>I', len(message_encoded)))
-        connection.sendall(message_encoded)
+        try:
+            connection.settimeout(fado_args.wait_for_clients_timeout)
+            connection.sendall(struct.pack('>I', len(message_encoded)))
+            connection.sendall(message_encoded)
+            connection.settimeout(None)
+        except socket.timeout:
+            self.logger.info("Could not send model to server")
 
     def add_observer(self, observer: Observer):
         self._observers.append(observer)
@@ -54,12 +61,14 @@ class ClientSocketCommunicationManager(BaseCommunicationManager):
 
     def handle_receive_message(self):
         while self.is_running:
-            connection = self.connections[0]
-            message_size = struct.unpack('>I', recvall(connection, 4))[0]
-            message_encoded = recvall(connection, message_size)
-            message = pickle.loads(message_encoded)
-            for observer in self._observers:
-                observer.receive_message(message)
+            ready = select.select([self.connections[0]], [], [], 1)
+            if ready[0]:
+                connection = self.connections[0]
+                message_size = struct.unpack('>I', recvall(connection, 4))[0]
+                message_encoded = recvall(connection, message_size)
+                message = pickle.loads(message_encoded)
+                for observer in self._observers:
+                    observer.receive_message(message)
 
     def stop_receive_message(self):
         self.is_running = False

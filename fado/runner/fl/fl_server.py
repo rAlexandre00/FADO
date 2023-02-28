@@ -58,66 +58,62 @@ class FLServer(Observer):
 
     def _train_round(self):
         # 1. Select clients 'num_clients_select' clients (bigger than 'clients_per_round')
-        round_clients = self.participant_selector.get_participants(list(range(1, fado_args.number_clients)), fado_args.num_clients_select)
+        round_clients = self.participant_selector.get_participants(list(range(1, fado_args.number_clients)),
+                                                                   fado_args.num_clients_select)
         logger.info(f"Starting round {self.current_round} with clients {round_clients}")
 
-        # 2. Send model to clients
-        for client_id in round_clients:
-            send_model_message = Message(type=Message.MSG_TYPE_SEND_MODEL, sender_id=0, receiver_id=client_id)
-            send_model_message.add(Message.MSG_ARG_KEY_MODEL_PARAMS, self.global_model.get_parameters())
-            self.com_manager.send_message(send_model_message)
-
-        # 3. Wait for clients_per_round responses (timeout and return False if server has not receive enough models)
+        # 2. Send models and wait for clients_per_round responses
         self.client_models = []
-        self.waiting_for_models = True
+        self.waiting_threads = {}
         for client_id in round_clients:
-            threading.Thread(target=self._wait_for_client_model, args=(client_id, self.current_round), daemon=True).start()
+            self.waiting_threads[client_id] = threading.Thread(target=self._wait_for_client_model,
+                                                               args=(client_id, self.current_round), daemon=True)
+            self.waiting_threads[client_id].start()
+        for client_id in round_clients:
+            self.waiting_threads[client_id].join()
 
-        initial_time = time.time()
-        num_models = 0
-        while time.time() - initial_time < fado_args.wait_for_clients_timeout and self.waiting_for_models:
-            time.sleep(0.1)
-            clients_models_dict_lock.acquire()
-            num_models = len(self.client_models)
-            if num_models >= fado_args.clients_per_round:
-                # Stop waiting for clients
-                self.waiting_for_models = False
-            clients_models_dict_lock.release()
-
-        if num_models < fado_args.clients_per_round:
+        num_models = len(self.client_models)
+        if not fado_args.allow_less_clients and num_models < fado_args.clients_per_round:
             return False
-        assert num_models == fado_args.clients_per_round
+        elif num_models == 0:
+            return False
 
-        # 4. Aggregate models
+        # 3. Aggregate models
+        logger.info(f'Aggregating {num_models} models')
         new_model_parameters = self.aggregator.aggregate(self.client_models)
 
-        # 5. Replace global model
+        # 4. Replace global model
         self.global_model.set_parameters(new_model_parameters)
 
-        # 6. Test new model
-        loss, accuracy = self.global_model.model.evaluate(self.dataset.test_data['x'], self.dataset.test_data['y'], verbose=0)
+        # 5. Test new model
+        loss, accuracy = self.global_model.evaluate(self.dataset.test_data['x'], self.dataset.test_data['y'])
         logger.info(f'Round loss, accuracy on test data: {loss}, {accuracy}')
-        loss, accuracy = self.global_model.model.evaluate(self.dataset.target_test_data['x'], self.dataset.target_test_data['y'], verbose=0)
+        loss, accuracy = self.global_model.evaluate(self.dataset.target_test_data['x'], self.dataset.target_test_data['y'])
         logger.info(f'Round loss, accuracy on target test data: {loss}, {accuracy}')
 
         return True
 
-    def _wait_for_client_model(self, client_id, current_round):
-        model_message = None
-        # Try to get response from client
-        sys.stdout.flush()
-        while model_message is None:
-            if self.waiting_for_models:
-                model_message = self.com_manager.receive_message(client_id)
-            else:
-                return
+    def _send_model(self, client_id):
+        send_model_message = Message(type=Message.MSG_TYPE_SEND_MODEL, sender_id=0, receiver_id=client_id)
+        send_model_message.add(Message.MSG_ARG_KEY_MODEL_PARAMS, self.global_model.get_parameters())
+        return self.com_manager.send_message(send_model_message)
 
-        # Add the model to the models to be aggregated if the server does not have already enough models
-        model = model_message.get(Message.MSG_ARG_KEY_MODEL_PARAMS)
-        clients_models_dict_lock.acquire()
-        if len(self.client_models) < fado_args.clients_per_round and current_round == self.current_round:
-            self.client_models.append(model)
-        clients_models_dict_lock.release()
+    def _wait_for_client_model(self, client_id, current_round):
+        sent = self._send_model(client_id)
+        if sent:
+            # Try to get response from client
+            model_message = self.com_manager.receive_message(client_id)
+
+            # Add the model to the models to be aggregated if the server does not have already enough models
+            if model_message is None:
+                # Malformed model, ignore
+                return
+            model = model_message.get(Message.MSG_ARG_KEY_MODEL_PARAMS)
+            clients_models_dict_lock.acquire()
+            if len(self.client_models) < fado_args.clients_per_round and current_round == self.current_round:
+                self.client_models.append(model)
+            clients_models_dict_lock.release()
+        return
 
     def receive_message(self, message) -> None:
         """ Called when new clients connect

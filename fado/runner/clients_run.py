@@ -50,11 +50,13 @@ if __name__ == '__main__':
     seed = args.random_seed
     if args.engine == 'pytorch':
         import torch
+
         torch.manual_seed(seed)
         torch.backends.cudnn.benchmark = False
         torch.use_deterministic_algorithms(True, warn_only=True)
     elif args.engine == 'pytorch':
         import tensorflow as tf
+
         tf.random.set_seed(seed)
 
     np.random.seed(seed)

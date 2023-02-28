@@ -44,7 +44,7 @@ dataset_spec:
  
 communication:
     encrypt_comm: true
-    wait_for_clients_timeout: 200
+    wait_for_clients_timeout: 20
 
 output:
     logs_file_name: "logs_{model}_{target_class}_{num_pop_clients}_{remove_pop_clients}_{drop_count}_{poison_count}_\

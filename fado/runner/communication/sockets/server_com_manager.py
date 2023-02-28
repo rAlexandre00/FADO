@@ -8,6 +8,7 @@ import threading
 from time import sleep
 from typing import List, Optional, Any
 
+from fado.cli.arguments.arguments import FADOArguments
 from fado.constants import SERVER_IP, SERVER_PORT
 from fado.runner.communication.base_com_manager import BaseCommunicationManager
 from fado.runner.communication.message import Message
@@ -18,6 +19,7 @@ logger = logging.getLogger("fado")
 extra = {'node_id': 'server'}
 logger = logging.LoggerAdapter(logger, extra)
 
+fado_args = FADOArguments()
 new_client_lock = threading.Lock()
 
 
@@ -64,13 +66,14 @@ class ServerSocketCommunicationManager(BaseCommunicationManager):
         connection = self.connections[receiver_id]
         message_encoded = pickle.dumps(message)
         try:
+            connection.settimeout(fado_args.wait_for_clients_timeout)
             connection.sendall(struct.pack('>I', len(message_encoded)))
             connection.sendall(message_encoded)
+            connection.settimeout(None)
+            return True
         except Exception as e:
-            self.connections.pop(receiver_id)
-            logger.info(f'Client {receiver_id} did not respond. Removed from connections')
-            for observer in self._observers:
-                observer.receive_message(message_encoded)
+            logger.info(f"Client {receiver_id} did not reply. Skipping contribution")
+            return False
 
     def receive_message(self, sender_id) -> Optional[Message]:
         """ Tries to receive a message for 1 second
@@ -79,12 +82,19 @@ class ServerSocketCommunicationManager(BaseCommunicationManager):
         :return:
         """
         connection = self.connections[sender_id]
-        ready = select.select([connection], [], [], 1)
-        if ready[0]:
+        try:
+            connection.settimeout(fado_args.wait_for_clients_timeout)
             message_size = struct.unpack('>I', recvall(connection, 4))[0]
             message_encoded = recvall(connection, message_size)
             message = pickle.loads(message_encoded)
+            connection.settimeout(None)
             return message
+        except TypeError:
+            # Probably dropped packets
+            return None
+        except socket.timeout:
+            logger.info(f"Client {sender_id} did not reply. Skipping contribution")
+            return None
         return None
 
     def get_available_clients(self):
