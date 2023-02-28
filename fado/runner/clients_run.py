@@ -19,7 +19,8 @@ logger = logging.LoggerAdapter(logger, {'node_id': 'clients'})
 
 def isOpen(ip, port):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, '10.128.1.0'.encode())
+    if ip != 'localhost':
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, '10.128.1.0'.encode())
     s.settimeout(5)
 
     try:
