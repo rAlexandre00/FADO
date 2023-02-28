@@ -23,8 +23,8 @@ new_client_lock = threading.Lock()
 
 class ServerSocketCommunicationManager(BaseCommunicationManager):
 
-    def __init__(self, id):
-        self.id = id
+    def __init__(self):
+        self.id = 0
         self.connections = {}
         self._observers: List[Observer] = []
 
@@ -42,13 +42,12 @@ class ServerSocketCommunicationManager(BaseCommunicationManager):
             # establish connection with client
             c, addr = self.server_socket.accept()
             try:
-                self.register_new_client(c, addr)
+                self.register_new_client(c)
             except TypeError:
                 # Ignore. Clients node checking if server is alive
                 pass
 
-
-    def register_new_client(self, connection, addr):
+    def register_new_client(self, connection):
         message_size = struct.unpack('>I', recvall(connection, 4))[0]
         message_encoded = recvall(connection, message_size)
         connect_message = pickle.loads(message_encoded)
@@ -58,7 +57,6 @@ class ServerSocketCommunicationManager(BaseCommunicationManager):
         self.connections[connect_message.sender_id] = connection
         for observer in self._observers:
             observer.receive_message(connect_message)
-        logger.info(f'Client {connect_message.sender_id} connected from: {addr[0]}:{addr[1]}')
         new_client_lock.release()
 
     def send_message(self, message: Message):
@@ -70,7 +68,7 @@ class ServerSocketCommunicationManager(BaseCommunicationManager):
             connection.sendall(message_encoded)
         except Exception as e:
             self.connections.pop(receiver_id)
-            logger.info(f'Client {receiver_id} did not respond. Removed from available clients')
+            logger.info(f'Client {receiver_id} did not respond. Removed from connections')
             for observer in self._observers:
                 observer.receive_message(message_encoded)
 
@@ -90,7 +88,7 @@ class ServerSocketCommunicationManager(BaseCommunicationManager):
         return None
 
     def get_available_clients(self):
-        return self.connections.keys()
+        return len(self.connections)
 
     def add_observer(self, observer: Observer):
         self._observers.append(observer)

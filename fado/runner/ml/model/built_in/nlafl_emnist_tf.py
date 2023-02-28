@@ -1,6 +1,7 @@
 import numpy as np
 
 import os
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 import tensorflow as tf
@@ -52,13 +53,16 @@ class NlaflEmnistTf(FADOModule):
             y,
             epochs=fado_args.epochs,
             batch_size=fado_args.batch_size,
-            #verbose=1
+            # verbose=1
             verbose=0
         )
 
         score = self.model.evaluate(x, y, verbose=0)
 
         return self.model.get_weights(), score[0], score[1]
+
+    def evaluate(self, x, y):
+        return self.model.evaluate(x, y, verbose=0)
 
 
 def build_model(momentum=0.0, dropouts=False):
@@ -84,9 +88,9 @@ def build_model(momentum=0.0, dropouts=False):
     model.add(Dense(10, activation='softmax'))
 
     if momentum:
-        sgd = SGD(learning_rate=0.1, momentum=momentum)
+        sgd = SGD(learning_rate=fado_args.learning_rate, momentum=momentum)
     else:
-        sgd = SGD(learning_rate=0.1)
+        sgd = SGD(learning_rate=fado_args.learning_rate)
 
     model.compile(loss=tf.keras.losses.SparseCategoricalCrossentropy(),
                   optimizer=sgd, metrics=['accuracy'])

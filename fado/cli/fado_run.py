@@ -74,6 +74,11 @@ def shape_data(fado_arguments):
         # TODO: TorchVisionShaper.shape()
 
 
+def create_networks():
+    subprocess.run(['docker', 'network', 'create', 'clients-network'])
+    subprocess.run(['docker', 'network', 'create', 'server-network'])
+
+
 def run_clients(fado_args, dev_mode, docker, add_flags):
     if not docker:
         subprocess.run(f"FADO_DATA_PATH={os.path.join(ALL_DATA_FOLDER, fado_args.dataset)} "
@@ -83,8 +88,9 @@ def run_clients(fado_args, dev_mode, docker, add_flags):
         return
 
     # Start clients container
-    subprocess.run(['docker', 'run', '-d', '-w', '/app', '--name', 'fado-clients', '--cap-add=NET_ADMIN'] + add_flags +
-                    ['ralexandre00/fado-node', 'bash', '-c', 'tail -f /dev/null'])
+    subprocess.run(['docker', 'run', '-d', '-w', '/app', '--name', 'fado-clients', '--cap-add=NET_ADMIN',
+                    '--network', 'clients-network'] + add_flags +
+                   ['ralexandre00/fado-node', 'bash', '-c', 'tail -f /dev/null'])
 
     # Send fado_config and data to container
     subprocess.run(['docker', 'cp', f'{FADO_CONFIG_OUT}', 'fado-clients:/app/config/fado_config.yaml'])
@@ -98,10 +104,7 @@ def run_clients(fado_args, dev_mode, docker, add_flags):
 
     # Start clients
     subprocess.run(['docker', 'exec', 'fado-clients', '/bin/bash', '-c',
-                    'export FADO_CONFIG_PATH=/app/config/fado_config.yaml && '
-                    'export FADO_DATA_PATH=/app/data && '
-                    f'export SERVER_IP={SERVER_IP}'])
-    subprocess.run(['docker', 'exec', 'fado-clients', '/bin/bash', '-c', 'python3 -m fado.runner.communication.config.config_clients_network'])
+                    'python3 -m fado.runner.communication.config.config_clients_network'])
     subprocess.run(['docker', 'exec', 'fado-clients', '/bin/bash', '-c', 'python3 -m fado.runner.clients_run'])
 
 
@@ -109,12 +112,14 @@ def run_server(fado_args, dev_mode, docker, add_flags):
     if not docker:
         subprocess.run(f"FADO_DATA_PATH={os.path.join(ALL_DATA_FOLDER, fado_args.dataset)} "
                        f"FADO_CONFIG_PATH={FADO_CONFIG_OUT} "
+                       f"LOG_FILE_PATH={LOGS_DIRECTORY} "
                        f"python3 -m fado.runner.server_run", shell=True)
         return
 
     # Start server container
-    subprocess.run(['docker', 'run', '-d', '-w', '/app', '--name', 'fado-server', '--cap-add=NET_ADMIN'] + add_flags +
-                    ['ralexandre00/fado-node', 'bash', '-c', 'tail -f /dev/null'])
+    subprocess.run(['docker', 'run', '-d', '-w', '/app', '--name', 'fado-server', '--cap-add=NET_ADMIN',
+                    '-v', f'{LOGS_DIRECTORY}:/app/logs', '--network', 'server-network'] + add_flags +
+                   ['ralexandre00/fado-node', 'bash', '-c', 'tail -f /dev/null'])
 
     # Send fado_config and data to container
     subprocess.run(['docker', 'cp', f'{FADO_CONFIG_OUT}', 'fado-server:/app/config/fado_config.yaml'])
@@ -130,24 +135,26 @@ def run_server(fado_args, dev_mode, docker, add_flags):
 
     # Start clients
     subprocess.run(['docker', 'exec', 'fado-server', '/bin/bash', '-c',
-                    f'export FADO_CONFIG_PATH=/app/config/fado_config.yaml && '
-                    f'export FADO_DATA_PATH=/app/data'])
-    subprocess.run(['docker', 'exec', 'fado-server', '/bin/bash', '-c', 'python3 -m fado.runner.communication.config.config_server_network'])
+                    'python3 -m fado.runner.communication.config.config_server_network'])
     subprocess.run(['docker', 'exec', 'fado-server', '/bin/bash', '-c', 'python3 -m fado.runner.server_run'])
     return
 
 
-def run_router(dev_mode, docker):
+def run_router(fado_args, dev_mode, docker):
     if not docker:
         # Do nothing
         return
 
     # Start server container
     subprocess.run(['docker', 'run', '-d', '-w', '/app', '--name', 'fado-router', '--cap-add=NET_ADMIN',
+                    '--network', 'server-network',
                     'ralexandre00/fado-router', 'bash', '-c', 'tail -f /dev/null'])
+    subprocess.run(['docker', 'network', 'connect', 'clients-network', 'fado-router'])
 
-    # Send fado_config to container
+    # Send fado_config and data to container
     subprocess.run(['docker', 'cp', f'{FADO_CONFIG_OUT}', 'fado-router:/app/config/fado_config.yaml'])
+    data_path = os.path.join(ALL_DATA_FOLDER, fado_args.dataset)
+    subprocess.run(['docker', 'cp', os.path.join(data_path, 'target_test_attacker'), 'fado-router:/app/data'])
 
     if dev_mode:
         # Install current fado
@@ -155,7 +162,8 @@ def run_router(dev_mode, docker):
         subprocess.run(['docker', 'exec', 'fado-router', '/bin/bash', './run_dev.sh'], stdout=subprocess.DEVNULL)
 
     # Start router
-    subprocess.run(['docker', 'exec', 'fado-router', '/bin/bash', '-c', 'python3 -m fado.runner.communication.config.config_router_network'])
+    subprocess.run(['docker', 'exec', 'fado-router', '/bin/bash', '-c',
+                    'python3 -m fado.runner.communication.config.config_router_network'])
     subprocess.run(['docker', 'exec', 'fado-router', '/bin/bash', '-c', 'python3 -m fado.runner.router_run'])
     return
 
@@ -180,9 +188,10 @@ def run(fado_args, dev_mode=False, docker=True):
     if fado_args.use_gpu:
         container_flags = ['--gpus', 'all']
     try:
+        create_networks()
+        Thread(target=run_router, args=(fado_args, dev_mode, docker,), daemon=True).start()
         Thread(target=run_server, args=(fado_args, dev_mode, docker, container_flags,), daemon=True).start()
-        Thread(target=run_router, args=(dev_mode, docker,), daemon=True).start()
-        Thread(target=run_clients, args=(fado_args, dev_mode, docker, container_flags), daemon=True).start()
+        Thread(target=run_clients, args=(fado_args, dev_mode, docker, container_flags,), daemon=True).start()
         while True:
             time.sleep(100)
     except KeyboardInterrupt:
@@ -194,6 +203,7 @@ def run(fado_args, dev_mode=False, docker=True):
 
 def move_files_to_fado_home(config_file):
     os.makedirs(CONFIG_OUT, exist_ok=True)
+    os.makedirs(LOGS_DIRECTORY, exist_ok=True)
     shutil.copyfile(config_file, FADO_CONFIG_OUT)
 
 

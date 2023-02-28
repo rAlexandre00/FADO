@@ -10,12 +10,13 @@ fl_training_process:
     number_clients: 10
     clients_per_round: 2
     num_clients_select: 2
+    allow_less_clients: True
     participant_selector: random
 
 client_training_process:
     engine: pytorch
     model: nlafl_emnist_torch
-    batch_size: 64
+    batch_size: 20
     epochs: 2
     learning_rate: 0.1
 
@@ -45,6 +46,9 @@ communication:
     encrypt_comm: true
     wait_for_clients_timeout: 200
 
-results:
-    results_file_name: results_{model}_{target_class}_{num_pop_clients}_{remove_pop_clients}_{drop_count}_{poison_count}_
-            {random_seed}_{strategy}_{boost_factor}_{upsample_epoch}_{upsample_count}
+output:
+    logs_file_name: "logs_{model}_{target_class}_{num_pop_clients}_{remove_pop_clients}_{drop_count}_{poison_count}_\
+    {random_seed}_{strategy}_{boost_factor}_{upsample_epoch}_{upsample_count}"
+    results_file_name: "results_{model}_{target_class}_{num_pop_clients}_{remove_pop_clients}_{drop_count}_{poison_count}_\
+    {random_seed}_{strategy}_{boost_factor}_{upsample_epoch}_{upsample_count}"
+

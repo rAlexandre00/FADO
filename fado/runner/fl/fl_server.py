@@ -8,13 +8,12 @@ from fado.cli.arguments.arguments import FADOArguments
 from fado.runner.communication.message import Message
 from fado.runner.communication.observer import Observer
 from fado.runner.communication.sockets.server_com_manager import ServerSocketCommunicationManager
+from fado.runner.communication.sockets.server_pub_info_manager import ServerSocketPubInfoManager
 from fado.runner.fl.aggregate.aggregator_manager import AggregatorManager
 from fado.runner.fl.select.participant_selector_manager import ParticipantSelectorManager
 from fado.runner.ml.model.module_manager import ModelManager
 
-logger = logging.getLogger("fado")
-extra = {'node_id': 'server'}
-logger = logging.LoggerAdapter(logger, extra)
+logger = logging.LoggerAdapter(logging.getLogger("fado"), extra={'node_id': 'server'})
 
 fado_args = FADOArguments()
 clients_models_dict_lock = threading.Lock()
@@ -26,14 +25,15 @@ class FLServer(Observer):
 
     def __init__(self, dataset, results):
         self.global_model = ModelManager.get_model()
-        self.global_model = ModelManager.get_model()
         self.dataset = dataset
         self.results = results
         self.is_running = False
         self.current_round = 1
-        self.com_manager = ServerSocketCommunicationManager(id=0)
+        self.com_manager = ServerSocketCommunicationManager()
+        self.pub_com_manager = ServerSocketPubInfoManager()
         # Add FLServer to observers in order to receive notification of new clients
         self.com_manager.add_observer(self)
+        self.pub_com_manager.add_observer(self)
         self.participant_selector = ParticipantSelectorManager.get_selector()
         self.aggregator = AggregatorManager.get_aggregator(self.global_model)
 
@@ -49,7 +49,7 @@ class FLServer(Observer):
 
     def stop(self):
         try:
-            for client_id in self.com_manager.get_available_clients():
+            for client_id in range(1, fado_args.number_clients):
                 end_message = Message(type=Message.MSG_TYPE_END, sender_id=0, receiver_id=client_id)
                 self.com_manager.send_message(end_message)
         finally:
@@ -58,8 +58,7 @@ class FLServer(Observer):
 
     def _train_round(self):
         # 1. Select clients 'num_clients_select' clients (bigger than 'clients_per_round')
-        clients_available = self.com_manager.get_available_clients()
-        round_clients = self.participant_selector.get_participants(clients_available, fado_args.num_clients_select)
+        round_clients = self.participant_selector.get_participants(list(range(1, fado_args.number_clients)), fado_args.num_clients_select)
         logger.info(f"Starting round {self.current_round} with clients {round_clients}")
 
         # 2. Send model to clients
@@ -126,11 +125,12 @@ class FLServer(Observer):
         :param message: Message
         :return:
         """
-        num_clients_available = len(self.com_manager.get_available_clients())
-        logger.info(f"Clients online - {num_clients_available}")
-        if not self.is_running and num_clients_available >= fado_args.num_clients_select:
-            logger.info("Server has enough clients to start")
-            self.is_running = True
-        elif self.is_running and num_clients_available < fado_args.num_clients_select:
-            logger.info("Server does not have enough clients to start")
-            self.is_running = False
+        if message.get_type() == message.MSG_TYPE_CONNECT:
+            num_clients_available = self.com_manager.get_available_clients()
+            if not self.is_running and num_clients_available == fado_args.number_clients:
+                logger.info("Server has enough clients to start")
+                self.is_running = True
+        elif message.get_type() == message.MSG_TYPE_GET_MODEL:
+            send_model_message = Message(type=Message.MSG_TYPE_SEND_MODEL, sender_id=0, receiver_id=0)
+            send_model_message.add(Message.MSG_ARG_KEY_MODEL_PARAMS, self.global_model.get_parameters())
+            self.pub_com_manager.send_message(send_model_message)

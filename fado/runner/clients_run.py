@@ -16,12 +16,14 @@ from fado.runner.fl.fl_client import FLClient
 logger = logging.getLogger("fado")
 logger = logging.LoggerAdapter(logger, {'node_id': 'clients'})
 
+
 def isOpen(ip, port):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, '10.128.1.0'.encode())
     s.settimeout(5)
 
     try:
-        is_open = s.connect_ex((ip, int(port))) == 0 # True if open, False if not
+        is_open = s.connect_ex((ip, int(port))) == 0  # True if open, False if not
         if is_open:
             s.shutdown(socket.SHUT_RDWR)
     except Exception:
@@ -54,7 +56,7 @@ if __name__ == '__main__':
     elif args.engine == 'pytorch':
         import tensorflow as tf
         tf.random.set_seed(seed)
-    seed = args.random_seed
+
     np.random.seed(seed)
     random.seed(seed)
 
@@ -62,9 +64,7 @@ if __name__ == '__main__':
         logger.info("Waiting for server to start")
         time.sleep(1)
 
-    for client_id in range(1, args.number_clients+1):
+    for client_id in range(1, args.number_clients + 1):
         t = Thread(target=start_client, args=(client_id,), daemon=True)
         t.start()
     t.join()
-
-

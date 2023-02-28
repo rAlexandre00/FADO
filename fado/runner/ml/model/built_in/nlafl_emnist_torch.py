@@ -85,6 +85,9 @@ class NlaflEmnistTorch(FADOModule):
 
         return self.get_parameters(), loss, accuracy
 
+    def evaluate(self, x, y):
+        self.model.evaluate(x, y)
+
 
 class NeuralNet(nn.Module):
     def __init__(self, momentum=0.0, dropouts=False):
