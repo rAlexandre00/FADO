@@ -49,6 +49,7 @@ class NetworkAttacker:
         # Dict with IPs as key and tuples (sum_perf, count_perf) as values to allow mean calculations
         self.clients_improv_history = {}
         self.clients_prev_round = []
+        self.ips_lowest_losses = []
         self.server_is_aggregating = True
         self.local_model = model
         self.x_target_test = x_target_test
@@ -61,6 +62,8 @@ class NetworkAttacker:
         self.target_clients = set(target_clients)
 
     def process_packet_server_to_client(self, scapy_pkt):
+        if scapy_pkt['IP'].dst in self.ips_lowest_losses:
+            return None
         # Store IPs that are seen receiving big packets from server (global model)
         if scapy_pkt['IP'].dst not in self.clients_training:
             self.clients_training.append(scapy_pkt['IP'].dst)
@@ -71,11 +74,13 @@ class NetworkAttacker:
                     # Server started new round - estimate contributions for the previous round
                     self.update_perf()
                     self.update_drop_list(drop_count=fado_args.drop_count)
-            self.clients_prev_round.append(scapy_pkt['IP'].dst)
+                self.clients_prev_round.append(scapy_pkt['IP'].dst)
 
         return scapy_pkt
 
     def process_packet_client_to_server(self, scapy_pkt):
+        if scapy_pkt['IP'].src in self.ips_lowest_losses:
+            return None
         # Remove IPs that are seen sending big packets to server (local model)
         if scapy_pkt['IP'].src in self.clients_training:
             self.clients_training.remove(scapy_pkt['IP'].src)
@@ -93,7 +98,6 @@ class NetworkAttacker:
         # Evaluate loss of the current model parameters with attacker test set
         self.local_model.set_parameters(get_model_parameters())
         current_loss, _ = self.local_model.evaluate(self.x_target_test, self.y_target_test)
-        logger.info(f'Last round loss - {current_loss}')
 
         # Calculate loss improvement
         if self.last_loss is None:
@@ -102,7 +106,6 @@ class NetworkAttacker:
 
         perf_diff = current_loss - self.last_loss
         self.last_loss = current_loss
-        logger.info(f'Improvement - {-perf_diff}')
 
         # Update the mean of improvements of every client that participated in this round
         for client_ip in self.clients_prev_round:
@@ -117,6 +120,6 @@ class NetworkAttacker:
     def update_drop_list(self, drop_count):
         # Choose lowest losses -> bigger improvements
         clients_lowest_losses = heapq.nsmallest(drop_count, self.clients_improv_history.items(), key=lambda x: x[1][0])
-        logger.info(f'IPs to drop - {clients_lowest_losses}')
-        ips_lowest_losses = [x[0] for x in clients_lowest_losses]
-        logger.info(f'Interception - {len(set(ips_lowest_losses) & self.target_clients)}')
+        self.ips_lowest_losses = [x[0] for x in clients_lowest_losses]
+        interception = len(set(self.ips_lowest_losses) & self.target_clients)
+        logger.info(f'IPs to drop - {self.ips_lowest_losses}. Number of clients that have target class - {interception}')

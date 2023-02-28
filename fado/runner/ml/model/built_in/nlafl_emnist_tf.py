@@ -54,15 +54,16 @@ class NlaflEmnistTf(FADOModule):
             epochs=fado_args.epochs,
             batch_size=fado_args.batch_size,
             # verbose=1
-            verbose=0
+            verbose=0,
+            use_multiprocessing=True
         )
 
-        score = self.model.evaluate(x, y, verbose=0)
+        score = self.model.evaluate(x, y, verbose=0, use_multiprocessing=True)
 
         return self.model.get_weights(), score[0], score[1]
 
     def evaluate(self, x, y):
-        return self.model.evaluate(x, y, verbose=0)
+        return self.model.evaluate(x, y, verbose=0, use_multiprocessing=True)
 
 
 def build_model(momentum=0.0, dropouts=False):
