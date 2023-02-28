@@ -28,7 +28,9 @@ attack_args:
         drop_count: 0
     data:
         poison_count: 0
-        boost_factor: 0z
+        boost_factor: 0
+    model:
+        name: 'random'
 
 defense_args:
     strategy: clip

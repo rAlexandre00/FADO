@@ -7,15 +7,15 @@ fl_training_process:
     aggregator: mean
     agg_learning_rate: 0.25
     client_optimizer: sgd
-    number_clients: 10
-    clients_per_round: 2
-    num_clients_select: 2
+    number_clients: 100
+    clients_per_round: 10
+    num_clients_select: 10
     allow_less_clients: True
     participant_selector: random
 
 client_training_process:
-    engine: pytorch
-    model: nlafl_emnist_torch
+    engine: tensorflow
+    model: nlafl_emnist_tf
     batch_size: 32
     epochs: 2
     learning_rate: 0.1
@@ -25,10 +25,10 @@ attack_args:
     target_class: 0
     network:
         remove_pop_clients: 0
-        drop_count: 0
+        drop_count: 10
     data:
         poison_count: 0
-        boost_factor: 0z
+        boost_factor: 0
 
 defense_args:
     strategy: clip
@@ -44,11 +44,10 @@ dataset_spec:
  
 communication:
     encrypt_comm: true
-    wait_for_clients_timeout: 200
+    wait_for_clients_timeout: 20
 
 output:
     logs_file_name: "logs_{model}_{target_class}_{num_pop_clients}_{remove_pop_clients}_{drop_count}_{poison_count}_\
     {random_seed}_{strategy}_{boost_factor}_{upsample_epoch}_{upsample_count}"
     results_file_name: "results_{model}_{target_class}_{num_pop_clients}_{remove_pop_clients}_{drop_count}_{poison_count}_\
     {random_seed}_{strategy}_{boost_factor}_{upsample_epoch}_{upsample_count}"
-
