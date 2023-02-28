@@ -3,6 +3,9 @@ FROM ralexandre00/fado-node-requirements:latest
 WORKDIR /app
 
 RUN mkdir -p /app/config
+RUN mkdir -p /app/data
+
+ENV SERVER_IP 10.0.0.2
 
 COPY requirements.txt requirements.txt
 COPY setup.py setup.py

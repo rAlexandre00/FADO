@@ -38,7 +38,6 @@ class FLClient(Observer):
             received_parameters = message.get(Message.MSG_ARG_KEY_MODEL_PARAMS)
             self.local_model.set_parameters(received_parameters)
             self.local_model.train(self.dataset.train_data['x'], self.dataset.train_data['y'])
-
             result_message = Message(type=Message.MSG_TYPE_SEND_MODEL, sender_id=self.client_id, receiver_id=0)
             result_message.add(Message.MSG_ARG_KEY_MODEL_PARAMS, self.local_model.get_parameters())
             self.com_manager.send_message(result_message)

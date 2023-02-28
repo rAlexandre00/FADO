@@ -1,6 +1,7 @@
 import numpy as np
 
 import os
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 import tensorflow as tf
@@ -52,13 +53,16 @@ class NlaflEmnistTf(FADOModule):
             y,
             epochs=fado_args.epochs,
             batch_size=fado_args.batch_size,
-            #verbose=1
+            # verbose=1
             verbose=0
         )
 
         score = self.model.evaluate(x, y, verbose=0)
 
         return self.model.get_weights(), score[0], score[1]
+
+    def evaluate(self, x, y):
+        return self.model.evaluate(x, y, verbose=0)
 
 
 def build_model(momentum=0.0, dropouts=False):

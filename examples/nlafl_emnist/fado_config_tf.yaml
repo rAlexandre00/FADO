@@ -10,6 +10,7 @@ fl_training_process:
     number_clients: 100
     clients_per_round: 10
     num_clients_select: 10
+    allow_less_clients: True
     participant_selector: random
 
 client_training_process:
@@ -24,7 +25,7 @@ attack_args:
     target_class: 0
     network:
         remove_pop_clients: 0
-        drop_count: 0
+        drop_count: 10
     data:
         poison_count: 0
         boost_factor: 0

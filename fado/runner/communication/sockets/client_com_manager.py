@@ -28,13 +28,13 @@ class ClientSocketCommunicationManager(BaseCommunicationManager):
 
         # This is client -> Connect to server
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        base_ip = ipaddress.ip_address('10.128.0.2')
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(base_ip + client_id - 1).encode())
+        base_ip = ipaddress.ip_address('10.128.1.0')
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(base_ip + client_id).encode())
         s.connect((os.getenv('SERVER_IP'), SERVER_PORT))
         self.connections[0] = s
 
         # Store connection
-        connect_message = Message(sender_id=client_id, receiver_id=0)
+        connect_message = Message(sender_id=client_id, receiver_id=0, type=Message.MSG_TYPE_CONNECT)
         self.send_message(connect_message)
 
         self.is_running = True

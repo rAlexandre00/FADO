@@ -140,7 +140,7 @@ def run_server(fado_args, dev_mode, docker, add_flags):
     return
 
 
-def run_router(dev_mode, docker):
+def run_router(fado_args, dev_mode, docker):
     if not docker:
         # Do nothing
         return
@@ -151,8 +151,10 @@ def run_router(dev_mode, docker):
                     'ralexandre00/fado-router', 'bash', '-c', 'tail -f /dev/null'])
     subprocess.run(['docker', 'network', 'connect', 'clients-network', 'fado-router'])
 
-    # Send fado_config to container
+    # Send fado_config and data to container
     subprocess.run(['docker', 'cp', f'{FADO_CONFIG_OUT}', 'fado-router:/app/config/fado_config.yaml'])
+    data_path = os.path.join(ALL_DATA_FOLDER, fado_args.dataset)
+    subprocess.run(['docker', 'cp', os.path.join(data_path, 'target_test_attacker'), 'fado-router:/app/data'])
 
     if dev_mode:
         # Install current fado
@@ -187,9 +189,9 @@ def run(fado_args, dev_mode=False, docker=True):
         container_flags = ['--gpus', 'all']
     try:
         create_networks()
-        Thread(target=run_router, args=(dev_mode, docker,), daemon=True).start()
+        Thread(target=run_router, args=(fado_args, dev_mode, docker,), daemon=True).start()
         Thread(target=run_server, args=(fado_args, dev_mode, docker, container_flags,), daemon=True).start()
-        Thread(target=run_clients, args=(fado_args, dev_mode, docker, container_flags), daemon=True).start()
+        Thread(target=run_clients, args=(fado_args, dev_mode, docker, container_flags,), daemon=True).start()
         while True:
             time.sleep(100)
     except KeyboardInterrupt:

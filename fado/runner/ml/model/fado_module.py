@@ -14,3 +14,7 @@ class FADOModule(object):
     @abstractmethod
     def train(self, x, y):
         pass
+
+    @abstractmethod
+    def evaluate(self, x, y):
+        pass

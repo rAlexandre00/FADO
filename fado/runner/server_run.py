@@ -9,8 +9,8 @@ from fado.cli.arguments.arguments import FADOArguments
 from fado.runner.fl.fl_server import FLServer
 from fado.runner.output.results import Results
 
-
 logger = logging.getLogger("fado")
+
 
 def start_server():
     data_path = os.getenv("FADO_DATA_PATH", default='/app/data')

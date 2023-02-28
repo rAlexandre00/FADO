@@ -41,15 +41,22 @@ def shape_emnist():
     # Returns list of tuples, (data, labels)) for each client
     client_data = sample_data(partitioned_trn)
     test_target_x = partitioned_tst[fado_args.target_class]
+    test_target_size = len(test_target_x)
+    test_target_x_server = test_target_x[:test_target_size//2]
+    test_target_x_attacker = test_target_x[test_target_size//2:]
 
     os.makedirs(os.path.join(DATA_FOLDER, 'train'), exist_ok=True)
     os.makedirs(os.path.join(DATA_FOLDER, 'test'), exist_ok=True)
     os.makedirs(os.path.join(DATA_FOLDER, 'target_test'), exist_ok=True)
+    os.makedirs(os.path.join(DATA_FOLDER, 'target_test_attacker'), exist_ok=True)
     np.savez_compressed(os.path.join(DATA_FOLDER, 'train', 'all_data'), **client_data)
     np.savez_compressed(os.path.join(DATA_FOLDER, 'test', 'all_data'), x=tst_x, y=tst_y)
     np.savez_compressed(os.path.join(DATA_FOLDER, 'target_test', 'all_data'),
-                        x=test_target_x,
-                        y=len(test_target_x)*[fado_args.target_class])
+                        x=test_target_x_server,
+                        y=len(test_target_x_server)*[fado_args.target_class])
+    np.savez_compressed(os.path.join(DATA_FOLDER, 'target_test_attacker', 'all_data'),
+                        x=test_target_x_attacker,
+                        y=len(test_target_x_attacker)*[fado_args.target_class])
 
 
 def load_emnist():

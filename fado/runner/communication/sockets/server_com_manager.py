@@ -23,8 +23,8 @@ new_client_lock = threading.Lock()
 
 class ServerSocketCommunicationManager(BaseCommunicationManager):
 
-    def __init__(self, id):
-        self.id = id
+    def __init__(self):
+        self.id = 0
         self.connections = {}
         self._observers: List[Observer] = []
 

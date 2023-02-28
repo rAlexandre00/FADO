@@ -17,8 +17,8 @@ def create_interface(ip, mask):
 
 
 def create_interfaces(n):
-    base_ip = ipaddress.ip_address('10.128.0.2')
-    for i in range(n):
+    base_ip = ipaddress.ip_address('10.128.1.0')
+    for i in range(n+1):
         create_interface(str(base_ip + i), 9)
         subprocess.run(
             ['ip', 'route', 'add', 'table', f'{2 + i}', 'to', 'default', 'via', '10.128.0.1', 'dev', str(base_ip + i)])

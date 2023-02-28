@@ -10,6 +10,7 @@ fl_training_process:
     number_clients: 10
     clients_per_round: 2
     num_clients_select: 2
+    allow_less_clients: True
     participant_selector: random
 
 client_training_process:
