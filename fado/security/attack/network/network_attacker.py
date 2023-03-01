@@ -62,8 +62,10 @@ class NetworkAttacker:
         self.target_clients = set(target_clients)
 
     def process_packet_server_to_client(self, scapy_pkt):
-        if scapy_pkt['IP'].dst in self.ips_lowest_losses:
-            return None
+        if self.current_round >= fado_args.drop_start:
+            if scapy_pkt['IP'].dst in self.ips_lowest_losses:
+                return None
+
         # Store IPs that are seen receiving big packets from server (global model)
         if scapy_pkt['IP'].dst not in self.clients_training:
             self.clients_training.append(scapy_pkt['IP'].dst)
@@ -79,8 +81,13 @@ class NetworkAttacker:
         return scapy_pkt
 
     def process_packet_client_to_server(self, scapy_pkt):
-        if scapy_pkt['IP'].src in self.ips_lowest_losses:
-            return None
+        if self.current_round > fado_args.drop_start:
+            if scapy_pkt['IP'].src in self.clients_training:
+                # Make sure clients_training list does not keep blocked clients
+                self.clients_training.remove(scapy_pkt['IP'].src)
+            if scapy_pkt['IP'].src in self.ips_lowest_losses:
+                return None
+
         # Remove IPs that are seen sending big packets to server (local model)
         if scapy_pkt['IP'].src in self.clients_training:
             self.clients_training.remove(scapy_pkt['IP'].src)
@@ -89,8 +96,6 @@ class NetworkAttacker:
                 logger.info(f"Round {self.current_round} finish detected")
                 self.current_round += 1
                 self.server_is_aggregating = True
-
-        # logger.info(f"2 - {len(scapy_pkt)}")
 
         return scapy_pkt
 
@@ -112,7 +117,8 @@ class NetworkAttacker:
             if client_ip not in self.clients_improv_history:
                 self.clients_improv_history[client_ip] = (0, 0)
             sum_perf, count_perf = self.clients_improv_history[client_ip]
-            self.clients_improv_history[client_ip] = ((sum_perf*count_perf + perf_diff) / (count_perf + 1), count_perf + 1)
+            self.clients_improv_history[client_ip] = (
+            (sum_perf * count_perf + perf_diff) / (count_perf + 1), count_perf + 1)
 
         # Reset list of clients that participated in the round
         self.clients_prev_round = []
@@ -122,4 +128,5 @@ class NetworkAttacker:
         clients_lowest_losses = heapq.nsmallest(drop_count, self.clients_improv_history.items(), key=lambda x: x[1][0])
         self.ips_lowest_losses = [x[0] for x in clients_lowest_losses]
         interception = len(set(self.ips_lowest_losses) & self.target_clients)
-        logger.info(f'IPs to drop - {self.ips_lowest_losses}. Number of clients that have target class - {interception}')
+        logger.info(
+            f'IPs to drop - {self.ips_lowest_losses}. Number of clients that have target class - {interception}')

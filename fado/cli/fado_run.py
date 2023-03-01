@@ -8,6 +8,7 @@ from threading import Thread
 
 from fado.constants import *
 from fado.cli.arguments.arguments import FADOArguments
+from fado.runner import server_run, clients_run
 
 logger = logging.getLogger('fado')
 logger = logging.LoggerAdapter(logger, {'node_id': 'builder'})
@@ -81,10 +82,7 @@ def create_networks():
 
 def run_clients(fado_args, dev_mode, docker, add_flags):
     if not docker:
-        subprocess.run(f"FADO_DATA_PATH={os.path.join(ALL_DATA_FOLDER, fado_args.dataset)} "
-                       f"FADO_CONFIG_PATH={FADO_CONFIG_OUT} "
-                       f"SERVER_IP=localhost "
-                       f"python3 -m fado.runner.clients_run", shell=True)
+        clients_run.main()
         return
 
     # Start clients container
@@ -110,10 +108,7 @@ def run_clients(fado_args, dev_mode, docker, add_flags):
 
 def run_server(fado_args, dev_mode, docker, add_flags):
     if not docker:
-        subprocess.run(f"FADO_DATA_PATH={os.path.join(ALL_DATA_FOLDER, fado_args.dataset)} "
-                       f"FADO_CONFIG_PATH={FADO_CONFIG_OUT} "
-                       f"LOG_FILE_PATH={LOGS_DIRECTORY} "
-                       f"python3 -m fado.runner.server_run", shell=True)
+        server_run.main()
         return
 
     # Start server container
@@ -187,13 +182,19 @@ def run(fado_args, dev_mode=False, docker=True):
     container_flags = []
     if fado_args.use_gpu:
         container_flags = ['--gpus', 'all']
+    if not docker:
+        os.environ['FADO_DATA_PATH'] = os.path.join(ALL_DATA_FOLDER, fado_args.dataset)
+        os.environ['FADO_CONFIG_PATH'] = FADO_CONFIG_OUT
+        os.environ['LOG_FILE_PATH'] = LOGS_DIRECTORY
+        os.environ['SERVER_IP'] = 'localhost'
     try:
-        create_networks()
+        if docker:
+            create_networks()
         Thread(target=run_router, args=(fado_args, dev_mode, docker,), daemon=True).start()
         Thread(target=run_server, args=(fado_args, dev_mode, docker, container_flags,), daemon=True).start()
-        Thread(target=run_clients, args=(fado_args, dev_mode, docker, container_flags,), daemon=True).start()
-        while True:
-            time.sleep(100)
+        t = Thread(target=run_clients, args=(fado_args, dev_mode, docker, container_flags,), daemon=True)
+        t.start()
+        t.join()
     except KeyboardInterrupt:
         if docker:
             stop_server()

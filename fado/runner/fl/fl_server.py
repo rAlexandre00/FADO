@@ -38,7 +38,7 @@ class FLServer(Observer):
         self.aggregator = AggregatorManager.get_aggregator(self.global_model)
 
     def start(self):
-        for self.current_round in range(fado_args.rounds + 1):
+        for self.current_round in range(fado_args.rounds):
             successful = False
             while not successful:
                 # Wait for enough clients
@@ -49,7 +49,7 @@ class FLServer(Observer):
 
     def stop(self):
         try:
-            for client_id in range(1, fado_args.number_clients):
+            for client_id in range(1, fado_args.number_clients+1):
                 end_message = Message(type=Message.MSG_TYPE_END, sender_id=0, receiver_id=client_id)
                 self.com_manager.send_message(end_message)
         finally:

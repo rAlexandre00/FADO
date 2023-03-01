@@ -42,8 +42,8 @@ def shape_emnist():
     client_data = sample_data(partitioned_trn)
     test_target_x = partitioned_tst[fado_args.target_class]
     test_target_size = len(test_target_x)
-    test_target_x_server = test_target_x[:test_target_size//2]
-    test_target_x_attacker = test_target_x[test_target_size//2:]
+    test_target_x_attacker = test_target_x[:test_target_size//2]
+    test_target_x_server = test_target_x[test_target_size//2:]
 
     os.makedirs(os.path.join(DATA_FOLDER, 'train'), exist_ok=True)
     os.makedirs(os.path.join(DATA_FOLDER, 'test'), exist_ok=True)
@@ -284,7 +284,8 @@ def fixed_poison(
             this_x = np.concatenate(this_x)
             this_y = np.concatenate(this_y)
             assert this_x.shape[0] == this_y.shape[0]
-            clients.append((this_x, this_y))
+            clients[f'{i + 1}_x'] = this_x
+            clients[f'{i + 1}_y'] = this_y
             continue
 
         counts = (total_ct * all_dirichlets[i]).astype(np.int)

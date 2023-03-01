@@ -3,7 +3,7 @@ general:
     use_gpu: false
 
 fl_training_process:
-    rounds: 100
+    rounds: 2
     aggregator: mean
     agg_learning_rate: 0.25
     client_optimizer: sgd
@@ -26,14 +26,15 @@ attack_args:
     network:
         remove_pop_clients: 0
         drop_count: 10
+        drop_start: 30
     data:
         poison_count: 0
-        boost_factor: 0
+        boost_factor: 10.0
 
 defense_args:
     strategy: clip
-    upsample_epoch: 0
-    upsample_count: 0
+    upsample_start: 15
+    upsample_count: 10
 
 dataset_spec:
     dataset: nlafl_emnist
@@ -47,7 +48,7 @@ communication:
     wait_for_clients_timeout: 20
 
 output:
-    logs_file_name: "logs_{model}_{target_class}_{num_pop_clients}_{remove_pop_clients}_{drop_count}_{poison_count}_\
-    {random_seed}_{strategy}_{boost_factor}_{upsample_epoch}_{upsample_count}"
-    results_file_name: "results_{model}_{target_class}_{num_pop_clients}_{remove_pop_clients}_{drop_count}_{poison_count}_\
-    {random_seed}_{strategy}_{boost_factor}_{upsample_epoch}_{upsample_count}"
+    logs_file_name:        "logs_{model}_{target_class}_{num_pop_clients}_0_{drop_count}_{drop_start}_{poison_count}_\
+    {random_seed}_{strategy}_{boost_factor}_{upsample_start}_{upsample_count}_agg_each"
+    results_file_name:  "results_{model}_{target_class}_{num_pop_clients}_0_{drop_count}_{drop_start}_{poison_count}_\
+    {random_seed}_{strategy}_{boost_factor}_{upsample_start}_{upsample_count}_agg_each"

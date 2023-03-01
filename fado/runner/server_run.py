@@ -25,7 +25,7 @@ def start_server():
         server.stop()
 
 
-if __name__ == '__main__':
+def main():
     # Read arguments to singleton
     args = FADOArguments(os.getenv("FADO_CONFIG_PATH", default="/app/config/fado_config.yaml"))
     if 'logs_file_name' in args:
@@ -50,3 +50,8 @@ if __name__ == '__main__':
     random.seed(seed)
 
     start_server()
+    return
+
+
+if __name__ == '__main__':
+    main()

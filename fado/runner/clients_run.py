@@ -43,7 +43,7 @@ def start_client(client_id):
     client.start()
 
 
-if __name__ == '__main__':
+def main():
     # Read arguments to singleton
     args = FADOArguments(os.getenv("FADO_CONFIG_PATH", default="/app/config/fado_config.yaml"))
 
@@ -71,3 +71,8 @@ if __name__ == '__main__':
         t = Thread(target=start_client, args=(client_id,), daemon=True)
         t.start()
     t.join()
+    return
+
+
+if __name__ == '__main__':
+    main()
