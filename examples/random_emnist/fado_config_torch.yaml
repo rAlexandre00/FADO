@@ -1,6 +1,6 @@
 general:
     random_seed: 0
-    use_gpu: false
+    use_gpu: true
 
 fl_training_process:
     rounds: 100
@@ -30,7 +30,7 @@ attack_args:
         poison_count: 0
         boost_factor: 0
     model:
-        name: 'random'
+        model_attack_name: 'random'
 
 defense_args:
     strategy: clip
