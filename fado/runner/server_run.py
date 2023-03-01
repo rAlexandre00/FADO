@@ -9,7 +9,7 @@ from fado.cli.arguments.arguments import FADOArguments
 from fado.runner.fl.fl_server import FLServer
 from fado.runner.output.results import Results
 
-logger = logging.getLogger("fado")
+logger = logging.LoggerAdapter(logging.getLogger("fado"), extra={'node_id': 'server'})
 
 
 def start_server():
@@ -22,6 +22,7 @@ def start_server():
     try:
         server.start()
     finally:
+        logger.info("Stopping server")
         server.stop()
 
 
@@ -31,7 +32,7 @@ def main():
     if 'logs_file_name' in args:
         log_file_path = os.path.join(os.getenv("LOG_FILE_PATH"), args.logs_file_name.format(**args.__dict__))
         fh = logging.FileHandler(log_file_path)
-        logger.addHandler(fh)
+        logging.getLogger("fado").addHandler(fh)
 
     # Set the seed for PRNGs to be equal to the trial index
     seed = args.random_seed

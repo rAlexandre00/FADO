@@ -1,6 +1,7 @@
 import argparse
 import logging
 import shutil
+import socket
 import subprocess
 import sys
 import time
@@ -191,7 +192,7 @@ def run(fado_args, dev_mode=False, docker=True):
         if docker:
             create_networks()
         Thread(target=run_router, args=(fado_args, dev_mode, docker,), daemon=True).start()
-        Thread(target=run_server, args=(fado_args, dev_mode, docker, container_flags,), daemon=True).start()
+        Thread(target=run_server, args=(fado_args, dev_mode, docker, container_flags), daemon=True).start()
         t = Thread(target=run_clients, args=(fado_args, dev_mode, docker, container_flags,), daemon=True)
         t.start()
         t.join()
@@ -207,8 +208,8 @@ def move_files_to_fado_home(config_file):
     os.makedirs(LOGS_DIRECTORY, exist_ok=True)
     shutil.copyfile(config_file, FADO_CONFIG_OUT)
 
-def run_multiple(args, experiments_list):
 
+def run_multiple(args, experiments_list):
     for experiment in experiments_list:
         logger.info(f"Running experiment {experiment}")
         fado_arguments = FADOArguments(experiment)
@@ -217,7 +218,8 @@ def run_multiple(args, experiments_list):
         download_data(fado_arguments)
         shape_data(fado_arguments)
         run(fado_arguments, args.development, args.docker)
-        
+
+
 def cli():
     args = parse_args(sys.argv[1:])
 
@@ -252,7 +254,7 @@ def cli():
         run(fado_arguments, args.development, args.docker)
     elif args.mode == 'clean':
         pass
-        #clean()
+        # clean()
     else:
         download_data(fado_arguments)
         shape_data(fado_arguments)

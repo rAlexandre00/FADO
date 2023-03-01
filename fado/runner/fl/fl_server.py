@@ -23,7 +23,7 @@ class FLServer(Observer):
     """ Class representing a server in the federated learning protocol
     """
 
-    def __init__(self, dataset, results):
+    def __init__(self, dataset, results, server_socket=None):
         self.global_model = ModelManager.get_model()
         self.dataset = dataset
         self.results = results
@@ -54,6 +54,7 @@ class FLServer(Observer):
                 self.com_manager.send_message(end_message)
         finally:
             self.com_manager.stop_receive_message()
+            self.pub_com_manager.stop_receive_message()
             self.is_running = False
 
     def _train_round(self):
