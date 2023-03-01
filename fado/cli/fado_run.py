@@ -206,7 +206,17 @@ def move_files_to_fado_home(config_file):
     os.makedirs(LOGS_DIRECTORY, exist_ok=True)
     shutil.copyfile(config_file, FADO_CONFIG_OUT)
 
+def run_multiple(args, experiments_list):
 
+    for experiment in experiments_list:
+        logger.info(f"Running experiment {experiment}")
+        fado_arguments = FADOArguments(experiment)
+
+        move_files_to_fado_home(experiment)
+        download_data(fado_arguments)
+        shape_data(fado_arguments)
+        run(fado_arguments, args.development, args.docker)
+        
 def cli():
     args = parse_args(sys.argv[1:])
 
@@ -217,6 +227,10 @@ def cli():
         config_file = fado_config_env if fado_config_env else FADO_DEFAULT_CONFIG_FILE_PATH
 
     fado_arguments = FADOArguments(config_file)
+
+    if 'experiments_list' in fado_arguments:
+        run_multiple(args, fado_arguments.experiments_list)
+        return
 
     move_files_to_fado_home(config_file)
 
@@ -236,7 +250,8 @@ def cli():
     elif args.mode == 'run':
         run(fado_arguments, args.development, args.docker)
     elif args.mode == 'clean':
-        clean()
+        pass
+        #clean()
     else:
         download_data(fado_arguments)
         shape_data(fado_arguments)

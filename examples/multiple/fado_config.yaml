@@ -1,0 +1,4 @@
+experiments_list:
+  - examples/nlafl_emnist/fado_config_torch.yaml
+  - examples/nlafl_emnist/fado_config_tf.yaml
+  - examples/random_emnist/fado_config_torch.yaml

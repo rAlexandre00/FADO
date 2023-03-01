@@ -10,8 +10,10 @@ class AttackManager:
     @classmethod
     def get_attacker(cls) -> Attack:
         args = FADOArguments()
-        if args.model_attack_name == 'random':
+
+        model_attack_name = args.model_attack_name if 'model_attack_name' in args else None
+        
+        if model_attack_name == 'random':
             return RandomAttacker()
         else:
             return Attack()
-        pass

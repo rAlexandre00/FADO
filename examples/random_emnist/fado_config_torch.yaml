@@ -3,7 +3,7 @@ general:
     use_gpu: true
 
 fl_training_process:
-    rounds: 100
+    rounds: 10
     aggregator: mean
     agg_learning_rate: 0.25
     client_optimizer: sgd
