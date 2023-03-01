@@ -1,9 +1,9 @@
 general:
     random_seed: 0
-    use_gpu: false
+    use_gpu: true
 
 fl_training_process:
-    rounds: 101
+    rounds: 10
     aggregator: mean
     agg_learning_rate: 0.25
     client_optimizer: sgd
@@ -28,7 +28,9 @@ attack_args:
         drop_count: 0
     data:
         poison_count: 0
-        boost_factor: 0z
+        boost_factor: 0
+    model:
+        model_attack_name: 'random'
 
 defense_args:
     strategy: clip
