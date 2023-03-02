@@ -58,12 +58,12 @@ class NlaflEmnistTf(FADOModule):
             use_multiprocessing=True
         )
 
-        score = self.model.evaluate(x, y, verbose=0, use_multiprocessing=True)
+        score = self.model.evaluate(x, y, verbose=0, use_multiprocessing=True, workers=10)
 
         return self.model.get_weights(), score[0], score[1]
 
     def evaluate(self, x, y):
-        return self.model.evaluate(x, y, verbose=0, use_multiprocessing=True)
+        return self.model.evaluate(x, y, verbose=0, use_multiprocessing=True, workers=10)
 
 
 def build_model(momentum=0.0, dropouts=False):

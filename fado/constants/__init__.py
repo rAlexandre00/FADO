@@ -15,6 +15,7 @@ FADO_DEFAULT_CONFIG_FILE_PATH = os.path.join(default_module_dir, 'fado_config.ya
 
 CONFIG_HASH = os.path.join(FADO_DIR, '.config_hash')
 LOGS_DIRECTORY = os.path.join(FADO_DIR, 'logs')
+RESULTS_DIRECTORY = os.path.join(FADO_DIR, 'results')
 TENSORBOARD_DIRECTORY = os.path.join(FADO_DIR, 'runs')
 ATTACK_DIRECTORY = os.path.join(FADO_DIR, 'attack')
 DEFENSE_DIRECTORY = os.path.join(FADO_DIR, 'defense')

@@ -1,5 +1,7 @@
 import argparse
+import itertools
 import logging
+import os
 import shutil
 import socket
 import subprocess
@@ -114,7 +116,8 @@ def run_server(fado_args, dev_mode, docker, add_flags):
 
     # Start server container
     subprocess.run(['docker', 'run', '-d', '-w', '/app', '--name', 'fado-server', '--cap-add=NET_ADMIN',
-                    '-v', f'{LOGS_DIRECTORY}:/app/logs', '--network', 'server-network'] + add_flags +
+                    '-v', f'{LOGS_DIRECTORY}:/app/logs', '-v', f'{RESULTS_DIRECTORY}:/app/results',
+                    '--network', 'server-network'] + add_flags +
                    ['ralexandre00/fado-node', 'bash', '-c', 'tail -f /dev/null'])
 
     # Send fado_config and data to container
@@ -187,6 +190,7 @@ def run(fado_args, dev_mode=False, docker=True):
         os.environ['FADO_DATA_PATH'] = os.path.join(ALL_DATA_FOLDER, fado_args.dataset)
         os.environ['FADO_CONFIG_PATH'] = FADO_CONFIG_OUT
         os.environ['LOG_FILE_PATH'] = LOGS_DIRECTORY
+        os.environ['RESULTS_FILE_PATH'] = RESULTS_DIRECTORY
         os.environ['SERVER_IP'] = 'localhost'
     try:
         if docker:
@@ -196,7 +200,7 @@ def run(fado_args, dev_mode=False, docker=True):
         t = Thread(target=run_clients, args=(fado_args, dev_mode, docker, container_flags,), daemon=True)
         t.start()
         t.join()
-    except KeyboardInterrupt:
+    finally:
         if docker:
             stop_server()
             stop_router()
@@ -209,15 +213,28 @@ def move_files_to_fado_home(config_file):
     shutil.copyfile(config_file, FADO_CONFIG_OUT)
 
 
-def run_multiple(args, experiments_list):
-    for experiment in experiments_list:
-        logger.info(f"Running experiment {experiment}")
-        fado_arguments = FADOArguments(experiment)
+def run_multiple(fado_arguments, development, docker):
+    # Create a dictionary with all possible combinations of configs to vary
+    vary_list = list(itertools.product(*fado_arguments.vary.values()))
+    temp_output = os.path.join(TEMP_DIRECTORY, 'fado_config.yaml')
+    os.makedirs(TEMP_DIRECTORY, exist_ok=True)
 
-        move_files_to_fado_home(experiment)
-        download_data(fado_arguments)
-        shape_data(fado_arguments)
-        run(fado_arguments, args.development, args.docker)
+    # For each combination execute fado run
+    for experiment in vary_list:
+        for i, vary_key in enumerate(fado_arguments.vary.keys()):
+            fado_arguments.set_argument(vary_key, experiment[i])
+
+        # Save current experiment fado_config file in temp folder
+        fado_arguments.save_to_file(temp_output)
+        logger.info(f"Running experiment {experiment}")
+
+        fado_arguments_experiment = FADOArguments(temp_output)
+
+        move_files_to_fado_home(temp_output)
+        download_data(fado_arguments_experiment)
+        shape_data(fado_arguments_experiment)
+        run(fado_arguments_experiment, development, docker)
+    os.remove(temp_output)
 
 
 def cli():
@@ -230,17 +247,15 @@ def cli():
         config_file = fado_config_env if fado_config_env else FADO_DEFAULT_CONFIG_FILE_PATH
 
     fado_arguments = FADOArguments(config_file)
-
-    if 'experiments_list' in fado_arguments:
-        run_multiple(args, fado_arguments.experiments_list)
+    if 'vary' in fado_arguments:
+        run_multiple(fado_arguments, args.development, args.docker)
         return
-
-    move_files_to_fado_home(config_file)
 
     # docker pull ralexandre00/fado-node-requirements
 
     if args.mode == 'build':
         build_mode = args.build_mode
+        move_files_to_fado_home(config_file)
 
         if build_mode == 'download':
             download_data(fado_arguments)
@@ -251,6 +266,7 @@ def cli():
             shape_data(fado_arguments)
 
     elif args.mode == 'run':
+        move_files_to_fado_home(config_file)
         run(fado_arguments, args.development, args.docker)
     elif args.mode == 'clean':
         pass

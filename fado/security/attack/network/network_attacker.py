@@ -102,7 +102,7 @@ class NetworkAttacker:
     def update_perf(self):
         # Evaluate loss of the current model parameters with attacker test set
         self.local_model.set_parameters(get_model_parameters())
-        current_loss, _ = self.local_model.evaluate(self.x_target_test, self.y_target_test)
+        current_loss, _ = self.local_model.evaluate(self.x_target_test, self.y_target_test, use_multiprocessing=True, workers=10)
 
         # Calculate loss improvement
         if self.last_loss is None:
