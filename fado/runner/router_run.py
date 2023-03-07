@@ -27,27 +27,23 @@ network_attacker = None
 def process_packet_client_to_server(pkt):
     scapy_pkt = IP(pkt.get_payload())
     # Ignore if client node is checking if server is alive
-    if scapy_pkt.getlayer("IP").src != '10.128.1.0':
-        scapy_pkt = network_attacker.process_packet_client_to_server(scapy_pkt)
-        if scapy_pkt is None:
-            pkt.drop()
-            return
-        else:
-            pkt.set_payload(raw(scapy_pkt))
-    pkt.accept()
+    scapy_pkt = network_attacker.process_packet_client_to_server(scapy_pkt)
+    if scapy_pkt is None:
+        pkt.drop()
+    else:
+        pkt.set_payload(raw(scapy_pkt))
+        pkt.accept()
 
 
 def process_packet_server_to_client(pkt):
     scapy_pkt = IP(pkt.get_payload())
     # Ignore if client node is checking if server is alive
-    if scapy_pkt.getlayer("IP").dst != '10.128.1.0':
-        scapy_pkt = network_attacker.process_packet_server_to_client(scapy_pkt)
-        if scapy_pkt is None:
-            pkt.drop()
-            return
-        else:
-            pkt.set_payload(raw(scapy_pkt))
-    pkt.accept()
+    scapy_pkt = network_attacker.process_packet_server_to_client(scapy_pkt)
+    if scapy_pkt is None:
+        pkt.drop()
+    else:
+        pkt.set_payload(raw(scapy_pkt))
+        pkt.accept()
 
 
 if __name__ == "__main__":

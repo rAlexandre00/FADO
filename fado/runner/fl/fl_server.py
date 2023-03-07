@@ -1,3 +1,4 @@
+import gzip
 import logging
 import sys
 import threading
@@ -46,7 +47,6 @@ class FLServer(Observer):
                 # Wait for enough clients
                 while not self.is_running:
                     time.sleep(0.01)
-                logger.info(f"Starting round {self.current_round}")
                 successful = self._train_round()
 
     def stop(self):

@@ -26,7 +26,7 @@ attack_args:
     network:
         remove_pop_clients: 0
         drop_count: 10
-        drop_start: 30
+        drop_start: 2
     data:
         poison_count: 0
         boost_factor: 10.0

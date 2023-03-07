@@ -5,6 +5,7 @@ import os
 import pickle
 import socket
 import struct
+import time
 
 from fado.cli.arguments.arguments import FADOArguments
 from fado.constants import SERVER_PUB_PORT
@@ -62,10 +63,6 @@ class NetworkAttacker:
         self.target_clients = set(target_clients)
 
     def process_packet_server_to_client(self, scapy_pkt):
-        if self.current_round >= fado_args.drop_start:
-            if scapy_pkt['IP'].dst in self.ips_lowest_losses:
-                return None
-
         # Store IPs that are seen receiving big packets from server (global model)
         if scapy_pkt['IP'].dst not in self.clients_training:
             self.clients_training.append(scapy_pkt['IP'].dst)
@@ -76,49 +73,50 @@ class NetworkAttacker:
                     # Server started new round - estimate contributions for the previous round
                     self.update_perf()
                     self.update_drop_list(drop_count=fado_args.drop_count)
-                self.clients_prev_round.append(scapy_pkt['IP'].dst)
+            self.clients_prev_round.append(scapy_pkt['IP'].dst)
 
         return scapy_pkt
 
     def process_packet_client_to_server(self, scapy_pkt):
-        if self.current_round > fado_args.drop_start:
-            if scapy_pkt['IP'].src in self.clients_training:
-                # Make sure clients_training list does not keep blocked clients
-                self.clients_training.remove(scapy_pkt['IP'].src)
+        if self.current_round >= fado_args.drop_start:
             if scapy_pkt['IP'].src in self.ips_lowest_losses:
+                if scapy_pkt['IP'].src in self.clients_training:
+                    self.client_ended_training(scapy_pkt['IP'].src)
                 return None
 
-        # Remove IPs that are seen sending big packets to server (local model)
         if scapy_pkt['IP'].src in self.clients_training:
-            self.clients_training.remove(scapy_pkt['IP'].src)
-            # If list of clients training is empty then all clients sent their local models and server is aggregating
-            if len(self.clients_training) == 0:
-                logger.info(f"Round {self.current_round} finish detected")
-                self.current_round += 1
-                self.server_is_aggregating = True
+            self.client_ended_training(scapy_pkt['IP'].src)
 
         return scapy_pkt
+
+    def client_ended_training(self, ip):
+        self.clients_training.remove(ip)
+        # If list of clients training is empty then all clients sent their local models and server is aggregating
+        if len(self.clients_training) == 0:
+            logger.info(f"Round {self.current_round} finish detected")
+            self.current_round += 1
+            self.server_is_aggregating = True
 
     def update_perf(self):
         # Evaluate loss of the current model parameters with attacker test set
         self.local_model.set_parameters(get_model_parameters())
-        current_loss, _ = self.local_model.evaluate(self.x_target_test, self.y_target_test, use_multiprocessing=True, workers=10)
+        current_loss, _ = self.local_model.evaluate(self.x_target_test, self.y_target_test)
 
         # Calculate loss improvement
         if self.last_loss is None:
             self.last_loss = current_loss
+            self.clients_prev_round = []
             return
 
         perf_diff = current_loss - self.last_loss
         self.last_loss = current_loss
-
         # Update the mean of improvements of every client that participated in this round
         for client_ip in self.clients_prev_round:
             if client_ip not in self.clients_improv_history:
                 self.clients_improv_history[client_ip] = (0, 0)
             sum_perf, count_perf = self.clients_improv_history[client_ip]
             self.clients_improv_history[client_ip] = (
-            (sum_perf * count_perf + perf_diff) / (count_perf + 1), count_perf + 1)
+                (sum_perf * count_perf + perf_diff) / (count_perf + 1), count_perf + 1)
 
         # Reset list of clients that participated in the round
         self.clients_prev_round = []

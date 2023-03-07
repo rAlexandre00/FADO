@@ -1,3 +1,4 @@
+import gzip
 import ipaddress
 import logging
 import os
@@ -6,6 +7,8 @@ import select
 import socket
 import struct
 import threading
+import time
+import traceback
 
 from typing import List
 
@@ -15,6 +18,8 @@ from fado.runner.communication.base_com_manager import BaseCommunicationManager
 from fado.runner.communication.message import Message
 from fado.runner.communication.observer import Observer
 from fado.runner.communication.sockets.utils import recvall
+
+TCP_USER_TIMEOUT = 18
 
 fado_args = FADOArguments()
 new_client_lock = threading.Lock()
@@ -29,31 +34,35 @@ class ClientSocketCommunicationManager(BaseCommunicationManager):
         self.logger = logging.LoggerAdapter(logging.getLogger("fado"), extra={'node_id': client_id})
 
         # This is client -> Connect to server
+        self.create_socket()
+
+        self.is_running = True
+
+    def create_socket(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.setsockopt(socket.IPPROTO_TCP, TCP_USER_TIMEOUT, fado_args.wait_for_clients_timeout*700)
         server_ip = os.getenv('SERVER_IP')
         if server_ip != 'localhost':
             base_ip = ipaddress.ip_address('10.128.1.0')
-            s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(base_ip + client_id).encode())
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(base_ip + self.client_id).encode())
         s.connect((server_ip, SERVER_PORT))
         self.connections[0] = s
 
         # Store connection
-        connect_message = Message(sender_id=client_id, receiver_id=0, type=Message.MSG_TYPE_CONNECT)
+        connect_message = Message(sender_id=self.client_id, receiver_id=0, type=Message.MSG_TYPE_CONNECT)
         self.send_message(connect_message)
-
-        self.is_running = True
 
     def send_message(self, message: Message):
         receiver_id = message.get_receiver_id()
         connection = self.connections[receiver_id]
         message_encoded = pickle.dumps(message)
         try:
-            connection.settimeout(fado_args.wait_for_clients_timeout)
             connection.sendall(struct.pack('>I', len(message_encoded)))
             connection.sendall(message_encoded)
-            connection.settimeout(None)
-        except socket.timeout:
-            self.logger.info("Could not send model to server")
+        except TimeoutError:
+            self.create_socket()
+        except Exception:
+            self.logger.error(traceback.format_exc())
 
     def add_observer(self, observer: Observer):
         self._observers.append(observer)
@@ -63,14 +72,22 @@ class ClientSocketCommunicationManager(BaseCommunicationManager):
 
     def handle_receive_message(self):
         while self.is_running:
-            ready = select.select([self.connections[0]], [], [], 1)
-            if ready[0]:
+            try:
                 connection = self.connections[0]
                 message_size = struct.unpack('>I', recvall(connection, 4))[0]
-                message_encoded = recvall(connection, message_size)
+                message_compressed = recvall(connection, message_size)
+                message_encoded = gzip.decompress(message_compressed)
                 message = pickle.loads(message_encoded)
                 for observer in self._observers:
                     observer.receive_message(message)
+            except TimeoutError:
+                self.create_socket()
+            except TypeError:
+                self.logger.info("TypeError")
+                continue
+            except Exception as e:
+                self.logger.error("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+                self.logger.error(f'{traceback.format_exc()}')
 
     def stop_receive_message(self):
         self.is_running = False

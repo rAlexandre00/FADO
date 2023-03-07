@@ -1,3 +1,4 @@
+import gzip
 import logging
 import pickle
 import select
@@ -5,6 +6,7 @@ import socket
 import struct
 import sys
 import threading
+import traceback
 from time import sleep
 from typing import List, Optional, Any
 
@@ -58,6 +60,7 @@ class ServerSocketCommunicationManager(BaseCommunicationManager):
         # lock acquired by client
         new_client_lock.acquire()
         self.connections[connect_message.sender_id] = connection
+        # logger.info(f"Client {connect_message.sender_id} connected")
         for observer in self._observers:
             observer.receive_message(connect_message)
         new_client_lock.release()
@@ -66,11 +69,11 @@ class ServerSocketCommunicationManager(BaseCommunicationManager):
         receiver_id = message.get_receiver_id()
         connection = self.connections[receiver_id]
         message_encoded = pickle.dumps(message)
+        message_compressed = gzip.compress(message_encoded)
         try:
             connection.settimeout(fado_args.wait_for_clients_timeout)
-            connection.sendall(struct.pack('>I', len(message_encoded)))
-            connection.sendall(message_encoded)
-            connection.settimeout(None)
+            connection.sendall(struct.pack('>I', len(message_compressed)))
+            connection.sendall(message_compressed)
             return True
         except Exception as e:
             logger.info(f"Client {receiver_id} did not reply. Skipping contribution")
@@ -88,15 +91,13 @@ class ServerSocketCommunicationManager(BaseCommunicationManager):
             message_size = struct.unpack('>I', recvall(connection, 4))[0]
             message_encoded = recvall(connection, message_size)
             message = pickle.loads(message_encoded)
-            connection.settimeout(None)
             return message
-        except TypeError:
-            # Probably dropped packets
-            return None
-        except socket.timeout:
+        except (socket.timeout, ConnectionResetError):
             logger.info(f"Client {sender_id} did not reply. Skipping contribution")
             return None
-        return None
+        except Exception as e:
+            logger.error("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB")
+            logger.error(f'{traceback.format_exc()}')
 
     def get_available_clients(self):
         return len(self.connections)

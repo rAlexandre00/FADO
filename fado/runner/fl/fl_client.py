@@ -1,4 +1,8 @@
+import gzip
 import logging
+
+import numpy as np
+from io import StringIO
 
 from fado.runner.communication.message import Message
 from fado.runner.communication.observer import Observer
