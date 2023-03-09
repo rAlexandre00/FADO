@@ -27,7 +27,8 @@ network_attacker = None
 def process_packet_client_to_server(pkt):
     scapy_pkt = IP(pkt.get_payload())
     # Ignore if client node is checking if server is alive
-    scapy_pkt = network_attacker.process_packet_client_to_server(scapy_pkt)
+    if network_attacker is not None:
+        scapy_pkt = network_attacker.process_packet_client_to_server(scapy_pkt)
     if scapy_pkt is None:
         pkt.drop()
     else:
