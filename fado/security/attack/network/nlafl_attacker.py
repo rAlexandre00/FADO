@@ -37,7 +37,7 @@ def get_model_parameters():
     return message.get(Message.MSG_ARG_KEY_MODEL_PARAMS)
 
 
-class NetworkAttacker:
+class NLAFLAttacker:
 
     def __init__(self, model, x_target_test, y_target_test):
         """ Called when receives message

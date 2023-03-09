@@ -24,9 +24,10 @@ attack_args:
     malicious_clients: 0
     target_class: [0,1,9]
     network:
+        network_attack: none
         remove_pop_clients: 0
         drop_count: 10
-        drop_start: -1
+        drop_start: 30
     data:
         poison_count: 0
         boost_factor: 10.0

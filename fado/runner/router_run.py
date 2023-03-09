@@ -8,6 +8,7 @@ from fado.cli.arguments.arguments import FADOArguments
 from fado.constants import SERVER_PORT
 from fado.runner.data.load.attacker_data_loader import AttackerDataLoader
 from fado.runner.ml.model.module_manager import ModelManager
+from fado.security.attack.network.network_attack_manager import NetworkAttackerManager
 from fado.security.attack.network.network_attacker import NetworkAttacker
 
 filterwarnings("ignore")
@@ -38,7 +39,8 @@ def process_packet_client_to_server(pkt):
 def process_packet_server_to_client(pkt):
     scapy_pkt = IP(pkt.get_payload())
     # Ignore if client node is checking if server is alive
-    scapy_pkt = network_attacker.process_packet_server_to_client(scapy_pkt)
+    if network_attacker is not None:
+        scapy_pkt = network_attacker.process_packet_server_to_client(scapy_pkt)
     if scapy_pkt is None:
         pkt.drop()
     else:
@@ -52,7 +54,7 @@ if __name__ == "__main__":
     data_loader = AttackerDataLoader('/app/data')
     dataset = data_loader.read_data()
 
-    network_attacker = NetworkAttacker(ModelManager.get_model(), dataset.test_data['x'], dataset.test_data['y'])
+    network_attacker = NetworkAttackerManager.get_attacker(ModelManager.get_model(), dataset.test_data['x'], dataset.test_data['y'])
 
     # Set the seed for PRNGs to be equal to the trial index
     seed = args.random_seed
