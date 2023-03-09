@@ -91,7 +91,7 @@ def run_clients(fado_args, dev_mode, docker, add_flags):
     # Start clients container
     subprocess.run(['docker', 'run', '-d', '-w', '/app', '--name', 'fado-clients', '--cap-add=NET_ADMIN',
                     '--network', 'clients-network'] + add_flags +
-                   ['ralexandre00/fado-node', 'bash', '-c', 'tail -f /dev/null'])
+                   ['ralexandre00/fado-node:latest', 'bash', '-c', 'tail -f /dev/null'])
 
     # Send fado_config and data to container
     subprocess.run(['docker', 'cp', f'{FADO_CONFIG_OUT}', 'fado-clients:/app/config/fado_config.yaml'])
@@ -118,7 +118,7 @@ def run_server(fado_args, dev_mode, docker, add_flags):
     subprocess.run(['docker', 'run', '-d', '-w', '/app', '--name', 'fado-server', '--cap-add=NET_ADMIN',
                     '-v', f'{LOGS_DIRECTORY}:/app/logs', '-v', f'{RESULTS_DIRECTORY}:/app/results',
                     '--network', 'server-network'] + add_flags +
-                   ['ralexandre00/fado-node', 'bash', '-c', 'tail -f /dev/null'])
+                   ['ralexandre00/fado-node:latest', 'bash', '-c', 'tail -f /dev/null'])
 
     # Send fado_config and data to container
     subprocess.run(['docker', 'cp', f'{FADO_CONFIG_OUT}', 'fado-server:/app/config/fado_config.yaml'])
@@ -147,7 +147,7 @@ def run_router(fado_args, dev_mode, docker):
     # Start server container
     subprocess.run(['docker', 'run', '-d', '-w', '/app', '--name', 'fado-router', '--cap-add=NET_ADMIN',
                     '--network', 'server-network',
-                    'ralexandre00/fado-router', 'bash', '-c', 'tail -f /dev/null'])
+                    'ralexandre00/fado-router:latest', 'bash', '-c', 'tail -f /dev/null'])
     subprocess.run(['docker', 'network', 'connect', 'clients-network', 'fado-router'])
 
     # Send fado_config and data to container

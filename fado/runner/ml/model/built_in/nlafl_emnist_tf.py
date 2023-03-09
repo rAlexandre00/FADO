@@ -15,6 +15,11 @@ from fado.runner.ml.model.fado_module import FADOModule
 
 fado_args = FADOArguments()
 
+if fado_args.use_gpu:
+    physical_devices = tf.config.experimental.list_physical_devices('GPU')
+    for device in physical_devices:
+        config = tf.config.experimental.set_memory_growth(device, True)
+
 
 class NlaflEmnistTf(FADOModule):
 
