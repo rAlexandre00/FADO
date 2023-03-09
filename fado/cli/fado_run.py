@@ -139,15 +139,15 @@ def run_server(fado_args, dev_mode, docker, add_flags):
     return
 
 
-def run_router(fado_args, dev_mode, docker):
+def run_router(fado_args, dev_mode, docker, add_flags):
     if not docker:
         # Do nothing
         return
 
     # Start server container
     subprocess.run(['docker', 'run', '-d', '-w', '/app', '--name', 'fado-router', '--cap-add=NET_ADMIN',
-                    '--network', 'server-network',
-                    'ralexandre00/fado-router:latest', 'bash', '-c', 'tail -f /dev/null'])
+                    '--network', 'server-network'], + add_flags +
+                    ['ralexandre00/fado-router:latest', 'bash', '-c', 'tail -f /dev/null'])
     subprocess.run(['docker', 'network', 'connect', 'clients-network', 'fado-router'])
 
     # Send fado_config and data to container
@@ -195,7 +195,7 @@ def run(fado_args, dev_mode=False, docker=True):
     try:
         if docker:
             create_networks()
-        Thread(target=run_router, args=(fado_args, dev_mode, docker,), daemon=True).start()
+        Thread(target=run_router, args=(fado_args, dev_mode, docker, container_flags,), daemon=True).start()
         Thread(target=run_server, args=(fado_args, dev_mode, docker, container_flags), daemon=True).start()
         t = Thread(target=run_clients, args=(fado_args, dev_mode, docker, container_flags,), daemon=True)
         t.start()
