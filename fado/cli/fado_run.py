@@ -146,8 +146,8 @@ def run_router(fado_args, dev_mode, docker, add_flags):
 
     # Start server container
     subprocess.run(['docker', 'run', '-d', '-w', '/app', '--name', 'fado-router', '--cap-add=NET_ADMIN',
-                    '--network', 'server-network'], + add_flags +
-                    ['ralexandre00/fado-router:latest', 'bash', '-c', 'tail -f /dev/null'])
+                    '--network', 'server-network'] + add_flags +
+                   ['ralexandre00/fado-router:latest', 'bash', '-c', 'tail -f /dev/null'])
     subprocess.run(['docker', 'network', 'connect', 'clients-network', 'fado-router'])
 
     # Send fado_config and data to container
