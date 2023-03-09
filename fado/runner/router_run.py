@@ -9,7 +9,6 @@ from fado.constants import SERVER_PORT
 from fado.runner.data.load.attacker_data_loader import AttackerDataLoader
 from fado.runner.ml.model.module_manager import ModelManager
 from fado.security.attack.network.network_attack_manager import NetworkAttackerManager
-from fado.security.attack.network.network_attacker import NetworkAttacker
 
 filterwarnings("ignore")
 from netfilterqueue import NetfilterQueue
