@@ -33,7 +33,7 @@ attack_args:
         boost_factor: 10.0
 
 defense_args:
-    defense_strategy: none
+    defense_strategy: drop
     upsample_start: 15
     upsample_count: 10
 
