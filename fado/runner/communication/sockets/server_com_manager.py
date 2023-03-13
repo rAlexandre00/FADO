@@ -21,6 +21,8 @@ logger = logging.getLogger("fado")
 extra = {'node_id': 'server'}
 logger = logging.LoggerAdapter(logger, extra)
 
+TCP_USER_TIMEOUT = 18
+
 fado_args = FADOArguments()
 new_client_lock = threading.Lock()
 
@@ -34,7 +36,8 @@ class ServerSocketCommunicationManager(BaseCommunicationManager):
 
         # This is server -> listen for client connections
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) 
+        self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.server_socket.setsockopt(socket.IPPROTO_TCP, TCP_USER_TIMEOUT, fado_args.wait_for_clients_timeout * 700)
         self.server_socket.bind(('0.0.0.0', SERVER_PORT))
         self.server_socket.listen()
         self.is_running = True

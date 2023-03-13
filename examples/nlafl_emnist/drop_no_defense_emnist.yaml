@@ -1,6 +1,6 @@
 general:
     random_seed: [0,1,2,3,4]
-    use_gpu: true
+    use_gpu: false
 
 fl_training_process:
     rounds: 105
