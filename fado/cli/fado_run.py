@@ -12,6 +12,7 @@ from threading import Thread
 from fado.constants import *
 from fado.cli.arguments.arguments import FADOArguments
 from fado.runner import server_run, clients_run
+from fado.runner.output.table import generate_table
 
 logger = logging.getLogger('fado')
 logger = logging.LoggerAdapter(logger, {'node_id': 'builder'})
@@ -26,7 +27,7 @@ def parse_args(args):
 
     build_parser = mode_parser.add_parser('build')
     mode_parser.add_parser('run')
-    mode_parser.add_parser('clean')
+    mode_parser.add_parser('table')
 
     parser.add_argument('-d', dest='dataset', type=str, choices=DATASETS, required=False)
     parser.add_argument('-dr', dest='dataset_rate', help='Fraction of the dataset', type=float,
@@ -247,9 +248,6 @@ def cli():
         config_file = fado_config_env if fado_config_env else FADO_DEFAULT_CONFIG_FILE_PATH
 
     fado_arguments = FADOArguments(config_file)
-    if 'vary' in fado_arguments:
-        run_multiple(fado_arguments, args.development, args.docker)
-        return
 
     # docker pull ralexandre00/fado-node-requirements
 
@@ -266,10 +264,14 @@ def cli():
             shape_data(fado_arguments)
 
     elif args.mode == 'run':
+        if 'vary' in fado_arguments:
+            run_multiple(fado_arguments, args.development, args.docker)
+            return
+
         move_files_to_fado_home(config_file)
         run(fado_arguments, args.development, args.docker)
-    elif args.mode == 'clean':
-        pass
+    elif args.mode == 'table':
+        generate_table(100)
         # clean()
     else:
         download_data(fado_arguments)

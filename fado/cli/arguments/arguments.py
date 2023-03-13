@@ -47,6 +47,9 @@ class FADOArguments:
     def set_argument(self, key, value):
         setattr(self, key, value)
 
+    def get_argument(self, key):
+        return getattr(self, key)
+
     def __contains__(self, key):
         return hasattr(self, key)
 

@@ -24,7 +24,7 @@ attack_args:
     malicious_clients: 0
     target_class: [0,1,9]
     network:
-        network_attack: none
+        network_attack: drop
         remove_pop_clients: 0
         drop_count: 10
         drop_start: 30
