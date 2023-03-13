@@ -24,7 +24,7 @@ attack_args:
     malicious_clients: 0
     target_class: [0,1,9]
     network:
-        network_attack: drop
+        network_attack: nlafl
         remove_pop_clients: 0
         drop_count: 10
         drop_start: 30
@@ -33,7 +33,7 @@ attack_args:
         boost_factor: 10.0
 
 defense_args:
-    defense_strategy: nlafl
+    defense_strategy: none
     upsample_start: 15
     upsample_count: 10
 
