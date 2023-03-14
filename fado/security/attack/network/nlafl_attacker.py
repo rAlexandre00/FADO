@@ -78,7 +78,6 @@ class NLAFLAttacker:
         threading.Thread(target=self.contribution_estimation, args=(), daemon=True).start()
 
     def contribution_estimation(self):
-        logger.info("Here1")
         while True:
             try:
                 old_model_parameters = get_model_parameters()
@@ -88,7 +87,7 @@ class NLAFLAttacker:
             break
 
         while True:
-            time.sleep(2)
+            time.sleep(1)
             current_model_parameters = get_model_parameters()
 
             # Check new round
