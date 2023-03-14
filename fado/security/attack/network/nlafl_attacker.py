@@ -5,7 +5,11 @@ import os
 import pickle
 import socket
 import struct
+import threading
 import time
+from threading import Lock
+
+import numpy as np
 
 from fado.cli.arguments.arguments import FADOArguments
 from fado.constants import SERVER_PUB_PORT
@@ -18,9 +22,12 @@ fado_args = FADOArguments("/app/config/fado_config.yaml")
 
 BASE_IP = ipaddress.ip_address('10.128.1.0')
 
+clients_training_lock = Lock()
+
 
 def get_model_parameters():
     # Connect
+
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((os.getenv('SERVER_IP'), SERVER_PUB_PORT))
 
@@ -35,6 +42,13 @@ def get_model_parameters():
     message_encoded = recvall(s, message_size)
     message = pickle.loads(message_encoded)
     return message.get(Message.MSG_ARG_KEY_MODEL_PARAMS)
+
+
+def check_param_equality(current_model_parameters, old_model_parameters):
+    for current_layer, old_layer in zip(current_model_parameters, old_model_parameters):
+        if not np.array_equal(current_layer, old_layer, equal_nan=True):
+            return False
+    return True
 
 
 class NLAFLAttacker:
@@ -61,45 +75,53 @@ class NLAFLAttacker:
         for ip_int in range(int(start_ip), int(start_ip) + fado_args.num_pop_clients):
             target_clients.append(str(ipaddress.IPv4Address(ip_int)))
         self.target_clients = set(target_clients)
+        threading.Thread(target=self.contribution_estimation, args=(), daemon=True).start()
+
+    def contribution_estimation(self):
+        logger.info("Here1")
+        while True:
+            try:
+                old_model_parameters = get_model_parameters()
+            except ConnectionRefusedError:
+                time.sleep(1)
+                continue
+            break
+
+        while True:
+            time.sleep(2)
+            current_model_parameters = get_model_parameters()
+
+            # Check new round
+            if not check_param_equality(current_model_parameters, old_model_parameters):
+                clients_training_lock.acquire()
+                logger.info(f"Round {self.current_round} end detected. Estimating clients contribution")
+                self.clients_prev_round = self.clients_training
+                self.clients_training = []
+                clients_training_lock.release()
+                old_model_parameters = current_model_parameters
+                self.current_round += 1
+                self.update_perf(current_model_parameters)
+                self.update_drop_list(drop_count=fado_args.drop_count)
 
     def process_packet_server_to_client(self, scapy_pkt):
         # Store IPs that are seen receiving big packets from server (global model)
-        if scapy_pkt['IP'].dst not in self.clients_training:
+        if scapy_pkt['IP'].dst not in self.clients_training and scapy_pkt['IP'].dst not in self.ips_lowest_losses:
+            clients_training_lock.acquire()
             self.clients_training.append(scapy_pkt['IP'].dst)
-            if self.server_is_aggregating:
-                logger.info(f"Round {self.current_round} start detected")
-                self.server_is_aggregating = False
-                if self.current_round > 0:
-                    # Server started new round - estimate contributions for the previous round
-                    self.update_perf()
-                    self.update_drop_list(drop_count=fado_args.drop_count)
-            self.clients_prev_round.append(scapy_pkt['IP'].dst)
+            clients_training_lock.release()
 
         return scapy_pkt
 
     def process_packet_client_to_server(self, scapy_pkt):
         if self.current_round >= fado_args.drop_start:
             if scapy_pkt['IP'].src in self.ips_lowest_losses:
-                if scapy_pkt['IP'].src in self.clients_training:
-                    self.client_ended_training(scapy_pkt['IP'].src)
                 return None
-
-        if scapy_pkt['IP'].src in self.clients_training:
-            self.client_ended_training(scapy_pkt['IP'].src)
 
         return scapy_pkt
 
-    def client_ended_training(self, ip):
-        self.clients_training.remove(ip)
-        # If list of clients training is empty then all clients sent their local models and server is aggregating
-        if len(self.clients_training) == 0:
-            logger.info(f"Round {self.current_round} finish detected")
-            self.current_round += 1
-            self.server_is_aggregating = True
-
-    def update_perf(self):
+    def update_perf(self, model_parameters):
         # Evaluate loss of the current model parameters with attacker test set
-        self.local_model.set_parameters(get_model_parameters())
+        self.local_model.set_parameters(model_parameters)
         current_loss, _ = self.local_model.evaluate(self.x_target_test, self.y_target_test)
 
         # Calculate loss improvement
