@@ -29,7 +29,6 @@ def get_model_parameters():
     # Connect
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.settimeout(2)
     s.connect((os.getenv('SERVER_IP'), SERVER_PUB_PORT))
 
     # Send model request
@@ -88,11 +87,8 @@ class NLAFLAttacker:
             break
 
         while True:
-            time.sleep(1)
-            try:
-                current_model_parameters = get_model_parameters()
-            except socket.timeout:
-                pass
+            time.sleep(2)
+            current_model_parameters = get_model_parameters()
 
             # Check new round
             if not check_param_equality(current_model_parameters, old_model_parameters):
