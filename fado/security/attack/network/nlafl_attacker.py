@@ -91,7 +91,7 @@ class NLAFLAttacker:
             time.sleep(1)
             try:
                 current_model_parameters = get_model_parameters()
-            except TimeoutError:
+            except socket.timeout:
                 pass
 
             # Check new round
