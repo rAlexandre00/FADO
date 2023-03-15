@@ -19,6 +19,7 @@ extra = {'node_id': 'server'}
 logger = logging.LoggerAdapter(logger, extra)
 
 new_client_lock = threading.Lock()
+connections_list_lock = threading.Lock()
 
 
 def receive_message(connection) -> Optional[Message]:
@@ -48,7 +49,7 @@ class ServerSocketPubInfoManager(BaseCommunicationManager):
         self.server_socket.bind(('0.0.0.0', SERVER_PUB_PORT))
         self.server_socket.listen()
         self.is_running = True
-        self.reply_connection = None
+        self.reply_connections = []
 
         threading.Thread(target=self.reply_loop, args=(), daemon=True).start()
 
@@ -57,13 +58,17 @@ class ServerSocketPubInfoManager(BaseCommunicationManager):
             # establish connection with client
             c, addr = self.server_socket.accept()
             message = receive_message(c)
-            self.reply_connection = c
+            connections_list_lock.acquire()
+            self.reply_connections.append(c)
+            connections_list_lock.release()
             if message:
                 for observer in self._observers:
                     observer.receive_message(message)
 
     def send_message(self, message: Message):
-        connection = self.reply_connection
+        connections_list_lock.acquire()
+        connection = self.reply_connections.pop()
+        connections_list_lock.release()
         message_encoded = pickle.dumps(message)
         connection.sendall(struct.pack('>I', len(message_encoded)))
         connection.sendall(message_encoded)
@@ -80,3 +85,7 @@ class ServerSocketPubInfoManager(BaseCommunicationManager):
     def stop_receive_message(self):
         self.is_running = False
         self.server_socket.close()
+        connections_list_lock.acquire()
+        for c in self.reply_connections:
+            c.close()
+        connections_list_lock.release()
