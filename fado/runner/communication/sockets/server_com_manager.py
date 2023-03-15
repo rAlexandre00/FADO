@@ -48,7 +48,13 @@ class ServerSocketCommunicationManager(BaseCommunicationManager):
     def accept_clients_loop(self):
         while self.is_running:
             # establish connection with client
-            c, addr = self.server_socket.accept()
+            try:
+                c, addr = self.server_socket.accept()
+            except Exception as e:
+                if self.is_running:
+                    raise e
+                else:
+                    break
             try:
                 self.register_new_client(c)
             except TypeError:
@@ -115,5 +121,9 @@ class ServerSocketCommunicationManager(BaseCommunicationManager):
         raise Exception("Method not implemented")
 
     def stop_receive_message(self):
+        logger.info("Closing server clients socket")
         self.is_running = False
+        for c in self.connections.values():
+            c.close()
+        self.server_socket.shutdown(2)
         self.server_socket.close()

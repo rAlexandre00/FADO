@@ -56,7 +56,13 @@ class ServerSocketPubInfoManager(BaseCommunicationManager):
     def reply_loop(self):
         while self.is_running:
             # establish connection with client
-            c, addr = self.server_socket.accept()
+            try:
+                c, addr = self.server_socket.accept()
+            except Exception as e:
+                if self.is_running:
+                    raise e
+                else:
+                    break
             message = receive_message(c)
             connections_list_lock.acquire()
             self.reply_connections.append(c)
@@ -83,9 +89,7 @@ class ServerSocketPubInfoManager(BaseCommunicationManager):
         raise Exception("Method not implemented")
 
     def stop_receive_message(self):
+        logger.info("Closing server pub socket")
         self.is_running = False
+        self.server_socket.shutdown(2)
         self.server_socket.close()
-        connections_list_lock.acquire()
-        for c in self.reply_connections:
-            c.close()
-        connections_list_lock.release()
