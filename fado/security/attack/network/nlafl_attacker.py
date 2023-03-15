@@ -108,10 +108,11 @@ class NLAFLAttacker:
 
     def process_packet_server_to_client(self, scapy_pkt):
         # Store IPs that are seen receiving big packets from server (global model)
-        if scapy_pkt['IP'].dst not in self.clients_training and scapy_pkt['IP'].dst not in self.ips_lowest_losses:
-            clients_training_lock.acquire()
-            self.clients_training.append(scapy_pkt['IP'].dst)
-            clients_training_lock.release()
+        if scapy_pkt['IP'].dst not in self.clients_training:
+            if self.current_round < fado_args.drop_start or scapy_pkt['IP'].dst not in self.ips_lowest_losses:
+                clients_training_lock.acquire()
+                self.clients_training.append(scapy_pkt['IP'].dst)
+                clients_training_lock.release()
 
         return scapy_pkt
 
@@ -133,6 +134,7 @@ class NLAFLAttacker:
             self.clients_prev_round = []
             return
 
+        logger.info(f"Updating contributions for clients {self.clients_prev_round} {len(self.clients_prev_round)}")
         perf_diff = current_loss - self.last_loss
         self.last_loss = current_loss
         # Update the mean of improvements of every client that participated in this round
