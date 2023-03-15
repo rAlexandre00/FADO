@@ -8,13 +8,8 @@ from fado.cli.arguments.arguments import FADOArguments
 from fado.constants import ALL_DATA_FOLDER
 
 ALPHA = 1
-NUM_ROUNDS = 120
 NUM_CLIENTS = 10
-NUM_USERS = 100
-CLIENT_SIZE = 1000
-NUM_EPOCHS_CLIENT = 20
 UPSAMPLE_FACTOR = 2
-TARGET_FRACTION = 0.5
 
 fado_args = FADOArguments()
 DATA_FOLDER = os.path.join(ALL_DATA_FOLDER, fado_args.dataset)
@@ -25,25 +20,75 @@ logger = logging.LoggerAdapter(logger, {'node_id': 'builder'})
 
 class NLAFLShaper(Shaper):
 
+    def __init__(self):
+        self.num_users = None
+        self.client_size = None
+        self.target_fraction = None
+
     def shape(self):
         if fado_args.dataset == 'nlafl_emnist':
-            shape_emnist()
+            trn_x, trn_y, tst_x, tst_y = load_emnist()
+            logger.info('Generating nlafl emnist dataset')
+            self.num_users = fado_args.number_clients
+            self.client_size = 1000
+            self.target_fraction = 0.5
+            self.shape_data(trn_x, trn_y, tst_x, tst_y)
+        elif fado_args.dataset == 'nlafl_fashionmnist':
+            trn_x, trn_y, tst_x, tst_y = load_fashionmnist()
+            logger.info('Generating nlafl fashionmnist dataset')
+            self.num_users = fado_args.number_clients
+            self.client_size = 400
+            self.target_fraction = 0.6
+            self.shape_data(trn_x, trn_y, tst_x, tst_y)
+        elif fado_args.dataset == 'nlafl_dbpedia':
+            trn_x, trn_y, tst_x, tst_y = load_dbpedia()
+            logger.info('Generating nlafl dbpedia dataset')
+            self.num_users = fado_args.number_clients
+            self.client_size = 1000
+            self.target_fraction = 0.6
+            self.shape_data(trn_x, trn_y, tst_x, tst_y)
         else:
             raise Exception("NLAFL dataset not supported yet")
 
+    def shape_data(self, trn_x, trn_y, tst_x, tst_y):
+        partitioned_trn = partition_by_class(trn_x, trn_y)
+        partitioned_tst = partition_by_class(tst_x, tst_y)
+        # Sample data from the original dataset according to a Dirichlet distribution.
+        # Returns list of tuples, (data, labels)) for each client
+        client_data = self.sample(partitioned_trn)
+        write_files(client_data, tst_x, tst_y, partitioned_tst)
 
-def shape_emnist():
-    logger.info('Generating nlafl emnist dataset')
-    trn_x, trn_y, tst_x, tst_y = load_emnist()
-    partitioned_trn = partition_by_class(trn_x, trn_y)
-    partitioned_tst = partition_by_class(tst_x, tst_y)
-    # Sample data from the original dataset according to a Dirichlet distribution.
-    # Returns list of tuples, (data, labels)) for each client
-    client_data = sample_data(partitioned_trn)
+    def sample(self, partitioned):
+        if fado_args.poison_count > 0:
+            client_data = fixed_poison_emnist(
+                partitioned,
+                self.num_users,
+                self.client_size,
+                fado_args.poison_count,
+                targ_class=fado_args.target_class,
+                client_targ=fado_args.num_pop_clients,
+                targ_frac=self.target_fraction,
+                alpha=ALPHA,
+            )
+
+        else:
+            client_data = fixed_sample_emnist(
+                partitioned,
+                self.num_users,
+                self.client_size,
+                targ_class=fado_args.target_class,
+                client_targ=fado_args.num_pop_clients,
+                targ_frac=self.target_fraction,
+                alpha=ALPHA,
+            )
+        return client_data
+
+
+def write_files(client_data, tst_x, tst_y, partitioned_tst):
     test_target_x = partitioned_tst[fado_args.target_class]
     test_target_size = len(test_target_x)
-    test_target_x_attacker = test_target_x[:test_target_size//2]
-    test_target_x_server = test_target_x[test_target_size//2:]
+    test_target_x_attacker = test_target_x[:test_target_size // 2]
+    test_target_x_server = test_target_x[test_target_size // 2:]
 
     os.makedirs(os.path.join(DATA_FOLDER, 'train'), exist_ok=True)
     os.makedirs(os.path.join(DATA_FOLDER, 'test'), exist_ok=True)
@@ -53,10 +98,10 @@ def shape_emnist():
     np.savez_compressed(os.path.join(DATA_FOLDER, 'test', 'all_data'), x=tst_x, y=tst_y)
     np.savez_compressed(os.path.join(DATA_FOLDER, 'target_test', 'all_data'),
                         x=test_target_x_server,
-                        y=len(test_target_x_server)*[fado_args.target_class])
+                        y=len(test_target_x_server) * [fado_args.target_class])
     np.savez_compressed(os.path.join(DATA_FOLDER, 'target_test_attacker', 'all_data'),
                         x=test_target_x_attacker,
-                        y=len(test_target_x_attacker)*[fado_args.target_class])
+                        y=len(test_target_x_attacker) * [fado_args.target_class])
 
 
 def load_emnist():
@@ -69,6 +114,32 @@ def load_emnist():
     trn_y = np.load(os.path.join(DATA_FOLDER, 'trn_y_emnist.npy'))
     tst_x = np.load(os.path.join(DATA_FOLDER, 'tst_x_emnist.npy'))
     tst_y = np.load(os.path.join(DATA_FOLDER, 'tst_y_emnist.npy'))
+    return trn_x, trn_y, tst_x, tst_y
+
+
+def load_fashionmnist():
+    """ Load the EMNIST dataet
+    Returns:
+        tuple: tuple of numpy arrays trn_x, trn_y, tst_x, tst_y
+    """
+
+    trn_x = np.load(os.path.join(DATA_FOLDER, 'trn_x_fashionMnist.npy'))
+    trn_y = np.load(os.path.join(DATA_FOLDER, 'trn_y_fashionMnist.npy'))
+    tst_x = np.load(os.path.join(DATA_FOLDER, 'tst_x_fashionMnist.npy'))
+    tst_y = np.load(os.path.join(DATA_FOLDER, 'tst_y_fashionMnist.npy'))
+    return trn_x, trn_y, tst_x, tst_y
+
+
+def load_dbpedia():
+    """ Load the EMNIST dataet
+    Returns:
+        tuple: tuple of numpy arrays trn_x, trn_y, tst_x, tst_y
+    """
+
+    trn_x = np.load(os.path.join(DATA_FOLDER, 'trn_x_dbpedia.npy'))
+    trn_y = np.load(os.path.join(DATA_FOLDER, 'trn_y_dbpedia.npy'))
+    tst_x = np.load(os.path.join(DATA_FOLDER, 'tst_x_dbpedia.npy'))
+    tst_y = np.load(os.path.join(DATA_FOLDER, 'tst_y_dbpedia.npy'))
     return trn_x, trn_y, tst_x, tst_y
 
 
@@ -91,34 +162,7 @@ def partition_by_class(x, y):
         all_x.append(x[np.where(y == y_val)[0]])
     return all_x
 
-
-def sample_data(partitioned):
-    if fado_args.poison_count > 0:
-        client_data = fixed_poison(
-            partitioned,
-            NUM_USERS,
-            CLIENT_SIZE,
-            fado_args.poison_count,
-            targ_class=fado_args.target_class,
-            client_targ=fado_args.num_pop_clients,
-            targ_frac=TARGET_FRACTION,
-            alpha=ALPHA,
-        )
-
-    else:
-        client_data = fixed_sample(
-            partitioned,
-            NUM_USERS,
-            CLIENT_SIZE,
-            targ_class=fado_args.target_class,
-            client_targ=fado_args.num_pop_clients,
-            targ_frac=TARGET_FRACTION,
-            alpha=ALPHA,
-        )
-    return client_data
-
-
-def fixed_sample(
+def fixed_sample_emnist(
         all_x,
         num_clients,
         client_size,
@@ -199,7 +243,7 @@ def fixed_sample(
     return clients
 
 
-def fixed_poison(
+def fixed_poison_emnist(
         all_x,
         num_clients,
         client_size,

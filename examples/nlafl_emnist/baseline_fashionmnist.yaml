@@ -1,13 +1,13 @@
 general:
     random_seed: [0,1,2,3,4]
-    use_gpu: true
+    use_gpu: false
 
 fl_training_process:
-    rounds: 105
+    rounds: 305
     aggregator: mean
     agg_learning_rate: 0.25
     client_optimizer: sgd
-    number_clients: 100
+    number_clients: 60
     clients_per_round: 10
     num_clients_select: 10
     allow_less_clients: True
@@ -15,7 +15,7 @@ fl_training_process:
 
 client_training_process:
     engine: tensorflow
-    model: nlafl_emnist_tf
+    model: nlafl_fashionmnist_tf
     batch_size: 32
     epochs: 2
     learning_rate: 0.1
@@ -38,16 +38,16 @@ defense_args:
     upsample_count: 10
 
 dataset_spec:
-    dataset: nlafl_emnist
+    dataset: nlafl_fashionmnist
     dataset_rate: 0.05
     data_distribution: niid
     num_classes: 10
-    num_pop_clients: [9,12,15]
+    num_pop_clients: 15
  
 communication:
     encrypt_comm: true
     wait_for_clients_timeout: 15
 
 output:
-    logs_file_name:     "results_nlafl_emnist_tf_baseline_{target_class}_{num_pop_clients}_{random_seed}"
-    results_file_name:  "results_nlafl_emnist_tf_baseline_{target_class}_{num_pop_clients}_{random_seed}"
+    logs_file_name:     "results_nlafl_fashionmnist_tf_baseline_{target_class}_{num_pop_clients}_{random_seed}"
+    results_file_name:  "results_nlafl_fashionmnist_tf_baseline_{target_class}_{num_pop_clients}_{random_seed}"

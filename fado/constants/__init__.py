@@ -34,7 +34,7 @@ FEDML_IMAGE = os.path.join(IMAGES_PATH, 'client')
 ROUTER_IMAGE = os.path.join(IMAGES_PATH, 'router')
 
 LEAF_DATASETS = ['femnist', 'emnist', 'shakespeare', 'sent140']
-NLAFL_DATASETS = ['nlafl_emnist']
+NLAFL_DATASETS = ['nlafl_emnist', 'nlafl_fashionmnist', 'nlafl_dbpedia']
 DATASETS = ['cifar10', 'cifar100', 'mnist'] + LEAF_DATASETS + NLAFL_DATASETS
 
 SERVER_IP = '10.0.0.2'
