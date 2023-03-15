@@ -134,7 +134,6 @@ class NLAFLAttacker:
             self.clients_prev_round = []
             return
 
-        logger.info(f"Updating contributions for clients {self.clients_prev_round} {len(self.clients_prev_round)}")
         perf_diff = current_loss - self.last_loss
         self.last_loss = current_loss
         # Update the mean of improvements of every client that participated in this round
