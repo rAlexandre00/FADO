@@ -15,10 +15,10 @@ fl_training_process:
 
 client_training_process:
     engine: tensorflow
-    model: nlafl_fashionmnist_tf
-    batch_size: 32
+    model: nlafl_dbpedia_tf
+    batch_size: 256
     epochs: 2
-    learning_rate: 0.1
+    learning_rate: 0.01
 
 attack_args:
     malicious_clients: 0
@@ -38,10 +38,10 @@ defense_args:
     upsample_count: 10
 
 dataset_spec:
-    dataset: nlafl_fashionmnist
+    dataset: nlafl_dbpedia
     dataset_rate: 0.05
     data_distribution: niid
-    num_classes: 10
+    num_classes: 14
     num_pop_clients: 15
  
 communication:
@@ -49,6 +49,6 @@ communication:
     wait_for_clients_timeout: 15
 
 output:
-    logs_file_name:     "results_nlafl_fashionmnist_tf_baseline_{target_class}_{num_pop_clients}_{random_seed}"
-    results_file_name:  "results_nlafl_fashionmnist_tf_baseline_{target_class}_{num_pop_clients}_{random_seed}"
+    logs_file_name:     "results_nlafl_dbpedia_tf_baseline_{target_class}_{num_pop_clients}_{random_seed}"
+    results_file_name:  "results_nlafl_dbpedia_tf_baseline_{target_class}_{num_pop_clients}_{random_seed}"
     table_round: 300

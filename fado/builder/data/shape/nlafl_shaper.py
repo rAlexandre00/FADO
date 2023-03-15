@@ -1,5 +1,6 @@
 import logging
 import os
+import shutil
 
 import numpy as np
 
@@ -8,8 +9,6 @@ from fado.cli.arguments.arguments import FADOArguments
 from fado.constants import ALL_DATA_FOLDER
 
 ALPHA = 1
-NUM_CLIENTS = 10
-UPSAMPLE_FACTOR = 2
 
 fado_args = FADOArguments()
 DATA_FOLDER = os.path.join(ALL_DATA_FOLDER, fado_args.dataset)
@@ -48,6 +47,7 @@ class NLAFLShaper(Shaper):
             self.client_size = 1000
             self.target_fraction = 0.6
             self.shape_data(trn_x, trn_y, tst_x, tst_y)
+            shutil.copy(os.path.join(DATA_FOLDER, 'dbpedia_embedding_matrix.npy'), os.path.join(DATA_FOLDER, 'train'))
         else:
             raise Exception("NLAFL dataset not supported yet")
 
