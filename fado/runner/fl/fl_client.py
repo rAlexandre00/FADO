@@ -18,7 +18,7 @@ class FLClient(Observer):
     def __init__(self, client_id, dataset):
         self.client_id = client_id
         self.local_model = ModelManager.get_model()
-        self.attacker = AttackManager.get_attacker()
+        self.attacker = AttackManager.get_attacker(client_id=client_id)
         self.com_manager = ClientSocketCommunicationManager(client_id=client_id)
         # Add FLServer to observers in order to receive notification of new clients
         self.com_manager.add_observer(self)
@@ -42,9 +42,12 @@ class FLClient(Observer):
             self.logger.info(f'Received stop message')
         elif message.get_type() == Message.MSG_TYPE_SEND_MODEL:
             received_parameters = message.get(Message.MSG_ARG_KEY_MODEL_PARAMS)
+            old_parameters = self.local_model.get_parameters()
             self.local_model.set_parameters(received_parameters)
             self.local_model.train(self.dataset.train_data['x'], self.dataset.train_data['y'])
-            self.local_model.set_parameters(self.attacker.attack_model_parameters(self.local_model.get_parameters()))
+            self.local_model.set_parameters(self.attacker.attack_model_parameters(
+                self.local_model.get_parameters(), old_parameters
+            ))
             result_message = Message(type=Message.MSG_TYPE_SEND_MODEL, sender_id=self.client_id, receiver_id=0)
             result_message.add(Message.MSG_ARG_KEY_MODEL_PARAMS, self.local_model.get_parameters())
             self.com_manager.send_message(result_message)

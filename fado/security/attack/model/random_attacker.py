@@ -13,9 +13,8 @@ fado_args = FADOArguments()
 
 class RandomAttacker(Attack):
 
-    def attack_model_parameters(self, model_parameters) -> ndarray:
+    def attack_model_parameters(self, model_parameters, old_parameters: ndarray) -> ndarray:
 
         #logger.info(model_parameters)
         return model_parameters
 
-    

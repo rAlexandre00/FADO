@@ -271,7 +271,7 @@ def cli():
         move_files_to_fado_home(config_file)
         run(fado_arguments, args.development, args.docker)
     elif args.mode == 'table':
-        generate_table(100)
+        generate_table(fado_arguments.table_round)
         # clean()
     else:
         download_data(fado_arguments)
