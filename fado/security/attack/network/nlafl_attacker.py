@@ -60,6 +60,7 @@ class NLAFLAttacker:
         :param model (FADOModule):
         :return:
         """
+        self.drop_count = fado_args.drop_count_multiplier*(fado_args.num_pop_clients//3)
         self.current_round = 0
         self.clients_training = []
         # Dict with IPs as key and tuples (sum_perf, count_perf) as values to allow mean calculations
@@ -104,7 +105,7 @@ class NLAFLAttacker:
                 old_model_parameters = current_model_parameters
                 self.current_round += 1
                 self.update_perf(current_model_parameters)
-                self.update_drop_list(drop_count=fado_args.drop_count)
+                self.update_drop_list(drop_count=self.drop_count)
 
     def process_packet_server_to_client(self, scapy_pkt):
         # Store IPs that are seen receiving big packets from server (global model)

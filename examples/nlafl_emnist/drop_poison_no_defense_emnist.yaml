@@ -29,7 +29,7 @@ attack_args:
         drop_count: 10
         drop_start: 30
     data:
-        poison_count_multiplier: 0
+        poison_count: 0
         boost_factor: 10.0
 
 defense_args:
