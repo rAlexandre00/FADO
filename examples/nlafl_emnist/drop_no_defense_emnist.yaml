@@ -25,8 +25,7 @@ attack_args:
     target_class: [0,1,9]
     network:
         network_attack: nlafl
-        remove_pop_clients: 0
-        drop_count: 10
+        drop_count_multiplier: 2
         drop_start: 30
     data:
         poison_count_multiplier: 0
