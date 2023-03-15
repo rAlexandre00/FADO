@@ -35,7 +35,7 @@ def parse_args(args):
     parser.add_argument('-dd', dest='data_distribution', help='Data distribution', type=str, required=False)
     parser.add_argument('-nb', dest='number_benign', type=int, required=False)
     parser.add_argument('-nm', dest='number_malicious', type=int, required=False)
-    parser.add_argument('--dev', dest='development', action=argparse.BooleanOptionalAction, required=False)
+    parser.add_argument('--dev', dest='development', action='store_true', required=False)
     parser.add_argument('--no-docker', dest='docker', action='store_false', default=True)
 
     build_mode_parser = build_parser.add_subparsers(dest="build_mode")
