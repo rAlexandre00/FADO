@@ -24,6 +24,7 @@ class NLAFLShaper(Shaper):
         self.num_users = None
         self.client_size = None
         self.target_fraction = None
+        self.poison_count = fado_args.poison_count_multiplier*(fado_args.num_pop_clients//3)
 
     def shape(self):
         if fado_args.dataset == 'nlafl_emnist':
@@ -59,12 +60,12 @@ class NLAFLShaper(Shaper):
         write_files(client_data, tst_x, tst_y, partitioned_tst)
 
     def sample(self, partitioned):
-        if fado_args.poison_count > 0:
+        if self.poison_count > 0:
             client_data = fixed_poison_emnist(
                 partitioned,
                 self.num_users,
                 self.client_size,
-                fado_args.poison_count,
+                self.poison_count,
                 targ_class=fado_args.target_class,
                 client_targ=fado_args.num_pop_clients,
                 targ_frac=self.target_fraction,
