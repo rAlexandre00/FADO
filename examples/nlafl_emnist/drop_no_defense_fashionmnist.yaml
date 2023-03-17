@@ -45,7 +45,7 @@ dataset_spec:
  
 communication:
     encrypt_comm: true
-    wait_for_clients_timeout: 15
+    wait_for_clients_timeout: 10
 
 output:
     logs_file_name:     "logs_nlafl_fashionmnist_tf_drop_no_defense_{target_class}_{num_pop_clients}_{random_seed}"
