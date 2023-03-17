@@ -23,7 +23,7 @@ class NLAFLShaper(Shaper):
         self.num_users = None
         self.client_size = None
         self.target_fraction = None
-        self.poison_count = fado_args.poison_count_multiplier*(fado_args.num_pop_clients//3)
+        self.poison_count = fado_args.poison_count_multiplier * (fado_args.num_pop_clients // 3)
 
     def shape(self):
         if fado_args.dataset == 'nlafl_emnist':
@@ -61,7 +61,7 @@ class NLAFLShaper(Shaper):
 
     def sample(self, partitioned):
         if self.poison_count > 0:
-            client_data = fixed_poison_emnist(
+            client_data = fixed_poison(
                 partitioned,
                 self.num_users,
                 self.client_size,
@@ -73,7 +73,7 @@ class NLAFLShaper(Shaper):
             )
 
         else:
-            client_data = fixed_sample_emnist(
+            client_data = fixed_sample(
                 partitioned,
                 self.num_users,
                 self.client_size,
@@ -163,7 +163,8 @@ def partition_by_class(x, y):
         all_x.append(x[np.where(y == y_val)[0]])
     return all_x
 
-def fixed_sample_emnist(
+
+def fixed_sample(
         all_x,
         num_clients,
         client_size,
@@ -238,13 +239,13 @@ def fixed_sample_emnist(
         this_x = np.concatenate(this_x)
         this_y = np.concatenate(this_y)
         assert this_x.shape[0] == this_y.shape[0]
-        clients[f'{i+1}_x'] = this_x
-        clients[f'{i+1}_y'] = this_y
+        clients[f'{i + 1}_x'] = this_x
+        clients[f'{i + 1}_y'] = this_y
 
     return clients
 
 
-def fixed_poison_emnist(
+def fixed_poison(
         all_x,
         num_clients,
         client_size,
@@ -349,7 +350,7 @@ def fixed_poison_emnist(
         this_x = np.concatenate(this_x)
         this_y = np.concatenate(this_y)
         assert this_x.shape[0] == this_y.shape[0]
-        clients[f'{i+1}_x'] = this_x
-        clients[f'{i+1}_y'] = this_y
+        clients[f'{i + 1}_x'] = this_x
+        clients[f'{i + 1}_y'] = this_y
 
     return clients

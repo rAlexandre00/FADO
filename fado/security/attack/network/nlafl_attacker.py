@@ -127,7 +127,7 @@ class NLAFLAttacker:
     def update_perf(self, model_parameters):
         # Evaluate loss of the current model parameters with attacker test set
         self.local_model.set_parameters(model_parameters)
-        current_loss, _ = self.local_model.evaluate(self.x_target_test, self.y_target_test)
+        current_loss, current_acc = self.local_model.evaluate(self.x_target_test, self.y_target_test)
 
         # Calculate loss improvement
         if self.last_loss is None:

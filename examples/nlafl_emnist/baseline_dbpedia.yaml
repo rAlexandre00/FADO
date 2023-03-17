@@ -1,5 +1,5 @@
 general:
-    random_seed: [0,1,2,3,4]
+    random_seed: [3,4,5,6,7]
     use_gpu: false
 
 fl_training_process:
@@ -18,7 +18,7 @@ client_training_process:
     model: nlafl_dbpedia_tf
     batch_size: 256
     epochs: 2
-    learning_rate: 0.01
+    learning_rate: 0.001
 
 attack_args:
     malicious_clients: 0

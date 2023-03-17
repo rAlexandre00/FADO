@@ -1,5 +1,5 @@
 general:
-    random_seed: [0,1,2,3,4]
+    random_seed: [0,2,4,6,8]
     use_gpu: false
 
 fl_training_process:
@@ -46,8 +46,9 @@ dataset_spec:
  
 communication:
     encrypt_comm: true
-    wait_for_clients_timeout: 15
+    wait_for_clients_timeout: 20
 
 output:
     logs_file_name:     "results_nlafl_emnist_tf_drop_no_defense_{target_class}_{num_pop_clients}_{random_seed}"
     results_file_name:  "results_nlafl_emnist_tf_drop_no_defense_{target_class}_{num_pop_clients}_{random_seed}"
+    table_round: 100

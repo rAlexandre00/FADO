@@ -19,6 +19,7 @@ logger = logging.LoggerAdapter(logging.getLogger("fado"), extra={'node_id': 'ser
 
 fado_args = FADOArguments()
 clients_models_dict_lock = threading.Lock()
+model_update_lock = threading.Lock()
 
 
 class FLServer(Observer):
@@ -87,7 +88,9 @@ class FLServer(Observer):
         new_model_parameters = self.aggregator.aggregate(self.client_models)
 
         # 4. Replace global model
+        model_update_lock.acquire()
         self.global_model.set_parameters(new_model_parameters)
+        model_update_lock.release()
 
         # 5. Test new model
         loss, accuracy = self.global_model.evaluate(self.dataset.test_data['x'], self.dataset.test_data['y'])
@@ -136,5 +139,7 @@ class FLServer(Observer):
                 self.is_running = True
         elif message.get_type() == message.MSG_TYPE_GET_MODEL:
             send_model_message = Message(type=Message.MSG_TYPE_SEND_MODEL, sender_id=0, receiver_id=0)
+            model_update_lock.acquire()
             send_model_message.add(Message.MSG_ARG_KEY_MODEL_PARAMS, self.global_model.get_parameters())
+            model_update_lock.release()
             self.pub_com_manager.send_message(send_model_message)
