@@ -49,6 +49,6 @@ communication:
     wait_for_clients_timeout: 15
 
 output:
-    logs_file_name:     "results_nlafl_fashionmnist_tf_baseline_{target_class}_{num_pop_clients}_{random_seed}"
+    logs_file_name:     "loggs_nlafl_fashionmnist_tf_baseline_{target_class}_{num_pop_clients}_{random_seed}"
     results_file_name:  "results_nlafl_fashionmnist_tf_baseline_{target_class}_{num_pop_clients}_{random_seed}"
     table_round: 300
