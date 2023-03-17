@@ -84,7 +84,7 @@ class NLAFLAttacker:
             try:
                 old_model_parameters = get_model_parameters()
             except ConnectionRefusedError:
-                time.sleep(1)
+                time.sleep(0.5)
                 continue
             break
 
