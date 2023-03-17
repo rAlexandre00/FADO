@@ -13,6 +13,9 @@ class ModelManager:
             elif args.model == 'nlafl_emnist_tf':
                 from fado.runner.ml.model.built_in.nlafl_emnist_tf import NlaflEmnistTf
                 return NlaflEmnistTf()
+            elif args.model == 'nlafl_fashionmnist_tf':
+                from fado.runner.ml.model.built_in.nlafl_fashionmnist_tf import NlaflFashionmnistTf
+                return NlaflFashionmnistTf()
             elif args.model == 'nlafl_dbpedia_tf':
                 from fado.runner.ml.model.built_in.nlafl_dbpedia_tf import NlaflDbpediaTf
                 return NlaflDbpediaTf()
