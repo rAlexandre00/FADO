@@ -155,6 +155,8 @@ def run_router(fado_args, dev_mode, docker, add_flags):
     subprocess.run(['docker', 'cp', f'{FADO_CONFIG_OUT}', 'fado-router:/app/config/fado_config.yaml'])
     data_path = os.path.join(ALL_DATA_FOLDER, fado_args.dataset)
     subprocess.run(['docker', 'cp', os.path.join(data_path, 'target_test_attacker'), 'fado-router:/app/data'])
+    # Here to copy any data required to build the model
+    subprocess.run(['docker', 'cp', os.path.join(data_path, 'train'), 'fado-router:/app/data'])
 
     if dev_mode:
         # Install current fado

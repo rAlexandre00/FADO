@@ -1,12 +1,12 @@
 from typing import Type
 
 from fado.cli.arguments.arguments import FADOArguments
-from fado.security.attack.attack_base import Attack
-from fado.security.attack.model.random_attacker import RandomAttacker
-from fado.security.attack.model.nlafl_poison_attacker import NLAFLPoisonAttacker
+from fado.security.attack.client.attack_base import Attack
+from fado.security.attack.client.random_attacker import RandomAttacker
+from fado.security.attack.client.nlafl_poison_attacker import NLAFLPoisonAttacker
 
 
-class AttackManager:
+class ClientAttackManager:
 
     @classmethod
     def get_attacker(cls, client_id) -> Attack:

@@ -99,7 +99,7 @@ def build_model(momentum=0.0, dropouts=False):
     else:
         sgd = SGD(learning_rate=0.1)
 
-    model.compile(loss=tf.keras.losses.SparseCategoricalCrossentropy(),
+    model.compile(loss=tf.keras.losses.categorical_crossentropy,
                   optimizer=sgd, metrics=['accuracy'])
 
     return model

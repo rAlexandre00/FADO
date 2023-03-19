@@ -27,8 +27,9 @@ attack_args:
         network_attack: nlafl
         drop_count_multiplier: 1
         drop_start: 30
-    data:
-        poison_count_multiplier: 0
+    model:
+        model_attack_name: 'nlafl_poison'
+        poison_count_multiplier: 1
         boost_factor: 10.0
 
 dataset_spec:
@@ -38,7 +39,7 @@ dataset_spec:
  
 communication:
     encrypt_comm: true
-    wait_for_clients_timeout: 15
+    wait_for_clients_timeout: 10
 
 output:
     logs_file_name:     "logs_nlafl_fashionmnist_tf_drop_no_defense_{target_class}_{num_pop_clients}_{random_seed}"

@@ -54,6 +54,7 @@ class NLAFLShaper(Shaper):
     def shape_data(self, trn_x, trn_y, tst_x, tst_y):
         partitioned_trn = partition_by_class(trn_x, trn_y)
         partitioned_tst = partition_by_class(tst_x, tst_y)
+        trn_y, tst_y = np.eye(fado_args.num_classes)[trn_y], np.eye(fado_args.num_classes)[tst_y]
         # Sample data from the original dataset according to a Dirichlet distribution.
         # Returns list of tuples, (data, labels)) for each client
         client_data = self.sample(partitioned_trn)
@@ -99,10 +100,10 @@ def write_files(client_data, tst_x, tst_y, partitioned_tst):
     np.savez_compressed(os.path.join(DATA_FOLDER, 'test', 'all_data'), x=tst_x, y=tst_y)
     np.savez_compressed(os.path.join(DATA_FOLDER, 'target_test', 'all_data'),
                         x=test_target_x_server,
-                        y=len(test_target_x_server) * [fado_args.target_class])
+                        y=np.eye(fado_args.num_classes)[len(test_target_x_server) * [fado_args.target_class]])
     np.savez_compressed(os.path.join(DATA_FOLDER, 'target_test_attacker', 'all_data'),
                         x=test_target_x_attacker,
-                        y=len(test_target_x_attacker) * [fado_args.target_class])
+                        y=np.eye(fado_args.num_classes)[len(test_target_x_attacker) * [fado_args.target_class]])
 
 
 def load_emnist():
@@ -237,7 +238,7 @@ def fixed_sample(
             this_y.append(np.zeros(y_ct, dtype=int) + y)
 
         this_x = np.concatenate(this_x)
-        this_y = np.concatenate(this_y)
+        this_y = np.eye(fado_args.num_classes)[np.concatenate(this_y)]
         assert this_x.shape[0] == this_y.shape[0]
         clients[f'{i + 1}_x'] = this_x
         clients[f'{i + 1}_y'] = this_y
@@ -328,7 +329,7 @@ def fixed_poison(
                 all_x[y] = all_x[y][y_ct:]
 
             this_x = np.concatenate(this_x)
-            this_y = np.concatenate(this_y)
+            this_y = np.eye(fado_args.num_classes)[np.concatenate(this_y)]
             assert this_x.shape[0] == this_y.shape[0]
             clients[f'{i + 1}_x'] = this_x
             clients[f'{i + 1}_y'] = this_y
@@ -348,7 +349,7 @@ def fixed_poison(
             this_y.append(np.zeros(y_ct, dtype=np.int) + y)
 
         this_x = np.concatenate(this_x)
-        this_y = np.concatenate(this_y)
+        this_y = np.eye(fado_args.num_classes)[np.concatenate(this_y)]
         assert this_x.shape[0] == this_y.shape[0]
         clients[f'{i + 1}_x'] = this_x
         clients[f'{i + 1}_y'] = this_y

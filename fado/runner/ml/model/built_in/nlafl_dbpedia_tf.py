@@ -105,6 +105,6 @@ def build_model(embedding_matrix):
 
     model = tf.keras.Model(int_sequences_input, predictions)
 
-    model.compile(loss=tf.keras.losses.SparseCategoricalCrossentropy(),
+    model.compile(loss=tf.keras.losses.categorical_crossentropy,
                   optimizer="adam", metrics=["accuracy"])
     return model

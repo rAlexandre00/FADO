@@ -27,20 +27,13 @@ attack_args:
         network_attack: nlafl
         drop_count_multiplier: 2
         drop_start: 30
-    model:
+    server:
         model_attack_name: 'nlafl_poison'
         poison_count_multiplier: 2
         boost_factor: 10.0
 
-defense_args:
-    defense_strategy: none
-    upsample_start: 15
-    upsample_count: 10
-
 dataset_spec:
     dataset: nlafl_emnist
-    dataset_rate: 0.05
-    data_distribution: niid
     num_classes: 10
     num_pop_clients: [9,12,15]
  

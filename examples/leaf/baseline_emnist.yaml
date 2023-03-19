@@ -1,6 +1,6 @@
 general:
-    random_seed: [3,4,5,6,7]
-    use_gpu: false
+    random_seed: [0,1,2,3,4]
+    use_gpu: true
 
 fl_training_process:
     rounds: 105
@@ -24,23 +24,31 @@ attack_args:
     malicious_clients: 0
     target_class: [0,1,9]
     network:
-        network_attack: nlafl
-        drop_count_multiplier: 2
+        network_attack: none
+        remove_pop_clients: 0
+        drop_count: 10
         drop_start: 30
     data:
         poison_count_multiplier: 0
         boost_factor: 10.0
 
+defense_args:
+    defense_strategy: none
+    upsample_start: 15
+    upsample_count: 10
+
 dataset_spec:
     dataset: nlafl_emnist
+    dataset_rate: 0.05
+    data_distribution: niid
     num_classes: 10
     num_pop_clients: [9,12,15]
  
 communication:
     encrypt_comm: true
-    wait_for_clients_timeout: 20
+    wait_for_clients_timeout: 15
 
 output:
-    logs_file_name:     "logs_nlafl_emnist_tf_drop_no_defense_{target_class}_{num_pop_clients}_{random_seed}"
-    results_file_name:  "results_nlafl_emnist_tf_drop_no_defense_{target_class}_{num_pop_clients}_{random_seed}"
+    logs_file_name:     "logs_nlafl_emnist_tf_baseline_{target_class}_{num_pop_clients}_{random_seed}"
+    results_file_name:  "results_nlafl_emnist_tf_baseline_{target_class}_{num_pop_clients}_{random_seed}"
     table_round: 100

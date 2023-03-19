@@ -14,6 +14,7 @@ from fado.runner.fl.aggregate.aggregator_manager import AggregatorManager
 from fado.runner.fl.select.participant_selector_manager import ParticipantSelectorManager
 from fado.runner.ml.model.module_manager import ModelManager
 from fado.runner.output.results import Results
+from fado.security.defend.server.server_defense_manager import ServerDefenseManager
 
 logger = logging.LoggerAdapter(logging.getLogger("fado"), extra={'node_id': 'server'})
 
@@ -40,6 +41,7 @@ class FLServer(Observer):
         self.participant_selector = ParticipantSelectorManager.get_selector()
         self.aggregator = AggregatorManager.get_aggregator(self.global_model)
         self.results = Results()
+        self.defender = ServerDefenseManager.get_defender()
 
     def start(self):
         for self.current_round in range(fado_args.rounds):
@@ -85,6 +87,7 @@ class FLServer(Observer):
 
         # 3. Aggregate models
         logger.info(f'Aggregating {num_models} models')
+        self.client_models = self.defender.defend_model_parameters(self.client_models, self.global_model.get_parameters())
         new_model_parameters = self.aggregator.aggregate(self.client_models)
 
         # 4. Replace global model

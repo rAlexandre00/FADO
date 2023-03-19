@@ -4,7 +4,7 @@ import numpy as np
 from numpy import ndarray
 
 from fado.cli.arguments.arguments import FADOArguments
-from fado.security.attack.attack_base import Attack
+from fado.security.attack.client.attack_base import Attack
 
 logger = logging.getLogger("fado")
 logger = logging.LoggerAdapter(logger, {'node_id': 'clients'})

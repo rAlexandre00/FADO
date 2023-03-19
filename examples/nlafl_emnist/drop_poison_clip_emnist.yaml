@@ -1,5 +1,5 @@
 general:
-    random_seed: [3,4,5,6,7]
+    random_seed: [0,2,4,6,8]
     use_gpu: false
 
 fl_training_process:
@@ -27,12 +27,19 @@ attack_args:
         network_attack: nlafl
         drop_count_multiplier: 2
         drop_start: 30
-    data:
-        poison_count_multiplier: 0
+    model:
+        model_attack_name: 'nlafl_poison'
+        poison_count_multiplier: 2
         boost_factor: 10.0
+
+defense_args:
+    server:
+        server_defense_name: clip
+        clip_norm: 1
 
 dataset_spec:
     dataset: nlafl_emnist
+    data_distribution: niid
     num_classes: 10
     num_pop_clients: [9,12,15]
  
@@ -41,6 +48,6 @@ communication:
     wait_for_clients_timeout: 20
 
 output:
-    logs_file_name:     "logs_nlafl_emnist_tf_drop_no_defense_{target_class}_{num_pop_clients}_{random_seed}"
-    results_file_name:  "results_nlafl_emnist_tf_drop_no_defense_{target_class}_{num_pop_clients}_{random_seed}"
+    logs_file_name:     "logs_nlafl_emnist_tf_drop_poison_clip_{target_class}_{num_pop_clients}_{random_seed}"
+    results_file_name:  "results_nlafl_emnist_tf_drop_poison_clip_{target_class}_{num_pop_clients}_{random_seed}"
     table_round: 100
