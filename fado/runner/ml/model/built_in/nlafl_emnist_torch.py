@@ -68,7 +68,6 @@ class NlaflEmnistTorch(FADOModule):
         """
         self.model.to(device)
         self.model.train()
-
         x_train = torch.tensor(x).to(device)
         y_train = torch.tensor(y).to(device)
 
@@ -98,7 +97,7 @@ class NeuralNet(nn.Module):
         self.pool = nn.MaxPool2d(2, 2)
         self.dropouts = dropouts
         self.fc1 = nn.Linear(64 * 12 * 12, 128)
-        self.fc2 = nn.Linear(128, 10)
+        self.fc2 = nn.Linear(128, 62)
         self.momentum = momentum
         self.criterion = nn.CrossEntropyLoss().to(device)
 

@@ -42,6 +42,8 @@ def parse_args(args):
 
 def download_data(fado_arguments):
     from fado.builder.data.download.nlafl_downloader import NLAFLDownloader
+    from fado.builder.data.download.leaf_downloader import LEAFDownloader
+
     dataset = fado_arguments.dataset
 
     if dataset not in DATASETS:
@@ -49,7 +51,7 @@ def download_data(fado_arguments):
 
     if dataset in LEAF_DATASETS:
         logger.info("Executing LEAF...")
-        # TODO: LEAFDownloader().download()
+        LEAFDownloader().download()
     elif dataset in NLAFL_DATASETS:
         NLAFLDownloader().download()
     else:
@@ -59,6 +61,8 @@ def download_data(fado_arguments):
 
 def shape_data(fado_arguments):
     from fado.builder.data.shape.nlafl_shaper import NLAFLShaper
+    from fado.builder.data.shape.leaf_shaper import LEAFShaper
+
     dataset = fado_arguments.dataset
 
     if dataset not in DATASETS:
@@ -66,7 +70,7 @@ def shape_data(fado_arguments):
 
     if dataset in LEAF_DATASETS:
         logger.info("Executing LEAF...")
-        # TODO: LEAFShaper().shape()
+        LEAFShaper().shape()
     elif dataset in NLAFL_DATASETS:
         NLAFLShaper().shape()
     else:

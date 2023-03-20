@@ -3,22 +3,22 @@ general:
     use_gpu: true
 
 fl_training_process:
-    rounds: 10
+    rounds: 50
     aggregator: mean
-    agg_learning_rate: 0.25
+    agg_learning_rate: 0.5
     client_optimizer: sgd
-    number_clients: 10
-    clients_per_round: 2
-    num_clients_select: 2
+    number_clients: 100
+    clients_per_round: 80
+    num_clients_select: 80
     allow_less_clients: True
     participant_selector: random
 
 client_training_process:
     engine: pytorch
     model: nlafl_emnist_torch
-    batch_size: 32
-    epochs: 2
-    learning_rate: 0.1
+    batch_size: 128
+    epochs: 1
+    learning_rate: 0.01
 
 attack_args:
     malicious_clients: 0
@@ -38,10 +38,10 @@ defense_args:
     upsample_count: 0
 
 dataset_spec:
-    dataset: nlafl_emnist
-    dataset_rate: 0.05
+    dataset: femnist
+    #dataset_rate: 0.05
     data_distribution: niid
-    num_classes: 10
+    num_classes: 62
     num_pop_clients: 15
  
 communication:
