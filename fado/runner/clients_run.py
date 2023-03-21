@@ -75,6 +75,8 @@ def main():
     for client_id in range(1, args.number_clients + 1):
         t = Thread(target=start_client, args=(client_id,), daemon=True)
         t.start()
+        if client_id % 100 == 0:
+            time.sleep(1)
     t.join()
     return
 
