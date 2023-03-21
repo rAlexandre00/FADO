@@ -1,15 +1,15 @@
 general:
     random_seed: 0
-    use_gpu: true
+    use_gpu: false
 
 fl_training_process:
     rounds: 1500
     aggregator: mean
-    agg_learning_rate: 0.5
+    agg_learning_rate: 0.25
     client_optimizer: sgd
     number_clients: 1000
-    clients_per_round: 30
-    num_clients_select: 30
+    clients_per_round: 3
+    num_clients_select: 3
     allow_less_clients: True
     participant_selector: random
 
