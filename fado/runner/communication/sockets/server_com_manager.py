@@ -36,6 +36,7 @@ class ServerSocketCommunicationManager(BaseCommunicationManager):
 
         # This is server -> listen for client connections
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.server_socket.bind(('0.0.0.0', SERVER_PORT))
         self.server_socket.listen()
         self.is_running = True
@@ -49,7 +50,7 @@ class ServerSocketCommunicationManager(BaseCommunicationManager):
                 # establish connection with client
                 c, addr = self.server_socket.accept()
                 try:
-                    self.register_new_client(c)
+                    threading.Thread(target=self.register_new_client, args=(c, ), daemon=True).start()
                 except Exception:
                     logger.error(traceback.format_exc())
                     pass
