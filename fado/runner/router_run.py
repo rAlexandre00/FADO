@@ -83,7 +83,6 @@ if __name__ == "__main__":
     # Bind to the same queue number (here 3)
     nfqueue_server_to_client.bind(QUEUE_NUMBER_SERVER_TO_CLIENT, process_packet_server_to_client)
 
-    print('Starting network attack')
     # run (indefinitely)
     try:
         Thread(target=nfqueue_client_to_server.run, daemon=True).start()

@@ -60,6 +60,7 @@ class NLAFLAttacker:
         :param model (FADOModule):
         :return:
         """
+        logger.info('Starting network attack')
         self.drop_count = fado_args.drop_count_multiplier*(fado_args.num_pop_clients//3)
         self.current_round = 0
         self.clients_training = []
