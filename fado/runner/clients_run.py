@@ -16,7 +16,7 @@ from fado.constants import ALL_DATA_FOLDER, FADO_CONFIG_OUT, SERVER_PORT, SERVER
 from fado.runner.fl.fl_client import FLClient
 
 logger = logging.getLogger("fado")
-logger = logging.LoggerAdapter(logger, {'node_id': f'clients-{sys.argv[1]}'})
+logger = logging.LoggerAdapter(logger, {'node_id': f'clients'})
 
 
 def isOpen(ip, port):
