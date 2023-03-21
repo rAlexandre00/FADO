@@ -51,7 +51,7 @@ class ServerSocketCommunicationManager(BaseCommunicationManager):
                 # establish connection with client
                 c, addr = self.server_socket.accept()
                 try:
-                    Process(target=self.register_new_client, args=(c, ), daemon=True).start()
+                    Process(target=self.register_new_client, args=(c, )).start()
                 except Exception:
                     logger.error(traceback.format_exc())
                     pass
@@ -68,10 +68,10 @@ class ServerSocketCommunicationManager(BaseCommunicationManager):
         # lock acquired by client
         new_client_lock.acquire()
         self.connections[connect_message.sender_id] = connection
+        new_client_lock.release()
         # logger.info(f"Client {connect_message.sender_id} connected")
         for observer in self._observers:
             observer.receive_message(connect_message)
-        new_client_lock.release()
 
     def send_message(self, message: Message):
         receiver_id = message.get_receiver_id()
