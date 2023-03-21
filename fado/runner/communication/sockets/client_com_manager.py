@@ -52,9 +52,9 @@ class ClientSocketCommunicationManager(BaseCommunicationManager):
         self.send_message(connect_message)
 
     def send_message(self, message: Message):
-        s.setsockopt(socket.IPPROTO_TCP, TCP_USER_TIMEOUT, fado_args.wait_for_clients_timeout*700)
         receiver_id = message.get_receiver_id()
         connection = self.connections[receiver_id]
+        connection.setsockopt(socket.IPPROTO_TCP, TCP_USER_TIMEOUT, fado_args.wait_for_clients_timeout*700)
         message_encoded = pickle.dumps(message)
         try:
             connection.sendall(struct.pack('>I', len(message_encoded)))
