@@ -40,7 +40,6 @@ class ClientSocketCommunicationManager(BaseCommunicationManager):
 
     def create_socket(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.setsockopt(socket.IPPROTO_TCP, TCP_USER_TIMEOUT, fado_args.wait_for_clients_timeout*700)
         server_ip = os.getenv('SERVER_IP')
         if server_ip != 'localhost':
             base_ip = ipaddress.ip_address('10.128.1.0')
@@ -53,6 +52,7 @@ class ClientSocketCommunicationManager(BaseCommunicationManager):
         self.send_message(connect_message)
 
     def send_message(self, message: Message):
+        s.setsockopt(socket.IPPROTO_TCP, TCP_USER_TIMEOUT, fado_args.wait_for_clients_timeout*700)
         receiver_id = message.get_receiver_id()
         connection = self.connections[receiver_id]
         message_encoded = pickle.dumps(message)
