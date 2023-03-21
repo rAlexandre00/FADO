@@ -41,6 +41,7 @@ class ClientSocketCommunicationManager(BaseCommunicationManager):
     def create_socket(self):
         connected = False
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 0)
         server_ip = os.getenv('SERVER_IP')
         if server_ip != 'localhost':
             base_ip = ipaddress.ip_address('10.128.1.0')

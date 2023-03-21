@@ -36,7 +36,7 @@ class ServerSocketCommunicationManager(BaseCommunicationManager):
 
         # This is server -> listen for client connections
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 0)
         self.server_socket.bind(('0.0.0.0', SERVER_PORT))
         self.server_socket.listen()
         self.is_running = True
