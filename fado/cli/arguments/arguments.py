@@ -37,11 +37,22 @@ class FADOArguments:
         for section_name, section in key_pairs.items():
             if type(section) == dict:
                 self._set_arguments(section)
+            elif type(section) == list:
+                if 'vary' not in self:
+                    self.vary = {}
+                self.vary[section_name] = section
             else:
                 setattr(self, section_name, section)
 
     def set_argument(self, key, value):
         setattr(self, key, value)
 
+    def get_argument(self, key):
+        return getattr(self, key)
+
     def __contains__(self, key):
         return hasattr(self, key)
+
+    def save_to_file(self, file_path):
+        with open(file_path, 'w') as file:
+            yaml.dump(self.__dict__, file)

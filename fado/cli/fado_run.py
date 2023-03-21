@@ -1,6 +1,9 @@
 import argparse
+import itertools
 import logging
+import os
 import shutil
+import socket
 import subprocess
 import sys
 import time
@@ -8,6 +11,8 @@ from threading import Thread
 
 from fado.constants import *
 from fado.cli.arguments.arguments import FADOArguments
+from fado.runner import server_run, clients_run
+from fado.runner.output.table import generate_table
 
 logger = logging.getLogger('fado')
 logger = logging.LoggerAdapter(logger, {'node_id': 'builder'})
@@ -22,7 +27,7 @@ def parse_args(args):
 
     build_parser = mode_parser.add_parser('build')
     mode_parser.add_parser('run')
-    mode_parser.add_parser('clean')
+    mode_parser.add_parser('table')
 
     parser.add_argument('-d', dest='dataset', type=str, choices=DATASETS, required=False)
     parser.add_argument('-dr', dest='dataset_rate', help='Fraction of the dataset', type=float,
@@ -30,7 +35,7 @@ def parse_args(args):
     parser.add_argument('-dd', dest='data_distribution', help='Data distribution', type=str, required=False)
     parser.add_argument('-nb', dest='number_benign', type=int, required=False)
     parser.add_argument('-nm', dest='number_malicious', type=int, required=False)
-    parser.add_argument('--dev', dest='development', action=argparse.BooleanOptionalAction, required=False)
+    parser.add_argument('--dev', dest='development', action='store_true', required=False)
     parser.add_argument('--no-docker', dest='docker', action='store_false', default=True)
 
     build_mode_parser = build_parser.add_subparsers(dest="build_mode")
@@ -85,16 +90,13 @@ def create_networks():
 
 def run_clients(fado_args, dev_mode, docker, add_flags):
     if not docker:
-        subprocess.run(f"FADO_DATA_PATH={os.path.join(ALL_DATA_FOLDER, fado_args.dataset)} "
-                       f"FADO_CONFIG_PATH={FADO_CONFIG_OUT} "
-                       f"SERVER_IP=localhost "
-                       f"python3 -m fado.runner.clients_run", shell=True)
+        clients_run.main()
         return
 
     # Start clients container
     subprocess.run(['docker', 'run', '-d', '-w', '/app', '--name', 'fado-clients', '--cap-add=NET_ADMIN',
                     '--network', 'clients-network'] + add_flags +
-                   ['ralexandre00/fado-node', 'bash', '-c', 'tail -f /dev/null'])
+                   ['ralexandre00/fado-node:latest', 'bash', '-c', 'tail -f /dev/null'])
 
     # Send fado_config and data to container
     subprocess.run(['docker', 'cp', f'{FADO_CONFIG_OUT}', 'fado-clients:/app/config/fado_config.yaml'])
@@ -114,16 +116,14 @@ def run_clients(fado_args, dev_mode, docker, add_flags):
 
 def run_server(fado_args, dev_mode, docker, add_flags):
     if not docker:
-        subprocess.run(f"FADO_DATA_PATH={os.path.join(ALL_DATA_FOLDER, fado_args.dataset)} "
-                       f"FADO_CONFIG_PATH={FADO_CONFIG_OUT} "
-                       f"LOG_FILE_PATH={LOGS_DIRECTORY} "
-                       f"python3 -m fado.runner.server_run", shell=True)
+        server_run.main()
         return
 
     # Start server container
     subprocess.run(['docker', 'run', '-d', '-w', '/app', '--name', 'fado-server', '--cap-add=NET_ADMIN',
-                    '-v', f'{LOGS_DIRECTORY}:/app/logs', '--network', 'server-network'] + add_flags +
-                   ['ralexandre00/fado-node', 'bash', '-c', 'tail -f /dev/null'])
+                    '-v', f'{LOGS_DIRECTORY}:/app/logs', '-v', f'{RESULTS_DIRECTORY}:/app/results',
+                    '--network', 'server-network'] + add_flags +
+                   ['ralexandre00/fado-node:latest', 'bash', '-c', 'tail -f /dev/null'])
 
     # Send fado_config and data to container
     subprocess.run(['docker', 'cp', f'{FADO_CONFIG_OUT}', 'fado-server:/app/config/fado_config.yaml'])
@@ -144,21 +144,23 @@ def run_server(fado_args, dev_mode, docker, add_flags):
     return
 
 
-def run_router(fado_args, dev_mode, docker):
+def run_router(fado_args, dev_mode, docker, add_flags):
     if not docker:
         # Do nothing
         return
 
     # Start server container
     subprocess.run(['docker', 'run', '-d', '-w', '/app', '--name', 'fado-router', '--cap-add=NET_ADMIN',
-                    '--network', 'server-network',
-                    'ralexandre00/fado-router', 'bash', '-c', 'tail -f /dev/null'])
+                    '--network', 'server-network'] + add_flags +
+                   ['ralexandre00/fado-router:latest', 'bash', '-c', 'tail -f /dev/null'])
     subprocess.run(['docker', 'network', 'connect', 'clients-network', 'fado-router'])
 
     # Send fado_config and data to container
     subprocess.run(['docker', 'cp', f'{FADO_CONFIG_OUT}', 'fado-router:/app/config/fado_config.yaml'])
     data_path = os.path.join(ALL_DATA_FOLDER, fado_args.dataset)
     subprocess.run(['docker', 'cp', os.path.join(data_path, 'target_test_attacker'), 'fado-router:/app/data'])
+    # Here to copy any data required to build the model
+    subprocess.run(['docker', 'cp', os.path.join(data_path, 'train'), 'fado-router:/app/data'])
 
     if dev_mode:
         # Install current fado
@@ -191,14 +193,21 @@ def run(fado_args, dev_mode=False, docker=True):
     container_flags = []
     if fado_args.use_gpu:
         container_flags = ['--gpus', 'all']
+    if not docker:
+        os.environ['FADO_DATA_PATH'] = os.path.join(ALL_DATA_FOLDER, fado_args.dataset)
+        os.environ['FADO_CONFIG_PATH'] = FADO_CONFIG_OUT
+        os.environ['LOG_FILE_PATH'] = LOGS_DIRECTORY
+        os.environ['RESULTS_FILE_PATH'] = RESULTS_DIRECTORY
+        os.environ['SERVER_IP'] = 'localhost'
     try:
-        create_networks()
-        Thread(target=run_router, args=(fado_args, dev_mode, docker,), daemon=True).start()
-        Thread(target=run_server, args=(fado_args, dev_mode, docker, container_flags,), daemon=True).start()
-        Thread(target=run_clients, args=(fado_args, dev_mode, docker, container_flags,), daemon=True).start()
-        while True:
-            time.sleep(100)
-    except KeyboardInterrupt:
+        if docker:
+            create_networks()
+        Thread(target=run_router, args=(fado_args, dev_mode, docker, container_flags,), daemon=True).start()
+        Thread(target=run_server, args=(fado_args, dev_mode, docker, container_flags), daemon=True).start()
+        t = Thread(target=run_clients, args=(fado_args, dev_mode, docker, container_flags,), daemon=True)
+        t.start()
+        t.join()
+    finally:
         if docker:
             stop_server()
             stop_router()
@@ -210,17 +219,31 @@ def move_files_to_fado_home(config_file):
     os.makedirs(LOGS_DIRECTORY, exist_ok=True)
     shutil.copyfile(config_file, FADO_CONFIG_OUT)
 
-def run_multiple(args, experiments_list):
 
-    for experiment in experiments_list:
+def run_multiple(fado_arguments, development, docker):
+    # Create a dictionary with all possible combinations of configs to vary
+    vary_list = list(itertools.product(*fado_arguments.vary.values()))
+    temp_output = os.path.join(TEMP_DIRECTORY, 'fado_config.yaml')
+    os.makedirs(TEMP_DIRECTORY, exist_ok=True)
+
+    # For each combination execute fado run
+    for experiment in vary_list:
+        for i, vary_key in enumerate(fado_arguments.vary.keys()):
+            fado_arguments.set_argument(vary_key, experiment[i])
+
+        # Save current experiment fado_config file in temp folder
+        fado_arguments.save_to_file(temp_output)
         logger.info(f"Running experiment {experiment}")
-        fado_arguments = FADOArguments(experiment)
 
-        move_files_to_fado_home(experiment)
-        download_data(fado_arguments)
-        shape_data(fado_arguments)
-        run(fado_arguments, args.development, args.docker)
-        
+        fado_arguments_experiment = FADOArguments(temp_output)
+
+        move_files_to_fado_home(temp_output)
+        download_data(fado_arguments_experiment)
+        shape_data(fado_arguments_experiment)
+        run(fado_arguments_experiment, development, docker)
+    os.remove(temp_output)
+
+
 def cli():
     args = parse_args(sys.argv[1:])
 
@@ -232,16 +255,11 @@ def cli():
 
     fado_arguments = FADOArguments(config_file)
 
-    if 'experiments_list' in fado_arguments:
-        run_multiple(args, fado_arguments.experiments_list)
-        return
-
-    move_files_to_fado_home(config_file)
-
     # docker pull ralexandre00/fado-node-requirements
 
     if args.mode == 'build':
         build_mode = args.build_mode
+        move_files_to_fado_home(config_file)
 
         if build_mode == 'download':
             download_data(fado_arguments)
@@ -252,10 +270,15 @@ def cli():
             shape_data(fado_arguments)
 
     elif args.mode == 'run':
+        if 'vary' in fado_arguments:
+            run_multiple(fado_arguments, args.development, args.docker)
+            return
+
+        move_files_to_fado_home(config_file)
         run(fado_arguments, args.development, args.docker)
-    elif args.mode == 'clean':
-        pass
-        #clean()
+    elif args.mode == 'table':
+        generate_table(fado_arguments.table_round)
+        # clean()
     else:
         download_data(fado_arguments)
         shape_data(fado_arguments)

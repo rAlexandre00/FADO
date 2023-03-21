@@ -26,7 +26,14 @@ class NLAFLDownloader(Downloader):
 
     def download(self):
         if fado_args.dataset == 'nlafl_emnist':
+            logger.info('Downloading nlafl emnist dataset')
             download_emnist()
+        elif fado_args.dataset == 'nlafl_fashionmnist':
+            logger.info('Downloading nlafl fashion mnist dataset')
+            download_fashionmnist()
+        elif fado_args.dataset == 'nlafl_dbpedia':
+            logger.info('Downloading nlafl dbpedia dataset')
+            download_dbpedia()
         else:
             raise Exception("NLAFL dataset not supported yet")
 
@@ -35,12 +42,17 @@ def download_emnist():
     assert fado_args.dataset == 'nlafl_emnist'
     download_dataset(EMNIST_URL)
 
+def download_fashionmnist():
+    assert fado_args.dataset == 'nlafl_fashionmnist'
+    download_dataset(FASHION_MNIST_URL)
+
+def download_dbpedia():
+    assert fado_args.dataset == 'nlafl_dbpedia'
+    download_dataset(DBPEDIA_URL)
 
 def download_dataset(url):
     if Path(DATA_FOLDER).is_dir():
-        logger.info('nlafl emnist dataset already downloaded')
         return
-    logger.info('Downloading nlafl emnist dataset')
     response = requests.get(url, verify=False)
     os.makedirs(TEMP_DIRECTORY, exist_ok=True)
     archive_path = os.path.join(TEMP_DIRECTORY, "data.7z")

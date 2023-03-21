@@ -1,3 +1,4 @@
+import gzip
 import logging
 import sys
 import threading
@@ -12,11 +13,14 @@ from fado.runner.communication.sockets.server_pub_info_manager import ServerSock
 from fado.runner.fl.aggregate.aggregator_manager import AggregatorManager
 from fado.runner.fl.select.participant_selector_manager import ParticipantSelectorManager
 from fado.runner.ml.model.module_manager import ModelManager
+from fado.runner.output.results import Results
+from fado.security.defend.server.server_defense_manager import ServerDefenseManager
 
 logger = logging.LoggerAdapter(logging.getLogger("fado"), extra={'node_id': 'server'})
 
 fado_args = FADOArguments()
 clients_models_dict_lock = threading.Lock()
+model_update_lock = threading.Lock()
 
 
 class FLServer(Observer):
@@ -36,24 +40,27 @@ class FLServer(Observer):
         self.pub_com_manager.add_observer(self)
         self.participant_selector = ParticipantSelectorManager.get_selector()
         self.aggregator = AggregatorManager.get_aggregator(self.global_model)
+        self.results = Results()
+        self.defender = ServerDefenseManager.get_defender()
 
     def start(self):
-        for self.current_round in range(fado_args.rounds + 1):
+        for self.current_round in range(fado_args.rounds):
             successful = False
             while not successful:
                 # Wait for enough clients
                 while not self.is_running:
                     time.sleep(0.01)
-                logger.info(f"Starting round {self.current_round}")
                 successful = self._train_round()
 
     def stop(self):
         try:
-            for client_id in range(1, fado_args.number_clients):
+            self.results.write_to_file()
+            for client_id in range(1, fado_args.number_clients + 1):
                 end_message = Message(type=Message.MSG_TYPE_END, sender_id=0, receiver_id=client_id)
                 self.com_manager.send_message(end_message)
         finally:
             self.com_manager.stop_receive_message()
+            self.pub_com_manager.stop_receive_message()
             self.is_running = False
 
     def _train_round(self):
@@ -80,16 +87,23 @@ class FLServer(Observer):
 
         # 3. Aggregate models
         logger.info(f'Aggregating {num_models} models')
+        self.client_models = self.defender.defend_model_parameters(self.client_models, self.global_model.get_parameters())
         new_model_parameters = self.aggregator.aggregate(self.client_models)
 
         # 4. Replace global model
+        model_update_lock.acquire()
         self.global_model.set_parameters(new_model_parameters)
+        model_update_lock.release()
 
         # 5. Test new model
         loss, accuracy = self.global_model.evaluate(self.dataset.test_data['x'], self.dataset.test_data['y'])
         logger.info(f'Round loss, accuracy on test data: {loss}, {accuracy}')
-        loss, accuracy = self.global_model.evaluate(self.dataset.target_test_data['x'], self.dataset.target_test_data['y'])
+        self.results.add_round('per_round_model_accuracy', accuracy)
+
+        loss, accuracy = self.global_model.evaluate(self.dataset.target_test_data['x'],
+                                                    self.dataset.target_test_data['y'])
         logger.info(f'Round loss, accuracy on target test data: {loss}, {accuracy}')
+        self.results.add_round('per_round_target_accuracy', accuracy)
 
         return True
 
@@ -128,5 +142,7 @@ class FLServer(Observer):
                 self.is_running = True
         elif message.get_type() == message.MSG_TYPE_GET_MODEL:
             send_model_message = Message(type=Message.MSG_TYPE_SEND_MODEL, sender_id=0, receiver_id=0)
+            model_update_lock.acquire()
             send_model_message.add(Message.MSG_ARG_KEY_MODEL_PARAMS, self.global_model.get_parameters())
+            model_update_lock.release()
             self.pub_com_manager.send_message(send_model_message)

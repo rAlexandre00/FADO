@@ -8,7 +8,7 @@ from fado.cli.arguments.arguments import FADOArguments
 from fado.constants import SERVER_PORT
 from fado.runner.data.load.attacker_data_loader import AttackerDataLoader
 from fado.runner.ml.model.module_manager import ModelManager
-from fado.security.attack.network.network_attacker import NetworkAttacker
+from fado.security.attack.network.network_attack_manager import NetworkAttackerManager
 
 filterwarnings("ignore")
 from netfilterqueue import NetfilterQueue
@@ -27,27 +27,25 @@ network_attacker = None
 def process_packet_client_to_server(pkt):
     scapy_pkt = IP(pkt.get_payload())
     # Ignore if client node is checking if server is alive
-    if scapy_pkt.getlayer("IP").src != '10.128.1.0':
+    if network_attacker is not None:
         scapy_pkt = network_attacker.process_packet_client_to_server(scapy_pkt)
-        if scapy_pkt is None:
-            pkt.drop()
-            return
-        else:
-            pkt.set_payload(raw(scapy_pkt))
-    pkt.accept()
+    if scapy_pkt is None:
+        pkt.drop()
+    else:
+        pkt.set_payload(raw(scapy_pkt))
+        pkt.accept()
 
 
 def process_packet_server_to_client(pkt):
     scapy_pkt = IP(pkt.get_payload())
     # Ignore if client node is checking if server is alive
-    if scapy_pkt.getlayer("IP").dst != '10.128.1.0':
+    if network_attacker is not None:
         scapy_pkt = network_attacker.process_packet_server_to_client(scapy_pkt)
-        if scapy_pkt is None:
-            pkt.drop()
-            return
-        else:
-            pkt.set_payload(raw(scapy_pkt))
-    pkt.accept()
+    if scapy_pkt is None:
+        pkt.drop()
+    else:
+        pkt.set_payload(raw(scapy_pkt))
+        pkt.accept()
 
 
 if __name__ == "__main__":
@@ -56,7 +54,7 @@ if __name__ == "__main__":
     data_loader = AttackerDataLoader('/app/data')
     dataset = data_loader.read_data()
 
-    network_attacker = NetworkAttacker(ModelManager.get_model(), dataset.test_data['x'], dataset.test_data['y'])
+    network_attacker = NetworkAttackerManager.get_attacker(ModelManager.get_model(), dataset.test_data['x'], dataset.test_data['y'])
 
     # Set the seed for PRNGs to be equal to the trial index
     seed = args.random_seed

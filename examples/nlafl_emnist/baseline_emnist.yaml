@@ -1,0 +1,47 @@
+general:
+    random_seed: [0,1,2,3,4]
+    use_gpu: true
+
+fl_training_process:
+    rounds: 105
+    aggregator: mean
+    agg_learning_rate: 0.25
+    client_optimizer: sgd
+    number_clients: 100
+    clients_per_round: 10
+    num_clients_select: 10
+    allow_less_clients: True
+    participant_selector: random
+
+client_training_process:
+    engine: tensorflow
+    model: nlafl_emnist_tf
+    batch_size: 32
+    epochs: 2
+    learning_rate: 0.1
+
+attack_args:
+    malicious_clients: 0
+    target_class: [0,1,9]
+    network:
+        network_attack: none
+        remove_pop_clients: 0
+        drop_count: 10
+        drop_start: 30
+    data:
+        poison_count_multiplier: 0
+        boost_factor: 10.0
+
+dataset_spec:
+    dataset: nlafl_emnist
+    num_classes: 10
+    num_pop_clients: [9,12,15]
+ 
+communication:
+    encrypt_comm: true
+    wait_for_clients_timeout: 15
+
+output:
+    logs_file_name:     "logs_nlafl_emnist_tf_baseline_{target_class}_{num_pop_clients}_{random_seed}"
+    results_file_name:  "results_nlafl_emnist_tf_baseline_{target_class}_{num_pop_clients}_{random_seed}"
+    table_round: 100

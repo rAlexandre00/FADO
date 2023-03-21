@@ -21,7 +21,7 @@ if fado_args.use_gpu:
         config = tf.config.experimental.set_memory_growth(device, True)
 
 
-class NlaflEmnistTf(FADOModule):
+class NlaflFashionmnistTf(FADOModule):
 
     def __init__(self):
         self.model = build_model()
@@ -83,20 +83,21 @@ def build_model(momentum=0.0, dropouts=False):
     model = Sequential()
     model.add(Conv2D(32, kernel_size=(3, 3),
                      activation='relu', input_shape=(28, 28, 1)))
-    model.add(Conv2D(64, (3, 3), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Conv2D(64, kernel_size=(3, 3),
+                     activation='relu', ))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     if dropouts:
-        model.add(Dropout(0.25))
+        model.add(Dropout(0.2))
     model.add(Flatten())
     model.add(Dense(128, activation='relu'))
-    if dropouts:
-        model.add(Dropout(0.5))
+
     model.add(Dense(10, activation='softmax'))
 
     if momentum:
-        sgd = SGD(learning_rate=fado_args.learning_rate, momentum=momentum)
+        sgd = SGD(learning_rate=0.1, momentum=momentum)
     else:
-        sgd = SGD(learning_rate=fado_args.learning_rate)
+        sgd = SGD(learning_rate=0.1)
 
     model.compile(loss=tf.keras.losses.categorical_crossentropy,
                   optimizer=sgd, metrics=['accuracy'])

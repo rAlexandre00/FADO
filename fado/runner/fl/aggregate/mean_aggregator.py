@@ -1,7 +1,6 @@
 import logging
 
 import numpy as np
-from numpy.core._multiarray_umath import ndarray
 
 from fado.cli.arguments.arguments import FADOArguments
 from fado.runner.fl.aggregate.base_aggregator import Aggregator

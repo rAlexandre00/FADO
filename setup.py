@@ -9,7 +9,8 @@ requirements = [
     "tensorflow==2.11.0",
     "PyYAML==6.0",
     "py7zr==0.20.4",
-    "numpy==1.21"
+    "numpy==1.21",
+    "pandas==1.5.2"
 ]
 
 # ext_modules = Extension('fado.fedml_diff.core.distributed.communication.grpc.binder',

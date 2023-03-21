@@ -5,10 +5,6 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 import tensorflow as tf
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Dropout, Flatten
-from tensorflow.keras.layers import Conv2D, MaxPooling2D
-from tensorflow.keras.optimizers import SGD
 
 from fado.cli.arguments.arguments import FADOArguments
 from fado.runner.ml.model.fado_module import FADOModule
@@ -21,10 +17,12 @@ if fado_args.use_gpu:
         config = tf.config.experimental.set_memory_growth(device, True)
 
 
-class NlaflEmnistTf(FADOModule):
+class NlaflDbpediaTf(FADOModule):
 
     def __init__(self):
-        self.model = build_model()
+        data_path = os.getenv("FADO_DATA_PATH", default='/app/data')
+        embedding_matrix = np.load(os.path.join(data_path, 'train', 'dbpedia_embedding_matrix.npy'))
+        self.model = build_model(embedding_matrix)
 
     def get_parameters(self):
         """ Retrieve the model's weights
@@ -71,34 +69,42 @@ class NlaflEmnistTf(FADOModule):
         return self.model.evaluate(x, y, verbose=0, use_multiprocessing=True, workers=10)
 
 
-def build_model(momentum=0.0, dropouts=False):
-    """ Build the local model
+def build_model(embedding_matrix):
+    """ Build the local model using pretrained glove embeddings
     Args:
-        momentum (float, optional): momentum value for SGD. Defaults to 0.0.
-        dropouts (bool, optional): if True use dropouts. Defaults to False.
+        embedding_matrix
+
     Returns:
-        Sequential: model object
+        object: model object
     """
 
-    model = Sequential()
-    model.add(Conv2D(32, kernel_size=(3, 3),
-                     activation='relu', input_shape=(28, 28, 1)))
-    model.add(Conv2D(64, (3, 3), activation='relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    if dropouts:
-        model.add(Dropout(0.25))
-    model.add(Flatten())
-    model.add(Dense(128, activation='relu'))
-    if dropouts:
-        model.add(Dropout(0.5))
-    model.add(Dense(10, activation='softmax'))
+    num_tokens = embedding_matrix.shape[0]
+    embedding_dim = embedding_matrix.shape[1]
 
-    if momentum:
-        sgd = SGD(learning_rate=fado_args.learning_rate, momentum=momentum)
-    else:
-        sgd = SGD(learning_rate=fado_args.learning_rate)
+    embedding_layer = tf.keras.layers.Embedding(
+        num_tokens,
+        embedding_dim,
+        embeddings_initializer=tf.keras.initializers.Constant(
+            embedding_matrix),
+        trainable=False,
+    )
+
+    int_sequences_input = tf.keras.Input(shape=(None,), dtype="int64")
+    embedded_sequences = embedding_layer(int_sequences_input)
+
+    x = tf.keras.layers.Conv1D(
+        128, 7, padding="valid", activation="relu", strides=3)(embedded_sequences)
+    x = tf.keras.layers.Conv1D(
+        128, 7, padding="valid", activation="relu", strides=3)(x)
+    x = tf.keras.layers.GlobalMaxPooling1D()(x)
+
+    x = tf.keras.layers.Dense(128, activation="relu")(x)
+
+    predictions = tf.keras.layers.Dense(
+        14, activation="softmax", name="predictions")(x)
+
+    model = tf.keras.Model(int_sequences_input, predictions)
 
     model.compile(loss=tf.keras.losses.categorical_crossentropy,
-                  optimizer=sgd, metrics=['accuracy'])
-
+                  optimizer="adam", metrics=["accuracy"])
     return model
