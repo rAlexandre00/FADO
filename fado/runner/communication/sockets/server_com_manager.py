@@ -37,7 +37,6 @@ class ServerSocketCommunicationManager(BaseCommunicationManager):
         # This is server -> listen for client connections
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.server_socket.setsockopt(socket.IPPROTO_TCP, TCP_USER_TIMEOUT, fado_args.wait_for_clients_timeout * 700)
         self.server_socket.bind(('0.0.0.0', SERVER_PORT))
         self.server_socket.listen()
         self.is_running = True
@@ -46,21 +45,20 @@ class ServerSocketCommunicationManager(BaseCommunicationManager):
         threading.Thread(target=self.accept_clients_loop, args=(), daemon=True).start()
 
     def accept_clients_loop(self):
-
-        while self.is_running:
-            # establish connection with client
-            try:
+        try:
+            while self.is_running:
+                # establish connection with client
                 c, addr = self.server_socket.accept()
-            except Exception as e:
-                if self.is_running:
-                    raise e
-                else:
-                    break
-            try:
-                self.register_new_client(c)
-            except TypeError:
+                try:
+                    c.setsockopt(socket.IPPROTO_TCP, TCP_USER_TIMEOUT, fado_args.wait_for_clients_timeout * 700)
+                    self.register_new_client(c)
+                except Exception:
+                    logger.error(traceback.format_exc())
+                    pass
+        except Exception as e:
+            if self.is_running:
                 logger.error(traceback.format_exc())
-                pass
+                raise
 
     def register_new_client(self, connection):
         message_size = struct.unpack('>I', recvall(connection, 4))[0]
