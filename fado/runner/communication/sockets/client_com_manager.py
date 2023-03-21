@@ -53,6 +53,7 @@ class ClientSocketCommunicationManager(BaseCommunicationManager):
             except Exception:
                 self.logger.error(f'{traceback.format_exc()}')
                 self.logger.error("Could not connect to server. Trying again")
+                time.sleep(1)
                 pass
 
         # Store connection
