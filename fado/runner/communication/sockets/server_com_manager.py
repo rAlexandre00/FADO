@@ -65,6 +65,7 @@ class ServerSocketCommunicationManager(BaseCommunicationManager):
             message_size = struct.unpack('>I', recvall(connection, 4))[0]
             message_encoded = recvall(connection, message_size)
             connect_message = pickle.loads(message_encoded)
+            logger.info(f"Received message from {connect_message.sender_id}")
 
             # lock acquired by client
             new_client_lock.acquire()
