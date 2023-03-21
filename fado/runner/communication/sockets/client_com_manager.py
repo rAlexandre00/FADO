@@ -62,8 +62,6 @@ class ClientSocketCommunicationManager(BaseCommunicationManager):
             connection.setsockopt(socket.IPPROTO_TCP, TCP_USER_TIMEOUT, 0)
         except TimeoutError:
             self.create_socket()
-        except Exception:
-            self.logger.error(traceback.format_exc())
 
     def add_observer(self, observer: Observer):
         self._observers.append(observer)

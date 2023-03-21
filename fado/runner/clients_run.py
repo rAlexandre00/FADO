@@ -4,6 +4,7 @@ import random
 import socket
 import sys
 import time
+import traceback
 from threading import Thread
 
 import numpy as np
@@ -39,8 +40,13 @@ def start_client(client_id):
     data_loader = ClientDataLoader(data_path, client_id)
 
     dataset = data_loader.read_data()
-    client = FLClient(client_id=client_id, dataset=dataset)
-    client.start()
+    try:
+        client = FLClient(client_id=client_id, dataset=dataset)
+        client.start()
+    except Exception:
+        args = FADOArguments(os.getenv("FADO_CONFIG_PATH", default="/app/config/fado_config.yaml"))
+        c_logger = logging.LoggerAdapter(logging.getLogger("fado"), extra={'node_id': 'client_id'})
+        c_logger.error(traceback.format_exc())
 
 
 def main():
