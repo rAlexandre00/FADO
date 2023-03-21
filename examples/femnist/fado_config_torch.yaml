@@ -1,6 +1,6 @@
 general:
     random_seed: 0
-    use_gpu: true
+    use_gpu: false
 
 fl_training_process:
     rounds: 50
@@ -8,8 +8,8 @@ fl_training_process:
     agg_learning_rate: 0.5
     client_optimizer: sgd
     number_clients: 100
-    clients_per_round: 80
-    num_clients_select: 80
+    clients_per_round: 10
+    num_clients_select: 10
     allow_less_clients: True
     participant_selector: random
 
@@ -49,8 +49,6 @@ communication:
     wait_for_clients_timeout: 200
 
 output:
-    logs_file_name: "logs_{model}_{target_class}_{num_pop_clients}_{remove_pop_clients}_{drop_count}_{poison_count}_\
-    {random_seed}_{strategy}_{boost_factor}_{upsample_epoch}_{upsample_count}"
-    results_file_name: "results_{model}_{target_class}_{num_pop_clients}_{remove_pop_clients}_{drop_count}_{poison_count}_\
-    {random_seed}_{strategy}_{boost_factor}_{upsample_epoch}_{upsample_count}"
+    logs_file_name: "logs_femnist"
+    results_file_name: "results_femnist"
 

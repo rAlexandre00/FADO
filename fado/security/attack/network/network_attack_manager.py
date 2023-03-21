@@ -11,7 +11,10 @@ class NetworkAttackerManager:
 
     @classmethod
     def get_attacker(cls, model, attacker_test_x, attacker_test_y):
-        if fado_args.network_attack == 'nlafl':
+
+        network_attack_name = fado_args.network_attack if 'network_attack' in fado_args else None
+
+        if network_attack_name == 'nlafl':
             return NLAFLAttacker(model, attacker_test_x, attacker_test_y)
         else:
             return None
