@@ -28,7 +28,7 @@ def create_interfaces(n):
             continue
         create_interface(str(base_ip + created_interfaces), 9)
         subprocess.run(
-            ['ip', 'route', 'add', 'table', f'{rule_number}', 'to', 'default', 'via', '10.128.0.1', 'dev', ip]) 
+            ['ip', 'route', 'add', 'table', f'{rule_number}', 'to', 'default', 'via', '10.128.0.1', 'dev', ip])
         subprocess.run(['ip', 'rule', 'add', 'from', f'{ip}/32', 'table', f'{rule_number}', 'priority', '10'])
         created_interfaces += 1
         if created_interfaces == n + 1:
