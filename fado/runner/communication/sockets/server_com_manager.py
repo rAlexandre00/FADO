@@ -61,17 +61,21 @@ class ServerSocketCommunicationManager(BaseCommunicationManager):
                 raise
 
     def register_new_client(self, connection):
-        message_size = struct.unpack('>I', recvall(connection, 4))[0]
-        message_encoded = recvall(connection, message_size)
-        connect_message = pickle.loads(message_encoded)
+        try:
+            message_size = struct.unpack('>I', recvall(connection, 4))[0]
+            message_encoded = recvall(connection, message_size)
+            connect_message = pickle.loads(message_encoded)
 
-        # lock acquired by client
-        new_client_lock.acquire()
-        self.connections[connect_message.sender_id] = connection
-        new_client_lock.release()
-        # logger.info(f"Client {connect_message.sender_id} connected")
-        for observer in self._observers:
-            observer.receive_message(connect_message)
+            # lock acquired by client
+            new_client_lock.acquire()
+            self.connections[connect_message.sender_id] = connection
+            new_client_lock.release()
+            # logger.info(f"Client {connect_message.sender_id} connected")
+            for observer in self._observers:
+                observer.receive_message(connect_message)
+        except Exception:
+            logger.error(traceback.format_exc())
+            pass
 
     def send_message(self, message: Message):
         receiver_id = message.get_receiver_id()
