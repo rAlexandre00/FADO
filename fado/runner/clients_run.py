@@ -16,7 +16,7 @@ from fado.constants import ALL_DATA_FOLDER, FADO_CONFIG_OUT, SERVER_PORT, SERVER
 from fado.runner.fl.fl_client import FLClient
 
 logger = logging.getLogger("fado")
-logger = logging.LoggerAdapter(logger, {'node_id': 'clients'})
+logger = logging.LoggerAdapter(logger, {'node_id': f'clients-{sys.argv[1]}'})
 
 
 def isOpen(ip, port):
@@ -73,7 +73,8 @@ def main():
         logger.info("Waiting for server to start")
         time.sleep(1)
 
-    for client_id in range(int(sys.argv[1]), int(sys.argv[1]) + 1):
+    logger.info(f"Staring clients {sys.argv[2]} to {int(sys.argv[3]) + 1}")
+    for client_id in range(int(sys.argv[2]), int(sys.argv[3]) + 1):
         t = Process(target=start_client, args=(client_id,), daemon=True)
         t.start()
     t.join()

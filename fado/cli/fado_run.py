@@ -111,8 +111,8 @@ def run_clients(fado_args, dev_mode, docker, add_flags):
     # Start clients
     subprocess.run(['docker', 'exec', 'fado-clients', '/bin/bash', '-c',
                     'python3 -m fado.runner.communication.config.config_clients_network'])
-    subprocess.run(['docker', 'exec', 'fado-clients', '/bin/bash', '-c', 'python3 -m fado.runner.clients_run 1 500'])
-    subprocess.run(['docker', 'exec', 'fado-clients', '/bin/bash', '-c', 'python3 -m fado.runner.clients_run 501 1000'])
+    subprocess.Popen(['docker', 'exec', 'fado-clients', '/bin/bash', '-c', 'python3 -m fado.runner.clients_run 1 1 500'])
+    subprocess.run(['docker', 'exec', 'fado-clients', '/bin/bash', '-c', 'python3 -m fado.runner.clients_run 2 501 1000'])
 
 
 def run_server(fado_args, dev_mode, docker, add_flags):
