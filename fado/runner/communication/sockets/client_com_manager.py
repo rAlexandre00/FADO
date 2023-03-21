@@ -69,6 +69,7 @@ class ClientSocketCommunicationManager(BaseCommunicationManager):
             connection.sendall(message_encoded)
             connection.setsockopt(socket.IPPROTO_TCP, TCP_USER_TIMEOUT, 9999999)
         except TimeoutError:
+            self.logger.info("Timeout")
             self.create_socket()
 
     def add_observer(self, observer: Observer):
