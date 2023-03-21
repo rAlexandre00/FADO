@@ -22,7 +22,6 @@ from fado.runner.communication.sockets.utils import recvall
 TCP_USER_TIMEOUT = 18
 
 fado_args = FADOArguments()
-new_client_lock = threading.Lock()
 
 
 class ClientSocketCommunicationManager(BaseCommunicationManager):
@@ -39,7 +38,6 @@ class ClientSocketCommunicationManager(BaseCommunicationManager):
         self.is_running = True
 
     def create_socket(self):
-        connected = False
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_ip = os.getenv('SERVER_IP')
         if server_ip != 'localhost':
@@ -62,7 +60,7 @@ class ClientSocketCommunicationManager(BaseCommunicationManager):
     def send_message(self, message: Message):
         receiver_id = message.get_receiver_id()
         connection = self.connections[receiver_id]
-        connection.setsockopt(socket.IPPROTO_TCP, TCP_USER_TIMEOUT, fado_args.wait_for_clients_timeout*700)
+        connection.setsockopt(socket.IPPROTO_TCP, TCP_USER_TIMEOUT, fado_args.wait_for_clients_timeout * 700)
         message_encoded = pickle.dumps(message)
         try:
             connection.sendall(struct.pack('>I', len(message_encoded)))
@@ -97,4 +95,3 @@ class ClientSocketCommunicationManager(BaseCommunicationManager):
     def stop_receive_message(self):
         self.connections[0].close()
         self.is_running = False
-
