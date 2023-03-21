@@ -44,7 +44,6 @@ def start_client(client_id):
         client = FLClient(client_id=client_id, dataset=dataset)
         client.start()
     except Exception:
-        args = FADOArguments(os.getenv("FADO_CONFIG_PATH", default="/app/config/fado_config.yaml"))
         c_logger = logging.LoggerAdapter(logging.getLogger("fado"), extra={'node_id': 'client_id'})
         c_logger.error(traceback.format_exc())
 

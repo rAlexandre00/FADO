@@ -1,6 +1,7 @@
 import logging
 import os
 import random
+import traceback
 
 import numpy as np
 
@@ -21,6 +22,9 @@ def start_server():
     server = FLServer(dataset=dataset, results=results)
     try:
         server.start()
+    except Exception:
+        c_logger = logging.LoggerAdapter(logging.getLogger("fado"), extra={'node_id': 'server'})
+        c_logger.error(traceback.format_exc())
     finally:
         logger.info("Stopping server")
         server.stop()
