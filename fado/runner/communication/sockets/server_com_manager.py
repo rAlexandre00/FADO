@@ -46,6 +46,7 @@ class ServerSocketCommunicationManager(BaseCommunicationManager):
         threading.Thread(target=self.accept_clients_loop, args=(), daemon=True).start()
 
     def accept_clients_loop(self):
+
         while self.is_running:
             # establish connection with client
             try:
@@ -58,7 +59,7 @@ class ServerSocketCommunicationManager(BaseCommunicationManager):
             try:
                 self.register_new_client(c)
             except TypeError:
-                # Ignore. Clients node checking if server is alive
+                logger.error(traceback.format_exc())
                 pass
 
     def register_new_client(self, connection):
