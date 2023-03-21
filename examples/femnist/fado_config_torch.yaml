@@ -7,7 +7,7 @@ fl_training_process:
     aggregator: mean
     agg_learning_rate: 0.25
     client_optimizer: sgd
-    number_clients: 1000
+    number_clients: 900
     clients_per_round: 3
     num_clients_select: 3
     allow_less_clients: True

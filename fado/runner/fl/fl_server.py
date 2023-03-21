@@ -137,6 +137,7 @@ class FLServer(Observer):
         """
         if message.get_type() == message.MSG_TYPE_CONNECT:
             num_clients_available = self.com_manager.get_available_clients()
+            logger.info(f"Clients connected {num_clients_available}")
             if not self.is_running and num_clients_available == fado_args.number_clients:
                 logger.info("Server has enough clients to start")
                 self.is_running = True

@@ -26,6 +26,7 @@ TCP_USER_TIMEOUT = 18
 
 fado_args = FADOArguments()
 
+
 class ServerSocketCommunicationManager(BaseCommunicationManager):
 
     def __init__(self):

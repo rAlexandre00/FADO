@@ -13,6 +13,7 @@ class Message(object):
     MSG_TYPE_END = "end"
     MSG_TYPE_SEND_MODEL = "send"
     MSG_TYPE_GET_MODEL = "get"
+    MSG_TYPE_FL_START = "start"
 
     MSG_ARG_KEY_MODEL_PARAMS = "model_params"
 
