@@ -38,5 +38,6 @@ IMAGES_PATH = os.path.join(FADO_DIR, 'docker')
 FEDML_IMAGE = os.path.join(IMAGES_PATH, 'client')
 ROUTER_IMAGE = os.path.join(IMAGES_PATH, 'router')
 
-DATASETS = ['femnist', 'emnist', 'shakespeare', 'cifar10', 'cifar100', 'mnist', 'sent140']
+DATASETS = ['femnist', 'emnist', 'shakespeare', 'cifar10', 'cifar100', 'mnist', 'sent140', 'nda_emnist']
 LEAF_DATASETS = ['femnist', 'emnist', 'shakespeare', 'sent140']
+NETWORK_DROP_ATTACK_DATASETS = ['nda_emnist']

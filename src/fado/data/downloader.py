@@ -239,3 +239,8 @@ def torchvision_downloader(args):
         print("Test dataset already generated, proceeding.")
 
     os.chdir(curr_dir)
+
+def nda_downloader(args):
+    dataset = args.dataset
+    if dataset is 'nda_emnist':
+        pass

@@ -9,7 +9,7 @@ import errno
 from fado.arguments.arguments import AttackArguments
 from fado.constants import *
 from fado.orchestrate import prepare_orchestrate
-from fado.data.downloader import leaf_downloader, torchvision_downloader
+from fado.data.downloader import leaf_downloader, torchvision_downloader, nda_downloader
 from fado.data.data_splitter import split_data
 
 
@@ -23,6 +23,9 @@ def data(args):
     if dataset in LEAF_DATASETS:
         print("Executing LEAF...")
         leaf_downloader(args)
+    if dataset in NETWORK_DROP_ATTACK_DATASETS:
+        print(f"Downloading Network-Level-Adversaries-in-Federated-Learning dataset: {dataset}")
+        nda_downloader(args)
     else:
         print("Executing Torch vision Downloader...")
         torchvision_downloader(args)

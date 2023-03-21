@@ -271,7 +271,7 @@ def create_fedml_config(args, rank, malicious=False):
         if 'defense_spec' in args:
             config['defense_args'] = {}
             config['defense_args']['defense_spec'] = args.defense_spec
-        if rank is 0 and 'target_class' in args:
+        if rank == 0 and 'target_class' in args:
             config['monitor'] = {}
             config['monitor']['target_class'] = args.target_class
         
@@ -285,6 +285,7 @@ def create_fedml_config(args, rank, malicious=False):
     config['train_args']['epochs'] = args.epochs
     config['train_args']['batch_size'] = args.batch_size
     config['train_args']['client_optimizer'] = args.client_optimizer
+    config['train_args']['learning_rate'] = args.learning_rate
     config['device_args']['worker_num'] = client_num
     config['data_args']['dataset'] = args.dataset
     config['model_args']['model'] = args.model

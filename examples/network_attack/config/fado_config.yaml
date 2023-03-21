@@ -6,7 +6,7 @@ clients_per_round: 5
 rounds: 100
 epochs: 10
 batch_size: 64
-client_optimizer: adam
+client_optimizer: sgd
 learning_rate: 0.1
 model: 'get_model.py'
 

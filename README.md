@@ -7,11 +7,10 @@
 
 These commands build the prerequisites for running FADO
 
-- fado build data (Download LEAF dataset)
-- fado build partitions (Split the data)
-- fado build compose (Create docker-compose.yaml)
+- fado build download (Download dataset)
+- fado build shape (Make transformations to the data)
 ---
-- 'fado build' performs the three actions above
+- 'fado build' performs the two actions above
 ---
 
 Options for build:
