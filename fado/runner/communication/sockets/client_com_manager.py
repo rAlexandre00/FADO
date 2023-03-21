@@ -51,6 +51,7 @@ class ClientSocketCommunicationManager(BaseCommunicationManager):
                 s.connect((server_ip, SERVER_PORT))
                 self.connections[0] = s
             except Exception:
+                self.logger.error(f'{traceback.format_exc()}')
                 self.logger.error("Could not connect to server. Trying again")
                 pass
 
