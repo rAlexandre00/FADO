@@ -102,9 +102,9 @@ class NLAFLAttacker:
                 self.clients_training = []
                 clients_training_lock.release()
                 old_model_parameters = current_model_parameters
-                self.current_round += 1
                 self.update_perf(current_model_parameters)
                 self.update_drop_list(drop_count=self.drop_count)
+                self.current_round += 1
 
     def process_packet_server_to_client(self, scapy_pkt):
         # Store IPs that are seen receiving big packets from server (global model)
@@ -127,7 +127,7 @@ class NLAFLAttacker:
         # Evaluate loss of the current model parameters with attacker test set
         self.local_model.set_parameters(model_parameters)
         current_loss, current_acc = self.local_model.evaluate(self.x_target_test, self.y_target_test)
-
+        logger.info(f"Attacker model loss, accuracy - {current_loss}, {current_acc}")
         # Calculate loss improvement
         if self.last_loss is None:
             self.last_loss = current_loss
@@ -135,22 +135,23 @@ class NLAFLAttacker:
             return
 
         perf_diff = current_loss - self.last_loss
+        logger.info(f"Performance improvement - {-perf_diff}")
         self.last_loss = current_loss
         # Update the mean of improvements of every client that participated in this round
         for client_ip in self.clients_prev_round:
             if client_ip not in self.clients_improv_history:
-                self.clients_improv_history[client_ip] = (0, 0)
-            sum_perf, count_perf = self.clients_improv_history[client_ip]
-            self.clients_improv_history[client_ip] = (
-                (sum_perf * count_perf + perf_diff) / (count_perf + 1), count_perf + 1)
+                self.clients_improv_history[client_ip] = []
+            self.clients_improv_history[client_ip].append(perf_diff)
 
         # Reset list of clients that participated in the round
         self.clients_prev_round = []
 
     def update_drop_list(self, drop_count):
         # Choose lowest losses -> bigger improvements
-        clients_lowest_losses = heapq.nsmallest(drop_count, self.clients_improv_history.items(), key=lambda x: x[1][0])
-        self.ips_lowest_losses = [x[0] for x in clients_lowest_losses]
+        all_changes = [self.clients_improv_history.get(str(ipaddress.IPv4Address('10.128.1.1')+client_id), np.inf)
+                       for client_id in range(fado_args.number_clients)]
+        all_means = [np.mean(change) for change in all_changes]
+        self.ips_lowest_losses = [str(ipaddress.IPv4Address('10.128.1.1')+client_id) for client_id in np.argsort(all_means)[:drop_count]]
         interception = len(set(self.ips_lowest_losses) & self.target_clients)
         logger.info(
             f'IPs to drop - {self.ips_lowest_losses}. Number of clients that have target class - {interception}')
