@@ -39,13 +39,20 @@ class ClientSocketCommunicationManager(BaseCommunicationManager):
         self.is_running = True
 
     def create_socket(self):
+        connected = False
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_ip = os.getenv('SERVER_IP')
         if server_ip != 'localhost':
             base_ip = ipaddress.ip_address('10.128.1.0')
             s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(base_ip + self.client_id).encode())
-        s.connect((server_ip, SERVER_PORT))
-        self.connections[0] = s
+
+        while not connected:
+            try:
+                s.connect((server_ip, SERVER_PORT))
+                self.connections[0] = s
+            except Exception:
+                self.logger.error("Could not connect to server. Trying again")
+                pass
 
         # Store connection
         connect_message = Message(sender_id=self.client_id, receiver_id=0, type=Message.MSG_TYPE_CONNECT)
