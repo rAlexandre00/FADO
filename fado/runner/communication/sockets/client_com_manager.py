@@ -82,9 +82,6 @@ class ClientSocketCommunicationManager(BaseCommunicationManager):
                     observer.receive_message(message)
             except TimeoutError:
                 self.create_socket()
-            except TypeError:
-                self.logger.info("TypeError")
-                continue
             except Exception as e:
                 self.logger.error("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
                 self.logger.error(f'{traceback.format_exc()}')

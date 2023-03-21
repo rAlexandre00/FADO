@@ -1,5 +1,6 @@
 import logging
 
+import numpy
 import numpy as np
 
 from fado.cli.arguments.arguments import FADOArguments
@@ -19,9 +20,9 @@ class MeanAggregator(Aggregator):
         self.lr = fado_args.agg_learning_rate
 
     def aggregate(self, received_parameters):
-        old_weights = self.model.get_parameters()
+        old_weights = numpy.asarray(self.model.get_parameters(), dtype=object)
 
-        ave_weights = np.mean(received_parameters, axis=0)
+        ave_weights = np.mean(numpy.asarray(received_parameters, dtype=object), axis=0)
 
         # Here new_weights gets automatically converted to a numpy array
         new_weights = old_weights + self.lr * (ave_weights - old_weights)

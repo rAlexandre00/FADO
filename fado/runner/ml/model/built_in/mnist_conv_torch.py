@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 import os
 import torch.nn as nn
@@ -10,6 +12,11 @@ from fado.cli.arguments.arguments import FADOArguments
 from fado.runner.ml.model.fado_module import FADOModule
 
 fado_args = FADOArguments()
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f'Using device - {device}')
+
+logger = logging.LoggerAdapter(logging.getLogger("fado"), extra={'node_id': 'model'})
 
 
 class MnistConvTorch(FADOModule):
@@ -42,10 +49,7 @@ class MnistConvTorch(FADOModule):
         train_dataset = TensorDataset(x_train, y_train)
         train_loader = DataLoader(train_dataset, batch_size=fado_args.batch_size, shuffle=True)
 
-        if self.model.momentum > 0.0:
-            optimizer = optim.SGD(self.model.parameters(), lr=0.1, momentum=self.model.momentum)
-        else:
-            optimizer = optim.SGD(self.model.parameters(), lr=0.1)
+        optimizer = optim.SGD(self.model.parameters(), lr=fado_args.learning_rate)
 
         for epoch in range(fado_args.epochs):
             for inputs, targets in train_loader:
@@ -67,8 +71,8 @@ class MnistConvTorch(FADOModule):
         self.model.to(device)
         self.model.train()
 
-        x_train = torch.tensor(self.x_train, dtype=torch.float32).to(device)
-        y_train = torch.tensor(self.y_train, dtype=torch.float32).to(device)
+        x_train = torch.tensor(x).to(device)
+        y_train = torch.tensor(y).to(device)
 
         self._train_dataloader(x_train, y_train)
 
@@ -78,18 +82,33 @@ class MnistConvTorch(FADOModule):
 
         # Calculate the accuracy
         _, predictions = torch.max(y_pred, dim=1)
-        _, y_train = torch.max(y_train, dim=1)
         correct = (predictions == y_train).float()
         accuracy = torch.mean(correct)
 
         return self.get_parameters(), loss, accuracy
 
     def evaluate(self, x, y):
-        return self.model.evaluate(x, y, verbose=0)
+        # switch to evaluate mode
+        self.model.eval()
+
+        # Convert numpy arrays to PyTorch tensors
+        x = torch.from_numpy(x)
+        y = torch.from_numpy(y).long()
+
+        y_pred = self.model(x)
+        # Calculate the cross-entropy loss
+        loss = self.model.criterion(y_pred, y)
+
+        # Calculate the accuracy
+        _, predictions = torch.max(y_pred, dim=1)
+        correct = (predictions == y).float()
+        accuracy = torch.mean(correct)
+
+        return loss.item(), accuracy.item()
 
 
 def build_model():
-    return MnistConv
+    return MnistConv()
 
 
 class MnistConv(nn.Module):
@@ -100,6 +119,7 @@ class MnistConv(nn.Module):
         self.conv2 = nn.Conv2d(16, 32, 5, padding=2)
         self.fc1 = nn.Linear(32 * 7 * 7, 512)
         self.fc2 = nn.Linear(512, 62)
+        self.criterion = nn.CrossEntropyLoss().to(device)
 
     def forward(self, x, noise=torch.Tensor()):
         x = x.reshape(-1, 1, 28, 28)
@@ -111,24 +131,6 @@ class MnistConv(nn.Module):
         x = self.fc2(x)
         return x
 
-    def evaluate(self, x, y, verbose=0):
-        self.eval()
-        # Convert numpy arrays to PyTorch tensors
-        x = torch.from_numpy(x).float()
-        y = torch.from_numpy(y).float()
-
-        y_pred = self(x)
-        # Calculate the cross-entropy loss
-        loss = self.criterion(y_pred, y)
-
-        # Calculate the accuracy
-        _, predictions = torch.max(y_pred, dim=1)
-        _, y = torch.max(y, dim=1)
-        correct = (predictions == y).float()
-        accuracy = torch.mean(correct)
-
-        return loss.item(), accuracy.item()
-
 
 class MnistConvLarge(nn.Module):
     def __init__(self):
@@ -138,6 +140,8 @@ class MnistConvLarge(nn.Module):
         self.conv2 = nn.Conv2d(32, 64, 5, padding=2)
         self.fc1 = nn.Linear(64 * 7 * 7, 1024)
         self.fc2 = nn.Linear(1024, 62)
+        self.criterion = nn.CrossEntropyLoss().to(device)
+        self.optimizer = optim.SGD(self.model.parameters())
 
     def forward(self, x, noise=torch.Tensor()):
         x = x.reshape(-1, 1, 28, 28)
@@ -149,20 +153,31 @@ class MnistConvLarge(nn.Module):
         x = self.fc2(x)
         return x
 
-    def evaluate(self, x, y, verbose=0):
-        self.eval()
-        # Convert numpy arrays to PyTorch tensors
-        x = torch.from_numpy(x).float()
-        y = torch.from_numpy(y).float()
 
-        y_pred = self(x)
-        # Calculate the cross-entropy loss
-        loss = self.criterion(y_pred, y)
+class AverageMeter(object):
+    """Computes and stores the average and current value
+       Imported from https://github.com/pytorch/examples/blob/master/imagenet/main.py#L247-L262
+    """
 
-        # Calculate the accuracy
-        _, predictions = torch.max(y_pred, dim=1)
-        _, y = torch.max(y, dim=1)
-        correct = (predictions == y).float()
-        accuracy = torch.mean(correct)
+    def __init__(self):
+        self.reset()
 
-        return loss.item(), accuracy.item()
+    def reset(self):
+        self.val = 0
+        self.avg = 0
+        self.sum = 0
+        self.count = 0
+
+    def update(self, val, n=1):
+        self.val = val
+        self.sum += val * n
+        self.count += n
+        self.avg = self.sum / self.count
+
+
+def accuracy(output, target):
+    _, predictions = torch.max(output, dim=1)
+    correct = (predictions == target).float()
+    acc = torch.mean(correct)
+
+    return acc
