@@ -7,6 +7,7 @@ import struct
 import sys
 import threading
 import traceback
+from multiprocessing import Process
 from time import sleep
 from typing import List, Optional, Any
 
@@ -42,7 +43,7 @@ class ServerSocketCommunicationManager(BaseCommunicationManager):
         self.is_running = True
 
         # Wait for client connections and store them in connections
-        threading.Thread(target=self.accept_clients_loop, args=(), daemon=True).start()
+        Process(target=self.accept_clients_loop, args=()).start()
 
     def accept_clients_loop(self):
         try:
@@ -50,7 +51,7 @@ class ServerSocketCommunicationManager(BaseCommunicationManager):
                 # establish connection with client
                 c, addr = self.server_socket.accept()
                 try:
-                    threading.Thread(target=self.register_new_client, args=(c, ), daemon=True).start()
+                    Process(target=self.register_new_client, args=(c, ), daemon=True).start()
                 except Exception:
                     logger.error(traceback.format_exc())
                     pass
