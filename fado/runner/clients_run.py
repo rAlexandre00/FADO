@@ -73,8 +73,7 @@ def main():
         logger.info("Waiting for server to start")
         time.sleep(1)
 
-    logger.info(f"Staring clients {sys.argv[2]} to {int(sys.argv[3]) + 1}")
-    for client_id in range(int(sys.argv[2]), int(sys.argv[3]) + 1):
+    for client_id in range(1, args.number_clients + 1):
         t = Process(target=start_client, args=(client_id,), daemon=True)
         t.start()
     t.join()
