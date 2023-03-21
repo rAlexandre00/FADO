@@ -66,7 +66,6 @@ class ServerSocketCommunicationManager(BaseCommunicationManager):
 
         # lock acquired by client
         new_client_lock.acquire()
-        connection.setsockopt(socket.IPPROTO_TCP, TCP_USER_TIMEOUT, fado_args.wait_for_clients_timeout * 700)
         self.connections[connect_message.sender_id] = connection
         # logger.info(f"Client {connect_message.sender_id} connected")
         for observer in self._observers:
