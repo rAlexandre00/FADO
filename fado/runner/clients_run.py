@@ -44,7 +44,7 @@ def start_client(client_id):
         client = FLClient(client_id=client_id, dataset=dataset)
         client.start()
     except Exception:
-        c_logger = logging.LoggerAdapter(logging.getLogger("fado"), extra={'node_id': 'client_id'})
+        c_logger = logging.LoggerAdapter(logging.getLogger("fado"), extra={'node_id': client_id})
         c_logger.error(traceback.format_exc())
 
 
