@@ -74,10 +74,10 @@ def main():
         time.sleep(1)
 
     for client_id in range(1, args.number_clients + 1):
-        logger.info("Starting 30 clients")
         t = Process(target=start_client, args=(client_id,), daemon=True)
         t.start()
         if client_id % 30 == 0:
+            logger.info("Started 30 clients")
             time.sleep(1)
     t.join()
     return
