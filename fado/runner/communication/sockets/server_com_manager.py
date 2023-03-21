@@ -51,7 +51,7 @@ class ServerSocketCommunicationManager(BaseCommunicationManager):
                 # establish connection with client
                 c, addr = self.server_socket.accept()
                 try:
-                    Process(target=self.register_new_client, args=(c, ), daemon=True).start()
+                    self.register_new_client(c)
                 except Exception:
                     logger.error(traceback.format_exc())
                     pass
