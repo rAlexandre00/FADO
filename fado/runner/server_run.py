@@ -14,13 +14,13 @@ logger = logging.LoggerAdapter(logging.getLogger("fado"), extra={'node_id': 'ser
 
 
 def start_server():
-    data_path = os.getenv("FADO_DATA_PATH", default='/app/data')
-    data_loader = ServerDataLoader(data_path)
-
-    dataset = data_loader.read_data()
-    results = Results()
-    server = FLServer(dataset=dataset, results=results)
     try:
+        data_path = os.getenv("FADO_DATA_PATH", default='/app/data')
+        data_loader = ServerDataLoader(data_path)
+
+        dataset = data_loader.read_data()
+        results = Results()
+        server = FLServer(dataset=dataset, results=results)
         server.start()
     except Exception:
         c_logger = logging.LoggerAdapter(logging.getLogger("fado"), extra={'node_id': 'server'})

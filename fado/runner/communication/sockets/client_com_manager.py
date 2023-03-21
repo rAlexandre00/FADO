@@ -82,7 +82,6 @@ class ClientSocketCommunicationManager(BaseCommunicationManager):
             except TimeoutError:
                 self.create_socket()
             except Exception as e:
-                self.logger.error("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
                 self.logger.error(f'{traceback.format_exc()}')
 
     def stop_receive_message(self):

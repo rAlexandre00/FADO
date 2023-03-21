@@ -104,9 +104,6 @@ class ServerSocketCommunicationManager(BaseCommunicationManager):
         except (socket.timeout, ConnectionResetError):
             logger.info(f"Client {sender_id} did not reply. Skipping contribution")
             return None
-        except Exception as e:
-            logger.error("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB")
-            logger.error(f'{traceback.format_exc()}')
 
     def get_available_clients(self):
         return len(self.connections)
