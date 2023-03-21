@@ -43,7 +43,7 @@ class ServerSocketCommunicationManager(BaseCommunicationManager):
         self.is_running = True
 
         # Wait for client connections and store them in connections
-        Process(target=self.accept_clients_loop, args=(), daemon=True).start()
+        Process(target=self.accept_clients_loop, args=()).start()
 
     def accept_clients_loop(self):
         try:
