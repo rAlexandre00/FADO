@@ -46,15 +46,14 @@ class ClientSocketCommunicationManager(BaseCommunicationManager):
             base_ip = ipaddress.ip_address('10.128.1.0')
             s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(base_ip + self.client_id).encode())
 
-        while not connected:
-            try:
-                s.connect((server_ip, SERVER_PORT))
-                self.connections[0] = s
-            except Exception:
-                self.logger.error(f'{traceback.format_exc()}')
-                self.logger.error("Could not connect to server. Trying again")
-                time.sleep(1)
-                pass
+        try:
+            s.connect((server_ip, SERVER_PORT))
+            self.connections[0] = s
+        except Exception:
+            self.logger.error(f'{traceback.format_exc()}')
+            self.logger.error("Could not connect to server. Trying again")
+            time.sleep(1)
+            pass
 
         # Store connection
         connect_message = Message(sender_id=self.client_id, receiver_id=0, type=Message.MSG_TYPE_CONNECT)
