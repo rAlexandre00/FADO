@@ -65,7 +65,6 @@ class ClientSocketCommunicationManager(BaseCommunicationManager):
         try:
             connection.sendall(struct.pack('>I', len(message_encoded)))
             connection.sendall(message_encoded)
-            connection.setsockopt(socket.IPPROTO_TCP, TCP_USER_TIMEOUT, 9999999)
         except TimeoutError:
             self.logger.info("Timeout")
             self.create_socket()

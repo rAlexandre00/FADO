@@ -3,6 +3,7 @@ import os
 import random
 import socket
 import sys
+import threading
 import time
 import traceback
 from multiprocessing import Process
@@ -74,7 +75,7 @@ def main():
         time.sleep(1)
 
     for client_id in range(1, args.number_clients + 1):
-        t = Process(target=start_client, args=(client_id,), daemon=True)
+        t = threading.Thread(target=start_client, args=(client_id,), daemon=True)
         t.start()
     t.join()
     return
