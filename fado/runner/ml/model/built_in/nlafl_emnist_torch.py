@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -12,6 +14,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f'Using device - {device}')
 
 fado_args = FADOArguments()
+logger = logging.LoggerAdapter(logging.getLogger("fado"), extra={'node_id': 'model'})
 
 
 class NlaflEmnistTorch(FADOModule):
@@ -44,10 +47,7 @@ class NlaflEmnistTorch(FADOModule):
         train_dataset = TensorDataset(x_train, y_train)
         train_loader = DataLoader(train_dataset, batch_size=fado_args.batch_size, shuffle=True)
 
-        if self.model.momentum > 0.0:
-            optimizer = optim.SGD(self.model.parameters(), lr=0.1, momentum=self.model.momentum)
-        else:
-            optimizer = optim.SGD(self.model.parameters(), lr=0.1)
+        optimizer = optim.SGD(self.model.parameters(), lr=fado_args.learning_rate)
 
         for epoch in range(fado_args.epochs):
             for inputs, targets in train_loader:
@@ -70,6 +70,7 @@ class NlaflEmnistTorch(FADOModule):
         self.model.train()
         x_train = torch.tensor(x).to(device)
         y_train = torch.tensor(y).to(device)
+        y_train = torch.max(y_train, 1)[1]
 
         self._train_dataloader(x_train, y_train)
 
@@ -89,16 +90,14 @@ class NlaflEmnistTorch(FADOModule):
 
 
 class NeuralNet(nn.Module):
-    def __init__(self, momentum=0.0, dropouts=False):
+    def __init__(self):
         super(NeuralNet, self).__init__()
 
         self.conv1 = nn.Conv2d(1, 32, kernel_size=(3, 3))
         self.conv2 = nn.Conv2d(32, 64, kernel_size=(3, 3))
         self.pool = nn.MaxPool2d(2, 2)
-        self.dropouts = dropouts
         self.fc1 = nn.Linear(64 * 12 * 12, 128)
         self.fc2 = nn.Linear(128, 62)
-        self.momentum = momentum
         self.criterion = nn.CrossEntropyLoss().to(device)
 
     def forward(self, x):
@@ -108,12 +107,8 @@ class NeuralNet(nn.Module):
         x = F.relu(self.conv1(x))
         x = F.relu(self.conv2(x))
         x = self.pool(x)
-        if self.dropouts:
-            x = F.dropout(x, 0.25)
         x = x.reshape(-1, 64 * 12 * 12)
         x = F.relu(self.fc1(x))
-        if self.dropouts:
-            x = F.dropout(x, 0.5)
         x = self.fc2(x)
         return x
 
@@ -121,11 +116,10 @@ class NeuralNet(nn.Module):
         self.eval()
         # Convert numpy arrays to PyTorch tensors
         x = torch.from_numpy(x).float()
-        y = torch.from_numpy(y).float()
+        y = torch.tensor(y).to(device)
+        y = torch.max(y, 1)[1]
 
         y_pred = self(x)
-        y = y.long()
-        _, predictions = torch.max(y_pred, dim=1)
         # Calculate the cross-entropy loss
         loss = self.criterion(y_pred, y)
 

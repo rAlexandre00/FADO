@@ -43,7 +43,6 @@ class ClientSocketCommunicationManager(BaseCommunicationManager):
         if server_ip != 'localhost':
             base_ip = ipaddress.ip_address('10.128.1.0')
             s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(base_ip + self.client_id).encode())
-
         try:
             s.connect((server_ip, SERVER_PORT))
             self.connections[0] = s
