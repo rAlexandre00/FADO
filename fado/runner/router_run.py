@@ -1,6 +1,7 @@
 import subprocess
 
 from warnings import filterwarnings
+import multiprocessing
 
 import numpy as np
 
@@ -79,14 +80,14 @@ if __name__ == "__main__":
          '-j', 'NFQUEUE', '--queue-num', f'{QUEUE_NUMBER_SERVER_TO_CLIENT}'])
 
     # Bind to the same queue number (here 2)
-    nfqueue_client_to_server.bind(QUEUE_NUMBER_CLIENT_TO_SERVER, process_packet_client_to_server)
+    nfqueue_client_to_server.bind(QUEUE_NUMBER_CLIENT_TO_SERVER, process_packet_client_to_server, max_len=8192)
     # Bind to the same queue number (here 3)
-    nfqueue_server_to_client.bind(QUEUE_NUMBER_SERVER_TO_CLIENT, process_packet_server_to_client)
+    nfqueue_server_to_client.bind(QUEUE_NUMBER_SERVER_TO_CLIENT, process_packet_server_to_client, max_len=8192)
 
     # run (indefinitely)
     try:
-        Thread(target=nfqueue_client_to_server.run, daemon=True).start()
-        Thread(target=nfqueue_server_to_client.run, daemon=True).start()
+        multiprocessing.Process(target=nfqueue_client_to_server.run, daemon=True).start()
+        multiprocessing.Process(target=nfqueue_server_to_client.run, daemon=True).start()
         time.sleep(999999999)
     except KeyboardInterrupt:
         print('Quiting...')
