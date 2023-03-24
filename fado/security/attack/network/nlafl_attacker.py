@@ -36,8 +36,9 @@ def get_model_parameters():
     # Send model request
     message = Message(sender_id=-1, receiver_id=-1, type=Message.MSG_TYPE_GET_MODEL)
     message_encoded = pickle.dumps(message)
-    s.sendall(struct.pack('>I', len(message_encoded)))
-    s.sendall(message_encoded)
+    message_compressed = gzip.compress(message_encoded)
+    s.sendall(struct.pack('>I', len(message_compressed)))
+    s.sendall(message_compressed)
 
     # Receive model parameters
     message_size = struct.unpack('>I', recvall(s, 4))[0]

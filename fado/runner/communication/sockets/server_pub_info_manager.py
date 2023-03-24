@@ -32,7 +32,8 @@ def receive_message(connection) -> Optional[Message]:
     ready = select.select([connection], [], [], 1)
     if ready[0]:
         message_size = struct.unpack('>I', recvall(connection, 4))[0]
-        message_encoded = recvall(connection, message_size)
+        message_compressed = recvall(connection, message_size)
+        message_encoded = gzip.decompress(message_compressed)
         message = pickle.loads(message_encoded)
         return message
     return None

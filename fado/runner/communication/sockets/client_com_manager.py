@@ -61,9 +61,10 @@ class ClientSocketCommunicationManager(BaseCommunicationManager):
         connection = self.connections[receiver_id]
         connection.setsockopt(socket.IPPROTO_TCP, TCP_USER_TIMEOUT, fado_args.wait_for_clients_timeout * 700)
         message_encoded = pickle.dumps(message)
+        message_compressed = gzip.compress(message_encoded)
         try:
-            connection.sendall(struct.pack('>I', len(message_encoded)))
-            connection.sendall(message_encoded)
+            connection.sendall(struct.pack('>I', len(message_compressed)))
+            connection.sendall(message_compressed)
         except TimeoutError:
             self.logger.info("Timeout")
             self.create_socket()

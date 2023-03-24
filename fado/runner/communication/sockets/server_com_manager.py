@@ -61,7 +61,8 @@ class ServerSocketCommunicationManager(BaseCommunicationManager):
 
     def register_new_client(self, connection):
         message_size = struct.unpack('>I', recvall(connection, 4))[0]
-        message_encoded = recvall(connection, message_size)
+        message_compressed = recvall(connection, message_size)
+        message_encoded = gzip.decompress(message_compressed)
         connect_message = pickle.loads(message_encoded)
 
         # lock acquired by client
@@ -94,7 +95,8 @@ class ServerSocketCommunicationManager(BaseCommunicationManager):
         try:
             connection.settimeout(fado_args.wait_for_clients_timeout)
             message_size = struct.unpack('>I', recvall(connection, 4))[0]
-            message_encoded = recvall(connection, message_size)
+            message_compressed = recvall(connection, message_size)
+            message_encoded = gzip.decompress(message_compressed)
             message = pickle.loads(message_encoded)
             return message
         except (socket.timeout, ConnectionResetError):
