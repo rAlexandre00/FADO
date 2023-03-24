@@ -61,7 +61,7 @@ class NLAFLAttacker:
         :return:
         """
         logger.info('Starting network attack')
-        self.drop_count = fado_args.drop_count_multiplier*(fado_args.num_pop_clients//3)
+        self.drop_count = fado_args.drop_count_multiplier * (fado_args.num_pop_clients // 3)
         self.current_round = 0
         self.clients_training = []
         # Dict with IPs as key and tuples (sum_perf, count_perf) as values to allow mean calculations
@@ -105,8 +105,8 @@ class NLAFLAttacker:
                 clients_training_lock.release()
                 old_model_parameters = current_model_parameters
                 self.update_perf(current_model_parameters)
-                self.update_drop_list(drop_count=self.drop_count)
-
+                if self.current_round > 1:
+                    self.update_drop_list(drop_count=self.drop_count)
 
     def process_packet_server_to_client(self, scapy_pkt):
         # Store IPs that are seen receiving big packets from server (global model)
@@ -151,10 +151,11 @@ class NLAFLAttacker:
 
     def update_drop_list(self, drop_count):
         # Choose lowest losses -> bigger improvements
-        all_changes = [self.clients_improv_history.get(str(ipaddress.IPv4Address('10.128.1.1')+client_id), np.inf)
+        all_changes = [self.clients_improv_history.get(str(ipaddress.IPv4Address('10.128.1.1') + client_id), np.inf)
                        for client_id in range(fado_args.number_clients)]
         all_means = [np.mean(change) for change in all_changes]
-        self.ips_lowest_losses = [str(ipaddress.IPv4Address('10.128.1.1')+client_id) for client_id in np.argsort(all_means)[:drop_count]]
+        self.ips_lowest_losses = [str(ipaddress.IPv4Address('10.128.1.1') + client_id) for client_id in
+                                  np.argsort(all_means)[:drop_count]]
         interception = len(set(self.ips_lowest_losses) & self.target_clients)
         logger.info(
             f'IPs to drop - {self.ips_lowest_losses}. Number of clients that have target class - {interception}')
