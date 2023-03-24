@@ -69,8 +69,8 @@ class NlaflEmnistTorch(FADOModule):
         self.model.to(device)
         self.model.train()
         x_train = torch.tensor(x).to(device)
-        y_train = torch.tensor(y).to(device)
-        y_train = torch.max(y_train, 1)[1]
+        y_train = torch.tensor(y)
+        y_train = torch.max(y_train, 1)[1].to(device)
 
         self._train_dataloader(x_train, y_train)
 
@@ -113,13 +113,13 @@ class NeuralNet(nn.Module):
         return x
 
     def evaluate(self, x, y):
-        self.eval()
+        self.eval().to(device)
         # Convert numpy arrays to PyTorch tensors
-        x = torch.from_numpy(x).float()
-        y = torch.tensor(y).to(device)
-        y = torch.max(y, 1)[1]
+        x = torch.from_numpy(x).float().to(device)
+        y = torch.tensor(y)
+        y = torch.max(y, 1)[1].to(device)
 
-        y_pred = self(x)
+        y_pred = self(x).to(device)
         # Calculate the cross-entropy loss
         loss = self.criterion(y_pred, y)
 

@@ -29,7 +29,7 @@ def get_model_parameters():
     # Connect
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.settimeout(2)
+    s.settimeout(1)
     s.connect((os.getenv('SERVER_IP'), SERVER_PUB_PORT))
 
     # Send model request
@@ -109,9 +109,10 @@ class NLAFLAttacker:
 
     def process_packet_server_to_client(self, scapy_pkt):
         # Store IPs that are seen receiving big packets from server (global model)
-        if scapy_pkt['IP'].dst not in self.clients_training:
+        if scapy_pkt['IP'].dst not in self.clients_training and self.current_round > 0:
             if self.current_round < fado_args.drop_start or scapy_pkt['IP'].dst not in self.ips_lowest_losses:
                 clients_training_lock.acquire()
+                logger.info(f"{scapy_pkt['IP'].dst} was chosen")
                 self.clients_training.append(scapy_pkt['IP'].dst)
                 clients_training_lock.release()
 
