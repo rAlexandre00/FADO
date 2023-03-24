@@ -93,7 +93,7 @@ class NLAFLAttacker:
             try:
                 current_model_parameters = get_model_parameters()
             except socket.timeout:
-                pass
+                continue
 
             # Check new round
             if not check_param_equality(current_model_parameters, old_model_parameters):
