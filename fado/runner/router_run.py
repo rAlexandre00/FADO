@@ -17,7 +17,7 @@ from scapy.all import *
 from scapy.layers.inet import IP
 
 QUEUE_NUMBER_CLIENT_TO_SERVER = 2
-QUEUE_NUMBER_SERVER_TO_CLIENT = 3
+QUEUE_NUMBER_SERVER_TO_CLIENT = 40
 
 logger = logging.getLogger("fado")
 logger = logging.LoggerAdapter(logger, {'node_id': 'router'})
@@ -67,30 +67,31 @@ if __name__ == "__main__":
 
     # if FadoAttacker.get_instance().is_network_attack():
     # Sniff packets and for each packet send it to attack (apply filter first)
-    nfqueue_client_to_server = NetfilterQueue()
-    nfqueue_server_to_client = NetfilterQueue()
+    queue_numer = 2
+
+    client_to_server_queues = [NetfilterQueue() for _ in range(queue_numer)]
+    server_to_client_queues = [NetfilterQueue() for _ in range(queue_numer)]
 
     p = subprocess.call(
         ['iptables', '-I', 'FORWARD', '-p', 'tcp', '--destination-port', str(SERVER_PORT),
          '-m', 'length', '!', '--length', '0:500',  # Ignore handshake and control packets
-         '-j', 'NFQUEUE', '--queue-num', f'{QUEUE_NUMBER_CLIENT_TO_SERVER}'])
+         '-j', 'NFQUEUE', '--queue-balance', f'{QUEUE_NUMBER_CLIENT_TO_SERVER}:{QUEUE_NUMBER_CLIENT_TO_SERVER+queue_numer-1}'])
     p = subprocess.call(
         ['iptables', '-I', 'FORWARD', '-p', 'tcp', '--source-port', str(SERVER_PORT),
          '-m', 'length', '!', '--length', '0:500',  # Ignore handshake and control packets
-         '-j', 'NFQUEUE', '--queue-num', f'{QUEUE_NUMBER_SERVER_TO_CLIENT}'])
+         '-j', 'NFQUEUE', '--queue-balance', f'{QUEUE_NUMBER_SERVER_TO_CLIENT}:{QUEUE_NUMBER_SERVER_TO_CLIENT+queue_numer-1}'])
 
-    # Bind to the same queue number (here 2)
-    nfqueue_client_to_server.bind(QUEUE_NUMBER_CLIENT_TO_SERVER, process_packet_client_to_server, max_len=8192)
-    # Bind to the same queue number (here 3)
-    nfqueue_server_to_client.bind(QUEUE_NUMBER_SERVER_TO_CLIENT, process_packet_server_to_client, max_len=8192)
+    # Bind to the same queue number
+    for queue_numer_offset, nfqueue_client_to_server in enumerate(client_to_server_queues):
+        logger.info(f"Binding queue {id(nfqueue_client_to_server)}")
+        nfqueue_client_to_server.bind(QUEUE_NUMBER_CLIENT_TO_SERVER+queue_numer_offset, process_packet_client_to_server)
+        threading.Thread(target=nfqueue_client_to_server.run, daemon=True).start()
+    # Bind to the same queue number
+    for queue_numer_offset, nfqueue_server_to_client in enumerate(server_to_client_queues):
+        nfqueue_server_to_client.bind(QUEUE_NUMBER_SERVER_TO_CLIENT+queue_numer_offset, process_packet_server_to_client)
+        threading.Thread(target=nfqueue_server_to_client.run, daemon=True).start()
 
-    # run (indefinitely)
     try:
-        multiprocessing.Process(target=nfqueue_client_to_server.run, daemon=True).start()
-        multiprocessing.Process(target=nfqueue_server_to_client.run, daemon=True).start()
         time.sleep(999999999)
     except KeyboardInterrupt:
         print('Quiting...')
-    finally:
-        nfqueue_client_to_server.unbind()
-        nfqueue_server_to_client.unbind()

@@ -115,7 +115,6 @@ class NLAFLAttacker:
                 time.sleep(0.5)
 
     def process_packet_server_to_client(self, scapy_pkt):
-        return scapy_pkt
         # Store IPs that are seen receiving big packets from server (global model)
         if scapy_pkt['IP'].dst not in self.clients_training and self.current_round > 0:
             if self.current_round < fado_args.drop_start or scapy_pkt['IP'].dst not in self.ips_lowest_losses:
@@ -127,7 +126,6 @@ class NLAFLAttacker:
         return scapy_pkt
 
     def process_packet_client_to_server(self, scapy_pkt):
-        return scapy_pkt
         if self.current_round >= fado_args.drop_start:
             if scapy_pkt['IP'].src in self.ips_lowest_losses:
                 return None
