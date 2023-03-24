@@ -106,7 +106,7 @@ class NLAFLAttacker:
                 self.clients_training = []
                 clients_training_lock.release()
                 old_model_parameters = current_model_parameters
-                self.update_perf(current_model_parameters)
+                self.update_perf(old_model_parameters)
                 self.update_drop_list(drop_count=self.drop_count)
             else:
                 time.sleep(1)
@@ -130,6 +130,7 @@ class NLAFLAttacker:
         return scapy_pkt
 
     def update_perf(self, model_parameters):
+        logger.info(f"Updating performance")
         # Evaluate loss of the current model parameters with attacker test set
         self.local_model.set_parameters(model_parameters)
         current_loss, current_acc = self.local_model.evaluate(self.x_target_test, self.y_target_test)
