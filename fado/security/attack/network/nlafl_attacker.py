@@ -108,6 +108,8 @@ class NLAFLAttacker:
                 old_model_parameters = current_model_parameters
                 self.update_perf(current_model_parameters)
                 self.update_drop_list(drop_count=self.drop_count)
+            else:
+                time.sleep(1)
 
     def process_packet_server_to_client(self, scapy_pkt):
         # Store IPs that are seen receiving big packets from server (global model)
