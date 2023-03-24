@@ -1,6 +1,6 @@
 general:
     random_seed: [0,1,2,3,4]
-    use_gpu: true
+    use_gpu: false
 
 fl_training_process:
     rounds: 105
@@ -38,7 +38,7 @@ dataset_spec:
  
 communication:
     encrypt_comm: true
-    wait_for_clients_timeout: 20
+    wait_for_clients_timeout: 30
 
 output:
     logs_file_name:     "logs_nlafl_emnist_torch_drop_no_defense_{target_class}_{num_pop_clients}_{random_seed}"

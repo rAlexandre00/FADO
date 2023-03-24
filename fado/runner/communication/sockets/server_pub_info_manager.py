@@ -1,3 +1,4 @@
+import gzip
 import logging
 import pickle
 import select
@@ -76,8 +77,9 @@ class ServerSocketPubInfoManager(BaseCommunicationManager):
         connection = self.reply_connections.pop()
         connections_list_lock.release()
         message_encoded = pickle.dumps(message)
-        connection.sendall(struct.pack('>I', len(message_encoded)))
-        connection.sendall(message_encoded)
+        message_compressed = gzip.compress(message_encoded)
+        connection.sendall(struct.pack('>I', len(message_compressed)))
+        connection.sendall(message_compressed)
 
     def add_observer(self, observer: Observer):
         self._observers.append(observer)

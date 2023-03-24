@@ -1,3 +1,4 @@
+import gzip
 import heapq
 import ipaddress
 import logging
@@ -40,7 +41,8 @@ def get_model_parameters():
 
     # Receive model parameters
     message_size = struct.unpack('>I', recvall(s, 4))[0]
-    message_encoded = recvall(s, message_size)
+    message_compressed = recvall(s, message_size)
+    message_encoded = gzip.decompress(message_compressed)
     message = pickle.loads(message_encoded)
     return message.get(Message.MSG_ARG_KEY_MODEL_PARAMS)
 
