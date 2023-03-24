@@ -15,7 +15,7 @@ fl_training_process:
 
 client_training_process:
     engine: pytorch
-    model: mnist_conv_torch
+    model: nlafl_emnist_torch
     batch_size: 32
     epochs: 2
     learning_rate: 0.1

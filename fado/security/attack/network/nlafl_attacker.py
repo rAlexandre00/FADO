@@ -91,12 +91,11 @@ class NLAFLAttacker:
             break
 
         while True:
-            time.sleep(1)
             try:
                 current_model_parameters = get_model_parameters()
                 logger.info("Got current_model_parameters")
             except socket.timeout:
-                continue
+                time.sleep(1)
 
             # Check new round
             if not check_param_equality(current_model_parameters, old_model_parameters):
