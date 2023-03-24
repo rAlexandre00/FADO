@@ -29,7 +29,7 @@ def get_model_parameters():
     # Connect
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.settimeout(1)
+    s.settimeout(2)
     s.connect((os.getenv('SERVER_IP'), SERVER_PUB_PORT))
 
     # Send model request
@@ -84,7 +84,9 @@ class NLAFLAttacker:
         while True:
             try:
                 old_model_parameters = get_model_parameters()
+                logger.info("Got old_model_parameters")
             except ConnectionRefusedError:
+                time.sleep(0.5)
                 continue
             break
 
@@ -92,6 +94,7 @@ class NLAFLAttacker:
             time.sleep(1)
             try:
                 current_model_parameters = get_model_parameters()
+                logger.info("Got current_model_parameters")
             except socket.timeout:
                 continue
 
