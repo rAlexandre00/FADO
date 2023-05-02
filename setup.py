@@ -1,7 +1,5 @@
 
 from setuptools import setup, find_packages
-# from distutils.extension import Extension
-# from Cython.Build import cythonize
 
 
 requirements = [
@@ -12,12 +10,6 @@ requirements = [
     "numpy==1.21",
     "pandas==1.5.2"
 ]
-
-# ext_modules = Extension('fado.fedml_diff.core.distributed.communication.grpc.binder',
-#                         sources=['src/fado/fedml_diff/core/distributed/communication/grpc/binder.pyx'],
-#                         extra_compile_args=['-std=c++11'],
-#                         language='c++',
-#                         )
 
 setup(
     name='FAaDO',

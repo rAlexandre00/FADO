@@ -1,0 +1,47 @@
+general:
+    random_seed: [0,1,2,3,4]
+    use_gpu: false
+    python_import_folder: python
+
+fl_training_process:
+    rounds: 105
+    aggregator: mean_aggregator.py
+    agg_learning_rate: 0.25
+    number_clients: 100
+    clients_per_round: 10
+    num_clients_select: 10
+    allow_less_clients: True
+    participant_selector: participant_selector.py
+
+client_training_process:
+    engine: pytorch
+    model: mnist_conv_torch.py
+    batch_size: 32
+    epochs: 2
+    learning_rate: 0.1
+
+attack_args:
+    target_class: 0
+    network:
+        network_attack: network_attack_does_nothing.py
+        some_network_attack_arg: [experiment1, experiment2]
+    data:
+        poison_count_multiplier: 0
+        boost_factor: 10.0
+    model:
+        model_attack_name: random_model_attack.py
+
+dataset_spec:
+    dataset: custom
+    downloader: downloader.py
+    shaper: shaper.py
+    num_classes: 62
+ 
+communication:
+    encrypt_comm: true
+    wait_for_clients_timeout: 100
+
+output:
+    logs_file_name:     "logs_custom_{random_seed}_{some_network_attack_arg}"
+    results_file_name:  "results_custom_{random_seed}_{some_network_attack_arg}"
+    table_round: 100

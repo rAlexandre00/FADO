@@ -19,11 +19,14 @@ from fado.runner.communication.sockets.utils import recvall
 
 logger = logging.getLogger("fado")
 logger = logging.LoggerAdapter(logger, {'node_id': 'router'})
-fado_args = FADOArguments("/app/config/fado_config.yaml")
 
 BASE_IP = ipaddress.ip_address('10.128.1.0')
 
 clients_training_lock = Lock()
+
+
+def get_class():
+    return NLAFLAttacker
 
 
 def get_model_parameters():
@@ -64,7 +67,8 @@ class NLAFLAttacker:
         :return:
         """
         logger.info('Starting network attack')
-        self.drop_count = fado_args.drop_count_multiplier * (fado_args.num_pop_clients // 3)
+        self.fado_args = FADOArguments("/app/config/fado_config.yaml")
+        self.drop_count = self.fado_args.drop_count_multiplier * (self.fado_args.num_pop_clients // 3)
         self.current_round = 0
         self.clients_training = []
         # Dict with IPs as key and tuples (sum_perf, count_perf) as values to allow mean calculations
@@ -78,7 +82,7 @@ class NLAFLAttacker:
         self.last_loss = None
         start_ip = ipaddress.IPv4Address('10.128.1.1')
         target_clients = []
-        for ip_int in range(int(start_ip), int(start_ip) + fado_args.num_pop_clients):
+        for ip_int in range(int(start_ip), int(start_ip) + self.fado_args.num_pop_clients):
             target_clients.append(str(ipaddress.IPv4Address(ip_int)))
         self.target_clients = set(target_clients)
         threading.Thread(target=self.contribution_estimation, args=(), daemon=True).start()
@@ -87,7 +91,7 @@ class NLAFLAttacker:
         while True:
             try:
                 old_model_parameters = get_model_parameters()
-                #logger.info("Got old_model_parameters")
+                # logger.info("Got old_model_parameters")
             except ConnectionRefusedError:
                 time.sleep(0.5)
                 continue
@@ -96,7 +100,7 @@ class NLAFLAttacker:
         while True:
             try:
                 current_model_parameters = get_model_parameters()
-                #logger.info("Got current_model_parameters")
+                # logger.info("Got current_model_parameters")
             except socket.timeout:
                 time.sleep(1)
 
@@ -117,7 +121,7 @@ class NLAFLAttacker:
     def process_packet_server_to_client(self, scapy_pkt):
         # Store IPs that are seen receiving big packets from server (global model)
         if scapy_pkt['IP'].dst not in self.clients_training and self.current_round > 0:
-            if self.current_round < fado_args.drop_start or scapy_pkt['IP'].dst not in self.ips_lowest_losses:
+            if self.current_round < self.fado_args.drop_start or scapy_pkt['IP'].dst not in self.ips_lowest_losses:
                 clients_training_lock.acquire()
                 logger.info(f"{scapy_pkt['IP'].dst} is participating")
                 self.clients_training.append(scapy_pkt['IP'].dst)
@@ -126,7 +130,7 @@ class NLAFLAttacker:
         return scapy_pkt
 
     def process_packet_client_to_server(self, scapy_pkt):
-        if self.current_round >= fado_args.drop_start:
+        if self.current_round >= self.fado_args.drop_start:
             if scapy_pkt['IP'].src in self.ips_lowest_losses:
                 return None
 
@@ -159,7 +163,7 @@ class NLAFLAttacker:
     def update_drop_list(self, drop_count):
         # Choose lowest losses -> bigger improvements
         all_changes = [self.clients_improv_history.get(str(ipaddress.IPv4Address('10.128.1.1') + client_id), np.inf)
-                       for client_id in range(fado_args.number_clients)]
+                       for client_id in range(self.fado_args.number_clients)]
         all_means = [np.mean(change) for change in all_changes]
         self.ips_lowest_losses = [str(ipaddress.IPv4Address('10.128.1.1') + client_id) for client_id in
                                   np.argsort(all_means)[:drop_count]]

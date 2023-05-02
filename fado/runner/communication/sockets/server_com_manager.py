@@ -60,16 +60,19 @@ class ServerSocketCommunicationManager(BaseCommunicationManager):
                 raise
 
     def register_new_client(self, connection):
-        message_size = struct.unpack('>I', recvall(connection, 4))[0]
-        message_compressed = recvall(connection, message_size)
-        message_encoded = gzip.decompress(message_compressed)
-        connect_message = pickle.loads(message_encoded)
+        try:
+            message_size = struct.unpack('>I', recvall(connection, 4))[0]
+            message_compressed = recvall(connection, message_size)
+            message_encoded = gzip.decompress(message_compressed)
+            connect_message = pickle.loads(message_encoded)
 
-        # lock acquired by client
-        self.connections[connect_message.sender_id] = connection
-        # logger.info(f"Client {connect_message.sender_id} connected")
-        for observer in self._observers:
-            observer.receive_message(connect_message)
+            # lock acquired by client
+            self.connections[connect_message.sender_id] = connection
+            # logger.info(f"Client {connect_message.sender_id} connected")
+            for observer in self._observers:
+                observer.receive_message(connect_message)
+        except TypeError:
+            pass  # ignore. Heartbeat message
 
     def send_message(self, message: Message):
         receiver_id = message.get_receiver_id()

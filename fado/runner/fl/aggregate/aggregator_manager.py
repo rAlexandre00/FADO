@@ -12,6 +12,8 @@ class AggregatorManager:
         args = FADOArguments()
         if args.aggregator == 'mean':
             return MeanAggregator(global_module)
+        elif '.py' in args.aggregator:
+            return args.get_class('aggregator')(global_module)
         else:
             raise Exception("Specified aggregator does not exist")
         pass

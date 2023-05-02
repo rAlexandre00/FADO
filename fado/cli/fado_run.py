@@ -1,4 +1,5 @@
 import argparse
+import importlib
 import itertools
 import logging
 import os
@@ -7,6 +8,7 @@ import socket
 import subprocess
 import sys
 import time
+from distutils.dir_util import copy_tree
 from threading import Thread
 
 from fado.constants import *
@@ -60,8 +62,7 @@ def download_data(fado_arguments):
     elif dataset in NLAFL_DATASETS:
         NLAFLDownloader().download()
     else:
-        logger.info("Executing Torch vision Downloader...")
-        # TODO: TorchVisionDownloader().download()
+        fado_arguments.get_class('downloader')().download()
 
 
 def shape_data(fado_arguments):
@@ -79,8 +80,7 @@ def shape_data(fado_arguments):
     elif dataset in NLAFL_DATASETS:
         NLAFLShaper().shape()
     else:
-        logger.info("Executing Torch vision Shaper ...")
-        # TODO: TorchVisionShaper.shape()
+        fado_arguments.get_class('shaper')().shape()
 
 
 def create_networks():
@@ -102,6 +102,7 @@ def run_clients(fado_args, dev_mode, docker, add_flags):
     subprocess.run(['docker', 'cp', f'{FADO_CONFIG_OUT}', 'fado-clients:/app/config/fado_config.yaml'])
     client_data_path = os.path.join(ALL_DATA_FOLDER, fado_args.dataset, 'train')
     subprocess.run(['docker', 'cp', client_data_path, 'fado-clients:/app/data'])
+    subprocess.run(['docker', 'cp', IMPORT_OUT, 'fado-clients:/app/import'])
 
     if dev_mode:
         # Install current fado
@@ -131,6 +132,7 @@ def run_server(fado_args, dev_mode, docker, add_flags):
     subprocess.run(['docker', 'cp', os.path.join(data_path, 'train'), 'fado-server:/app/data'])
     subprocess.run(['docker', 'cp', os.path.join(data_path, 'test'), 'fado-server:/app/data'])
     subprocess.run(['docker', 'cp', os.path.join(data_path, 'target_test'), 'fado-server:/app/data'])
+    subprocess.run(['docker', 'cp', IMPORT_OUT, 'fado-server:/app/import'])
 
     if dev_mode:
         # Install current fado
@@ -161,6 +163,7 @@ def run_router(fado_args, dev_mode, docker, add_flags):
     subprocess.run(['docker', 'cp', os.path.join(data_path, 'target_test_attacker'), 'fado-router:/app/data'])
     # Here to copy any data required to build the model
     subprocess.run(['docker', 'cp', os.path.join(data_path, 'train'), 'fado-router:/app/data'])
+    subprocess.run(['docker', 'cp', IMPORT_OUT, 'fado-router:/app/import'])
 
     if dev_mode:
         # Install current fado
@@ -214,10 +217,13 @@ def run(fado_args, dev_mode=False, docker=True):
             stop_clients()
 
 
-def move_files_to_fado_home(config_file):
+def move_files_to_fado_home(fado_arguments, config_file):
     os.makedirs(CONFIG_OUT, exist_ok=True)
     os.makedirs(LOGS_DIRECTORY, exist_ok=True)
+    os.makedirs(IMPORT_OUT, exist_ok=True)
     shutil.copyfile(config_file, FADO_CONFIG_OUT)
+    python_import_folder = os.path.join(fado_arguments.config_path, fado_arguments.python_import_folder)
+    copy_tree(python_import_folder, IMPORT_OUT)
 
 
 def run_multiple(fado_arguments, development, docker):
@@ -228,6 +234,7 @@ def run_multiple(fado_arguments, development, docker):
 
     # For each combination execute fado run
     for experiment in vary_list:
+        # Set varying parameters
         for i, vary_key in enumerate(fado_arguments.vary.keys()):
             fado_arguments.set_argument(vary_key, experiment[i])
 
@@ -237,7 +244,7 @@ def run_multiple(fado_arguments, development, docker):
 
         fado_arguments_experiment = FADOArguments(temp_output)
 
-        move_files_to_fado_home(temp_output)
+        move_files_to_fado_home(fado_arguments_experiment, temp_output)
         download_data(fado_arguments_experiment)
         shape_data(fado_arguments_experiment)
         run(fado_arguments_experiment, development, docker)
@@ -255,7 +262,11 @@ def cli():
 
     fado_arguments = FADOArguments(config_file)
 
-    # docker pull ralexandre00/fado-node-requirements
+    # TODO:
+    # prepare_fado()
+    #   verify_docker_install()
+    #   docker pull ralexandre00/fado-node-requirements
+    #   ...
 
     if args.mode == 'build':
         build_mode = args.build_mode

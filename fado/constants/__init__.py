@@ -20,6 +20,7 @@ TENSORBOARD_DIRECTORY = os.path.join(FADO_DIR, 'runs')
 ATTACK_DIRECTORY = os.path.join(FADO_DIR, 'attack')
 DEFENSE_DIRECTORY = os.path.join(FADO_DIR, 'defense')
 CONFIG_OUT = os.path.join(FADO_DIR, 'config')
+IMPORT_OUT = os.path.join(FADO_DIR, 'import')
 FADO_CONFIG_OUT = os.path.join(CONFIG_OUT, 'fado_config.yaml')
 BENIGN_CONFIG_OUT = os.path.join(CONFIG_OUT, 'benign_ranks.csv')
 MAL_CONFIG_OUT = os.path.join(CONFIG_OUT, 'malicious_ranks.csv')
@@ -35,7 +36,7 @@ ROUTER_IMAGE = os.path.join(IMAGES_PATH, 'router')
 
 LEAF_DATASETS = ['femnist', 'emnist', 'shakespeare', 'sent140']
 NLAFL_DATASETS = ['nlafl_emnist', 'nlafl_fashionmnist', 'nlafl_dbpedia']
-DATASETS = ['cifar10', 'cifar100', 'mnist'] + LEAF_DATASETS + NLAFL_DATASETS
+DATASETS = ['custom', 'cifar10', 'cifar100', 'mnist'] + LEAF_DATASETS + NLAFL_DATASETS
 
 SERVER_IP = '10.0.0.2'
 SERVER_PORT = 51000

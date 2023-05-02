@@ -83,7 +83,6 @@ if __name__ == "__main__":
 
     # Bind to the same queue number
     for queue_numer_offset, nfqueue_client_to_server in enumerate(client_to_server_queues):
-        logger.info(f"Binding queue {id(nfqueue_client_to_server)}")
         nfqueue_client_to_server.bind(QUEUE_NUMBER_CLIENT_TO_SERVER+queue_numer_offset, process_packet_client_to_server)
         threading.Thread(target=nfqueue_client_to_server.run, daemon=True).start()
     # Bind to the same queue number

@@ -19,8 +19,10 @@ class ModelManager:
             elif args.model == 'nlafl_dbpedia_tf':
                 from fado.runner.ml.model.built_in.nlafl_dbpedia_tf import NlaflDbpediaTf
                 return NlaflDbpediaTf()
-        if args.model in ['mnist_conv_torch']:
+        elif args.model in ['mnist_conv_torch']:
             from fado.runner.ml.model.built_in.mnist_conv_torch import MnistConvTorch
             return MnistConvTorch()
+        elif 'py' in args.model:
+            return args.get_class('model')()
         else:
             raise Exception(f"Model {args.model} not found")

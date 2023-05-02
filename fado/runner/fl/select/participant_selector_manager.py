@@ -10,6 +10,7 @@ class ParticipantSelectorManager:
         args = FADOArguments()
         if args.participant_selector == 'random':
             return RandomParticipantSelector()
+        elif '.py' in args.participant_selector:
+            return args.get_class('participant_selector')()
         else:
             raise Exception("Specified participant selector does not exist")
-        pass
