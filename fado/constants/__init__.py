@@ -7,6 +7,8 @@ fado_module_dir = os.path.dirname(fado.__file__)
 crypto_module_dir = os.path.dirname(crypto.__file__)
 default_module_dir = os.path.dirname(default.__file__)
 
+FADO_VERSION = "0.0.3"
+
 FADO_DIR = os.getenv('FADO_HOME_FOLDER', os.path.join(os.path.expanduser("~"), '.fado'))
 FADO_SRC = os.path.join(fado_module_dir)
 

@@ -28,6 +28,7 @@ def parse_args(args):
     mode_parser = parser.add_subparsers(dest="mode", required=False)
 
     build_parser = mode_parser.add_parser('build')
+    mode_parser.add_parser('prepare')
     mode_parser.add_parser('run')
     mode_parser.add_parser('table')
 
@@ -96,7 +97,7 @@ def run_clients(fado_args, dev_mode, docker, add_flags):
     # Start clients container
     subprocess.run(['docker', 'run', '-d', '-w', '/app', '--name', 'fado-clients', '--cap-add=NET_ADMIN',
                     '--network', 'clients-network'] + add_flags +
-                   ['ralexandre00/fado-node:latest', 'bash', '-c', 'tail -f /dev/null'])
+                   [f'ralexandre00/fado-node:{FADO_VERSION}', 'bash', '-c', 'tail -f /dev/null'])
 
     # Send fado_config and data to container
     subprocess.run(['docker', 'cp', f'{FADO_CONFIG_OUT}', 'fado-clients:/app/config/fado_config.yaml'])
@@ -124,7 +125,7 @@ def run_server(fado_args, dev_mode, docker, add_flags):
     subprocess.run(['docker', 'run', '-d', '-w', '/app', '--name', 'fado-server', '--cap-add=NET_ADMIN',
                     '-v', f'{LOGS_DIRECTORY}:/app/logs', '-v', f'{RESULTS_DIRECTORY}:/app/results',
                     '--network', 'server-network'] + add_flags +
-                   ['ralexandre00/fado-node:latest', 'bash', '-c', 'tail -f /dev/null'])
+                   [f'ralexandre00/fado-node:{FADO_VERSION}', 'bash', '-c', 'tail -f /dev/null'])
 
     # Send fado_config and data to container
     subprocess.run(['docker', 'cp', f'{FADO_CONFIG_OUT}', 'fado-server:/app/config/fado_config.yaml'])
@@ -154,7 +155,7 @@ def run_router(fado_args, dev_mode, docker, add_flags):
     # Start server container
     subprocess.run(['docker', 'run', '-d', '-w', '/app', '--name', 'fado-router', '--cap-add=NET_ADMIN',
                     '--network', 'server-network'] + add_flags +
-                   ['ralexandre00/fado-router:latest', 'bash', '-c', 'tail -f /dev/null'])
+                   [f'ralexandre00/fado-router:{FADO_VERSION}', 'bash', '-c', 'tail -f /dev/null'])
     subprocess.run(['docker', 'network', 'connect', 'clients-network', 'fado-router'])
 
     # Send fado_config and data to container
@@ -251,6 +252,11 @@ def run_multiple(fado_arguments, development, docker):
     os.remove(temp_output)
 
 
+def verify_docker_install():
+    # TODO:
+    pass
+
+
 def cli():
     args = parse_args(sys.argv[1:])
 
@@ -262,12 +268,12 @@ def cli():
 
     fado_arguments = FADOArguments(config_file)
 
-    # TODO:
-    # prepare_fado()
-    #   verify_docker_install()
-    #   docker pull ralexandre00/fado-node-requirements
-    #   ...
-
+    if args.mode == 'prepare':
+        verify_docker_install()
+        logger.info("Pulling required docker images -q")
+        subprocess.run(['docker', 'pull', f'ralexandre00/fado-node-requirements:{FADO_VERSION}'])
+        subprocess.run(['docker', 'pull', f'ralexandre00/fado-router:{FADO_VERSION}'])
+        subprocess.run(['docker', 'pull', f'ralexandre00/fado-node:{FADO_VERSION}'])
     if args.mode == 'build':
         build_mode = args.build_mode
         move_files_to_fado_home(config_file)

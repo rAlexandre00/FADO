@@ -13,7 +13,7 @@ requirements = [
 
 setup(
     name='FAaDO',
-    version='0.0.1',
+    version='0.0.3',
     license='MIT',
     maintainer="Rodrigo Simoes",
     maintainer_email='rsimoes@lasige.di.fc.ul.pt',
