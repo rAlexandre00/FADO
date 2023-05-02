@@ -30,6 +30,7 @@ def parse_args(args):
     build_parser = mode_parser.add_parser('build')
     mode_parser.add_parser('prepare')
     mode_parser.add_parser('run')
+    clean_parser = mode_parser.add_parser('clean')
     mode_parser.add_parser('table')
 
     parser.add_argument('-d', dest='dataset', type=str, choices=DATASETS, required=False)
@@ -44,6 +45,10 @@ def parse_args(args):
     build_mode_parser = build_parser.add_subparsers(dest="build_mode")
     build_mode_parser.add_parser('download')
     build_mode_parser.add_parser('shape')
+
+    clean_mode_parser = clean_parser.add_subparsers(dest="clean_mode")
+    clean_mode_parser.add_parser('prepare')
+    clean_mode_parser.add_parser('build')
 
     return parser.parse_args(args)
 
@@ -257,6 +262,24 @@ def verify_docker_install():
     pass
 
 
+def clean_prepare():
+    subprocess.run(['docker', 'image', 'rm', f'ralexandre00/fado-router:{FADO_VERSION}'])
+    subprocess.run(['docker', 'image', 'rm', f'ralexandre00/fado-node:{FADO_VERSION}'])
+    subprocess.run(['docker', 'image', 'rm', f'ralexandre00/fado-node-requirements:{FADO_VERSION}'])
+
+
+def clean_build():
+    shutil.rmtree(FADO_DIR)
+
+
+def prepare_fado():
+    verify_docker_install()
+    logger.info("Pulling required docker images")
+    subprocess.run(['docker', 'pull', f'ralexandre00/fado-node-requirements:{FADO_VERSION}'])
+    subprocess.run(['docker', 'pull', f'ralexandre00/fado-router:{FADO_VERSION}'])
+    subprocess.run(['docker', 'pull', f'ralexandre00/fado-node:{FADO_VERSION}'])
+
+
 def cli():
     args = parse_args(sys.argv[1:])
 
@@ -266,17 +289,12 @@ def cli():
         fado_config_env = os.getenv('FADO_CONFIG')
         config_file = fado_config_env if fado_config_env else FADO_DEFAULT_CONFIG_FILE_PATH
 
-    fado_arguments = FADOArguments(config_file)
-
     if args.mode == 'prepare':
-        verify_docker_install()
-        logger.info("Pulling required docker images -q")
-        subprocess.run(['docker', 'pull', f'ralexandre00/fado-node-requirements:{FADO_VERSION}'])
-        subprocess.run(['docker', 'pull', f'ralexandre00/fado-router:{FADO_VERSION}'])
-        subprocess.run(['docker', 'pull', f'ralexandre00/fado-node:{FADO_VERSION}'])
+        prepare_fado()
     if args.mode == 'build':
+        fado_arguments = FADOArguments(config_file)
         build_mode = args.build_mode
-        move_files_to_fado_home(config_file)
+        move_files_to_fado_home(fado_arguments, config_file)
 
         if build_mode == 'download':
             download_data(fado_arguments)
@@ -287,16 +305,32 @@ def cli():
             shape_data(fado_arguments)
 
     elif args.mode == 'run':
+        fado_arguments = FADOArguments(config_file)
         if 'vary' in fado_arguments:
             run_multiple(fado_arguments, args.development, args.docker)
             return
 
-        move_files_to_fado_home(config_file)
+        move_files_to_fado_home(fado_arguments, config_file)
         run(fado_arguments, args.development, args.docker)
     elif args.mode == 'table':
+        fado_arguments = FADOArguments(config_file)
         generate_table(fado_arguments.table_round)
         # clean()
+    elif args.mode == "clean":
+        clean_mode = args.clean_mode
+        if clean_mode == 'prepare':
+            clean_prepare()
+        elif clean_mode == 'shape':
+            clean_build()
+        else:
+            clean_prepare()
+            clean_build()
     else:
+        prepare_fado()
+        fado_arguments = FADOArguments(config_file)
+        if 'vary' in fado_arguments:
+            run_multiple(fado_arguments, args.development, args.docker)
+            return
         download_data(fado_arguments)
         shape_data(fado_arguments)
         run(fado_arguments, args.development, args.docker)

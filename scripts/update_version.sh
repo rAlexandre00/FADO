@@ -8,8 +8,8 @@ echo "Updating fado images on Docker Hub"
 
 cd docker/requirements/
 ./upload_image.sh $FADO_VERSION
-cd docker/node/
+cd ../node/
 ./upload_image.sh $FADO_VERSION
-cd docker/router/
+cd ../router/
 ./upload_image.sh $FADO_VERSION
 

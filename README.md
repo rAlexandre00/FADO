@@ -48,6 +48,8 @@ Pulls required docker images to run FADO. Only needs to be run once.
 
 These commands build the prerequisites for running a FADO emulation.
 This step needs to be executed everytime a new configuration file is used.
+If your fado configuration file contains varying parameters (yaml lists) you do not
+have to execute this step since it will run automatically for every experiment.
 
 - ```fado build``` - Performs the two actions below
 
@@ -70,6 +72,10 @@ Commands that remove all files that FADO created/downloaded
 - ```fado clean``` - Performs the two actions below
 - ```fado clean prepare``` - Remove the pulled docker images
 - ```fado clean build``` - Remove all files generated/downloaded while building simulations
+
+## Examples
+
+Some examples are provided at examples.
 
 ## Emulation Results
 

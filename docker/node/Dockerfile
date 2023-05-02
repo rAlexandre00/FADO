@@ -1,4 +1,5 @@
-FROM ralexandre00/fado-node-requirements:latest
+ARG VERSION=latest
+FROM ralexandre00/fado-node-requirements:${VERSION}
 
 WORKDIR /app
 

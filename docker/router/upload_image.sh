@@ -1,2 +1,2 @@
-docker build . -t ralexandre00/fado-router:$1
+docker build -t ralexandre00/fado-router:$1 --build-arg VERSION=$1 .
 docker push ralexandre00/fado-router:$1

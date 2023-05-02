@@ -16,6 +16,8 @@ class NetworkAttackerManager:
 
         if network_attack_name == 'nlafl':
             return NLAFLAttacker(model, attacker_test_x, attacker_test_y)
+        elif '.py' in network_attack_name:
+            return fado_args.get_class("network_attack")(model, attacker_test_x, attacker_test_y)
         else:
             return None
 
